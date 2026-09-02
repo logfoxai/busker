@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # busker
 
-The [README](../../README.md) indexes the guides. Read the ones you need before changing a routine.
+The [README](https://raw.githubusercontent.com/logfoxai/busker/main/README.md) indexes the guides (§ Contents). Read the ones you need before changing a routine.
 
 1. **Do not time page changes.** If a click causes it, use `steps` and let the real click do it. A scene that changes on a timer will drift the first time a duration changes.
 2. **`routes` is the only list of clickable things.** Adding a route wires the scene change *and* the pointer affordance. Never hand-maintain a parallel CSS list of `cursor: pointer` selectors.
