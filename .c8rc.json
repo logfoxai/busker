@@ -1,0 +1,8 @@
+{
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.spec.ts", "src/content.config.ts", "src/content/**", "src/integrations/**"],
+  "reporter": [],
+  "all": true,
+  "cache": false,
+  "clean": true
+}

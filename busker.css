@@ -1,0 +1,123 @@
+/**
+ * Optional styling for the cursor and the affordances busker adds.
+ *
+ * Import it as-is or copy the bits you want. Everything is scoped to `.busker`,
+ * the class `busk()` puts on the root, so nothing leaks into the rest of the page.
+ * The two animation lengths here are also in the JavaScript (RING_MS, HINT_MS) —
+ * change one, change the other.
+ */
+
+.busker {
+    --busker-accent: #7c3aed;
+    --busker-cursor-size: 0.95rem;
+    --busker-cursor-fill: rgb(0 0 0 / 0.42);
+    --busker-cursor-edge: #fff;
+
+    /* The cursor is positioned against the root. */
+    position: relative;
+}
+
+/* Hidden until busk() takes over, so it never flashes on a page whose
+   JavaScript has not run (or will not). */
+[data-cursor] {
+    display: none;
+}
+
+.busker [data-cursor] {
+    background: var(--busker-cursor-fill);
+    border: 2px solid var(--busker-cursor-edge);
+    border-radius: 999px;
+    box-shadow: 0 1px 6px rgb(0 0 0 / 0.3);
+    display: block;
+    height: var(--busker-cursor-size);
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    scale: 1;
+    transition:
+        background 0.15s ease,
+        scale 0.15s ease;
+    translate: -50% -50%;
+    width: var(--busker-cursor-size);
+    z-index: 20;
+}
+
+.busker [data-cursor].is-visible {
+    opacity: 1;
+}
+
+.busker [data-cursor].is-pressing {
+    background: color-mix(in srgb, var(--busker-accent) 75%, transparent);
+    scale: 0.6;
+}
+
+.busker [data-cursor]::after {
+    border: 2px solid color-mix(in srgb, var(--busker-accent) 70%, transparent);
+    border-radius: 999px;
+    content: '';
+    inset: -3px;
+    opacity: 0;
+    position: absolute;
+}
+
+.busker [data-cursor].is-ringing::after {
+    animation: busker-ring 0.5s ease-out;
+}
+
+@keyframes busker-ring {
+    from {
+        opacity: 0.9;
+        scale: 0.5;
+    }
+    to {
+        opacity: 0;
+        scale: 2.8;
+    }
+}
+
+/* Only what the show has wired up gets a pointer, so what looks clickable is. */
+.busker .is-interactive {
+    cursor: pointer;
+}
+
+/* The visitor clicked something dead — show them what is not. */
+.busker .is-hint {
+    animation: busker-hint 1.5s ease-out;
+}
+
+@keyframes busker-hint {
+    from {
+        box-shadow:
+            0 0 0 2px var(--busker-accent),
+            0 0 12px 4px color-mix(in srgb, var(--busker-accent) 50%, transparent);
+    }
+    to {
+        box-shadow:
+            0 0 0 2px transparent,
+            0 0 0 0 transparent;
+    }
+}
+
+/* They took over: the show is off the pitch. */
+.busker.is-aside [data-cursor] {
+    display: none;
+}
+
+/* Scenes: one at a time. */
+.busker [data-scene] {
+    display: none;
+}
+
+.busker [data-scene].is-active {
+    display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .busker [data-cursor] {
+        transition: none;
+    }
+
+    .busker .is-hint {
+        animation: none;
+    }
+}

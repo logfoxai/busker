@@ -1,0 +1,73 @@
+{
+  "name": "busker",
+  "version": "0.0.0",
+  "description": "Scripted cursor demos that really click. Drive a fake product UI with a routine, not a stopwatch.",
+  "keywords": [
+    "demo",
+    "product-tour",
+    "cursor",
+    "animation",
+    "mock",
+    "marketing",
+    "landing-page",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/logfoxai/busker.git"
+  },
+  "homepage": "https://busker.logfox.ai",
+  "directories": {
+    "doc": "src/content/docs"
+  },
+  "license": "MIT",
+  "author": "Marc H. Weiner <mhweiner234@gmail.com>",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./busker.css": "./busker.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "files": [
+    "dist",
+    "busker.css",
+    "AGENTS.md",
+    "skills",
+    "!dist/**/*.spec.*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "tsc",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "test": "c8 kizu -f 'src/**/*.spec.ts' && c8 report -r text -r html",
+    "astro:sync": "astro sync",
+    "astro:dev": "astro sync && astro dev",
+    "astro:build": "astro sync && astro build",
+    "validate": "npm run lint && npm run build && npm test && npm run astro:build"
+  },
+  "devDependencies": {
+    "@astrojs/markdown-remark": "^7.3.0",
+    "@astrojs/starlight": "^0.42.0",
+    "@happy-dom/global-registrator": "^20.13.2",
+    "astro": "^7.2.10",
+    "c8": "^12.0.0",
+    "eslint": "^10.9.1",
+    "happy-dom": "^20.13.2",
+    "kizu": "^5.1.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.69.0"
+  }
+}

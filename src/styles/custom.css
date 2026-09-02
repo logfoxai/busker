@@ -1,0 +1,18 @@
+/* Logfox house accent, so busker sits next to callspec and castellan. */
+:root {
+    --sl-color-accent-low: #2b1a4d;
+    --sl-color-accent: #7c3aed;
+    --sl-color-accent-high: #c4b0f5;
+}
+
+:root[data-theme='light'] {
+    --sl-color-accent-low: #ddd2fb;
+    --sl-color-accent: #6d28d9;
+    --sl-color-accent-high: #35146b;
+}
+
+/* API tables get wide. Let them scroll rather than crushing the columns. */
+.sl-markdown-content table {
+    display: block;
+    overflow-x: auto;
+}
