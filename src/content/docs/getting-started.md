@@ -3,7 +3,7 @@
 ## 1. Install
 
 ```bash
-npm i busker
+npm i @logfox/busker
 ```
 
 Busker has no dependencies and runs in the browser. It ships types, and works with any framework or none &mdash; it only ever touches the element you hand it.
@@ -36,8 +36,8 @@ A mock is ordinary markup. Busker needs three things from it, all `data-` attrib
 ## 3. Put on a show
 
 ```typescript title="main.ts"
-import {busk} from 'busker';
-import 'busker/busker.css';
+import {busk} from '@logfox/busker';
+import '@logfox/busker/busker.css';
 
 const root = document.querySelector<HTMLElement>('.app');
 

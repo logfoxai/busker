@@ -3,7 +3,7 @@
 `busker.css` is optional. It styles the cursor, the ripple, the pointer affordance, the miss hint, and scene switching &mdash; about 100 lines, all scoped to `.busker`.
 
 ```typescript
-import 'busker/busker.css';
+import '@logfox/busker/busker.css';
 ```
 
 Or copy it into your own stylesheet and edit it. There is nothing clever in there.
