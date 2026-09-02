@@ -1,0 +1,20 @@
+{
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.js",
+    "src/components/**",
+    "src/overrides/**",
+    "src/pages/**",
+    "src/cs-pagefind/**",
+    "src/content/**",
+    "src/content.config.ts",
+    "src/integrations/**",
+    "src/styles/**",
+    "src/env.d.ts"
+  ],
+  "reporter": [],
+  "all": true,
+  "cache": false,
+  "clean": true
+}

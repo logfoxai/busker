@@ -1,0 +1,22 @@
+/*
+ * Splash homepage container — matches callspec's splash page chrome.
+ * Scoped to the splash page (no sidebar) so docs pages are untouched.
+ * Without this, Starlight's defaults (narrow left-aligned sl-container) shift the splash off-centre.
+ */
+
+html:not([data-has-sidebar]):has(.splash) {
+    --sl-content-width: min(80rem, calc(100vw - 2rem));
+    --sl-content-pad-x: clamp(1.25rem, 3.5vw, 2.75rem);
+
+    /* Centre the content column on wide viewports. Starlight's default sl-container
+       has no auto margins on the sidebar-less splash, so it sticks left without this. */
+    .content-panel .sl-container {
+        width: min(100%, var(--sl-content-width));
+        max-width: var(--sl-content-width);
+        margin-inline: auto;
+    }
+
+    .content-panel:first-of-type {
+        padding-inline: var(--sl-content-pad-x);
+    }
+}

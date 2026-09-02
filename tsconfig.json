@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "moduleResolution": "node16",
+    "module": "Node16",
+    "declaration": true,
+    "lib": ["ES2023", "DOM"],
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/components/**",
+    "src/overrides/**",
+    "src/pages/**",
+    "src/cs-pagefind/**",
+    "src/content/**",
+    "src/content.config.ts",
+    "src/integrations/**",
+    "src/styles/**",
+    "src/**/*.spec.ts",
+    "src/env.d.ts"
+  ]
+}

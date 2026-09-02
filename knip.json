@@ -1,0 +1,30 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreBinaries": ["report"],
+  "ignoreDependencies": [
+    "@fontsource-variable/inter",
+    "@pagefind/default-ui",
+    "astro-expressive-code",
+    "happy-dom",
+    "esbuild"
+  ],
+  "ignoreIssues": {
+    "src/components/searchPendingDelay.ts": ["exports"],
+    "src/components/searchStaleResults.ts": ["exports"],
+    "src/integrations/assertAstroDevFree.ts": ["files"],
+    "src/integrations/cleanAstroCache.ts": ["files"],
+    "src/integrations/pagefindShim.ts": ["files"],
+    "src/integrations/rehype-wrap-tables.ts": ["files"],
+    "src/integrations/remark-starlight-md-links.ts": ["files"]
+  },
+  "entry": [
+    "src/cs-pagefind/pagefind.ts",
+    "src/components/codeBlockTitles.ts",
+    "src/components/pagefindMount.ts",
+    "src/components/searchDialog.ts",
+    "src/components/searchKeyboardNav.ts",
+    "src/**/*.spec.ts",
+    "scripts/*.{mjs,cjs,js}"
+  ],
+  "project": ["src/**/*.{ts,js}", "scripts/**/*.{mjs,cjs,js}"]
+}

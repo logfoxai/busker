@@ -1,0 +1,42 @@
+---
+import {Icon} from '@astrojs/starlight/components';
+import './site-footer.css';
+---
+
+<div class="site-footer not-content">
+	<a href="/" class="site-footer__lockup" aria-label="busker home">
+		<img class="site-footer__logo site-footer__logo--light" src="/busker-lockup-light.svg" alt="" />
+		<img class="site-footer__logo site-footer__logo--dark" src="/busker-lockup-dark.svg" alt="busker" />
+	</a>
+	<nav class="site-footer__nav" aria-label="Site">
+		<a href="/getting-started/">
+			<Icon name="open-book" size="1rem" class="site-footer__icon" />
+			Docs
+		</a>
+		<a href="https://github.com/logfoxai/busker" rel="noopener noreferrer">
+			<Icon name="github" size="1rem" class="site-footer__icon" />
+			GitHub
+		</a>
+		<a href="https://github.com/logfoxai/busker/blob/main/LICENSE" rel="noopener noreferrer">
+			<Icon name="document" size="1rem" class="site-footer__icon" />
+			MIT
+		</a>
+	</nav>
+</div>
+
+<style>
+	.site-footer__lockup {
+		display: inline-flex;
+		align-items: center;
+	}
+	.site-footer__logo {
+		height: 1.4rem;
+		width: auto;
+	}
+	:global(html[data-theme='light']) .site-footer__logo--dark {
+		display: none;
+	}
+	:global(html[data-theme='dark']) .site-footer__logo--light {
+		display: none;
+	}
+</style>
