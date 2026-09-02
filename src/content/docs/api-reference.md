@@ -1,7 +1,7 @@
 # API reference
 
 ```typescript
-import {busk} from 'busker';
+import {busk} from '@logfox/busker';
 
 const show = busk(root, routine);
 ```

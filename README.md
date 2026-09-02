@@ -15,8 +15,8 @@ Fake product demos on a landing page usually rot. The cursor is on one timeline,
 Busker gets rid of the second timeline. You give it a list of places the cursor goes, it glides there and **really clicks the element**, and your own handlers change the page. Nothing is timed except the pauses, so there is nothing to keep in sync.
 
 ```typescript
-import {busk} from 'busker';
-import 'busker/busker.css';
+import {busk} from '@logfox/busker';
+import '@logfox/busker/busker.css';
 
 busk(document.querySelector('.app'), {
     scene: 'home',
@@ -39,7 +39,7 @@ Zero dependencies, about 4kB, no build step, no framework.
 ## Quick start
 
 ```bash
-npm i busker
+npm i @logfox/busker
 ```
 
 [Getting started](src/content/docs/getting-started.md) is a working demo in four steps.
