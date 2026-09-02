@@ -53,10 +53,12 @@
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
     "test": "c8 kizu -f 'src/**/*.spec.ts' && c8 report -r text -r html",
+    "deadcode:check": "knip",
+    "sync:fonts": "node scripts/sync-fonts.mjs",
     "astro:sync": "astro sync",
-    "astro:dev": "astro sync && astro dev",
-    "astro:build": "astro sync && astro build",
-    "validate": "npm run lint && npm run build && npm test && npm run astro:build"
+    "astro:dev": "node scripts/assert-astro-dev-free.mjs && node scripts/clean-astro-cache.mjs && astro sync && astro dev",
+    "astro:build": "node scripts/assert-astro-dev-free.mjs && astro sync && astro build && node scripts/write-cs-pagefind-shim.mjs",
+    "validate": "npm run lint && npm run build && npm run deadcode:check && npm test && npm run sync:fonts && npm run astro:build && node scripts/assert-404-page.mjs && node scripts/assert-splash-page.mjs"
   },
   "devDependencies": {
     "@astrojs/markdown-remark": "^7.3.0",
@@ -69,5 +71,9 @@
     "kizu": "^5.1.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.69.0"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "knip": "^6.34.0"
   }
 }

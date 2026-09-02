@@ -1,9 +1,9 @@
 import type {Countdown, Move, Point, Step, Toggle, Typing} from './types';
 
 /** How long a glide takes when a step does not say. */
-export const DEFAULT_MOVE_MS = 600;
+const DEFAULT_MOVE_MS = 600;
 /** How long the cursor hovers before pressing when a step does not say. */
-export const DEFAULT_DWELL_MS = 250;
+const DEFAULT_DWELL_MS = 250;
 /** How long the cursor stays squashed after a press. */
 export const PRESS_MS = 200;
 /** How long the ripple ring lingers. Outlives the press so the click reads. */

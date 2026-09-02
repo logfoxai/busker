@@ -1,23 +1,31 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import {Code} from '@astrojs/starlight/components';
+import {Code, Icon} from '@astrojs/starlight/components';
 import '../../busker.css';
+import '../styles/splash.css';
 
 const routineSource = `busk(root, {
-    scene: 'home',
+    scene: 'beans',
     start: [0.55, 0.3],
     steps: [
-        {click: '[data-nav-item="alerts"]', wait: 900},
-        {click: '[data-row="p0"]', wait: 1400},
-        {click: '[data-why]', wait: 2200},
+        {click: '[data-cta]', wait: 900},
+        {click: '[data-plan="duo"]', wait: 1500},
+        {click: '[data-checkout]', wait: 2200},
         {click: '[data-close]', wait: 2600},
-        {click: '[data-nav-item="home"]', wait: 900},
+        {click: '[data-nav-item="plans"]', wait: 900},
+        {click: '[data-plan="solo"]', wait: 1400},
         {to: [0.55, 0.3], wait: 900},
     ],
     routes: [
-        {click: '[data-nav-item="home"]', scene: 'home'},
-        {click: '[data-nav-item="alerts"]', scene: 'alerts'},
-        {click: '[data-row="p0"]', scene: 'case'},
+        {click: '[data-nav-item="beans"]', scene: 'beans'},
+        {click: '[data-nav-item="plans"]', scene: 'plans'},
+        {click: '[data-nav-item="roasters"]', scene: 'roasters'},
+        {click: '[data-cta]', scene: 'plans'},
+        {click: '[data-plan="solo"]', scene: 'checkout'},
+        {click: '[data-plan="duo"]', scene: 'checkout'},
+        {click: '[data-plan="family"]', scene: 'checkout'},
+        {click: '[data-checkout]', scene: 'checkout'},
+        {click: '[data-close]', scene: 'beans'},
     ],
 });`;
 ---
@@ -35,17 +43,21 @@ const routineSource = `busk(root, {
 >
     <div class="splash not-content">
         <header class="splash__hero">
-            <h1>Scripted cursor demos that&nbsp;really click.</h1>
+            <h1>Scripted cursor demos that really&nbsp;click.</h1>
             <p class="splash__lead">
-                Fake product demos rot because the cursor is on one timeline and the page is on
-                another. Busker gets rid of the second one: it glides to an element and <strong
-                    >really clicks it</strong
-                >, so your own handlers change the page. Nothing to keep in sync, and the demo is
-                live &mdash; click it yourself and busker steps aside.
+                The easy way to build an <strong>interactive product mock</strong>. Write the
+                screens in plain HTML, then link a click to the screen it opens &mdash; the same
+                move as wiring frames in a Figma prototype, except this one ships on your page.
+                Busker plays it back with a cursor that glides and really clicks, so the mock
+                changes through its own handlers. Click it yourself and busker steps aside.
             </p>
             <p class="splash__actions">
-                <a class="splash__btn splash__btn--primary" href="/getting-started/">Get started</a>
-                <a class="splash__btn" href="https://github.com/logfoxai/busker">GitHub</a>
+                <a class="splash__btn splash__btn--primary" href="/getting-started/"
+                    >Get started <Icon name="right-arrow" /></a
+                >
+                <a class="splash__btn" href="https://github.com/logfoxai/busker"
+                    ><Icon name="github" /> GitHub</a
+                >
             </p>
             <p class="splash__meta">Zero dependencies &middot; ~4kB &middot; MIT</p>
         </header>
@@ -55,46 +67,80 @@ const routineSource = `busk(root, {
                 <div class="mock__chrome"><span></span><span></span><span></span></div>
                 <div class="mock__body">
                     <nav class="mock__nav">
-                        <button class="mock__nav-item" data-nav-item="home">Overview</button>
-                        <button class="mock__nav-item" data-nav-item="alerts">Alerts</button>
+                        <button class="mock__brand" data-nav-item="beans">Crema</button>
+                        <div class="mock__nav-items">
+                            <button class="mock__nav-item" data-nav-item="beans">Beans</button>
+                            <button class="mock__nav-item" data-nav-item="plans">Plans</button>
+                            <button class="mock__nav-item" data-nav-item="roasters">Roasters</button>
+                        </div>
                     </nav>
 
                     <div class="mock__main">
-                        <section class="mock__scene" data-scene="home" data-nav="home">
-                            <div class="mock__cards">
-                                <div class="mock__card"><b>1.2M</b><span>events today</span></div>
-                                <div class="mock__card"><b>3</b><span>open alerts</span></div>
-                                <div class="mock__card"><b>99.98%</b><span>uptime</span></div>
-                            </div>
-                            <p class="mock__note">Nothing needs you right now.</p>
-                        </section>
-
-                        <section class="mock__scene" data-scene="alerts" data-nav="alerts">
-                            <div class="mock__row mock__row--p0" data-row="p0">
-                                <span class="mock__sev">P0</span>
-                                <span class="mock__title">checkout: payment timeout</span>
-                                <span class="mock__age">12m</span>
-                            </div>
-                            <div class="mock__row">
-                                <span class="mock__sev mock__sev--p2">P2</span>
-                                <span class="mock__title">worker: retry budget low</span>
-                                <span class="mock__age">1h</span>
-                            </div>
-                            <div class="mock__row">
-                                <span class="mock__sev mock__sev--p3">P3</span>
-                                <span class="mock__title">cdn: cache miss spike</span>
-                                <span class="mock__age">4h</span>
+                        <section class="mock__scene" data-scene="beans" data-nav="beans">
+                            <div class="mock__hero">
+                                <h2 class="mock__hero-title">Fresh roasts,<br />to your door.</h2>
+                                <p class="mock__hero-sub">
+                                    Single-origin beans, roasted the morning they ship. No
+                                    warehouse, no staleness.
+                                </p>
+                                <button class="mock__btn mock__btn--primary" data-cta>
+                                    See plans
+                                </button>
                             </div>
                         </section>
 
-                        <section class="mock__scene" data-scene="case" data-nav="alerts">
-                            <h4 class="mock__case-title">checkout: payment timeout</h4>
-                            <p class="mock__note">427 events in 12 minutes, all from one region.</p>
-                            <button class="mock__btn" data-why>Why is this happening?</button>
+                        <section class="mock__scene" data-scene="plans" data-nav="plans">
+                            <h3 class="mock__section-title">Pick your pace</h3>
+                            <div class="mock__plans">
+                                <button class="mock__plan" data-plan="solo" data-name="Solo" data-price="$18/mo">
+                                    <b>Solo</b>
+                                    <span class="mock__plan-price">$18<span>/mo</span></span>
+                                    <span class="mock__plan-desc">250g &middot; 1 roast</span>
+                                </button>
+                                <button
+                                    class="mock__plan mock__plan--featured"
+                                    data-plan="duo"
+                                    data-name="Duo"
+                                    data-price="$32/mo"
+                                >
+                                    <b>Duo</b>
+                                    <span class="mock__plan-price">$32<span>/mo</span></span>
+                                    <span class="mock__plan-desc">500g &middot; 2 roasts</span>
+                                </button>
+                                <button class="mock__plan" data-plan="family" data-name="Family" data-price="$54/mo">
+                                    <b>Family</b>
+                                    <span class="mock__plan-price">$54<span>/mo</span></span>
+                                    <span class="mock__plan-desc">1kg &middot; 4 roasts</span>
+                                </button>
+                            </div>
+                        </section>
+
+                        <section class="mock__scene" data-scene="checkout" data-nav="plans">
+                            <h3 class="mock__section-title">You're almost there</h3>
+                            <div class="mock__summary">
+                                <span class="mock__summary-plan" data-summary-plan>Duo</span>
+                                <span class="mock__summary-price" data-summary-price>$32/mo</span>
+                            </div>
+                            <button class="mock__btn mock__btn--primary" data-checkout>
+                                Start subscription
+                            </button>
                             <div class="mock__panel" data-panel>
-                                <b>Most likely</b>
-                                <p>The payment provider's EU endpoint started returning 504s at 09:12.</p>
-                                <button class="mock__btn mock__btn--quiet" data-close>Close</button>
+                                <div class="mock__panel-card">
+                                    <b class="mock__panel-title">You're in.</b>
+                                    <p class="mock__panel-sub">
+                                        First batch ships Monday. We'll email your tracking link.
+                                    </p>
+                                    <button class="mock__btn mock__btn--quiet" data-close>Close</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="mock__scene" data-scene="roasters" data-nav="roasters">
+                            <h3 class="mock__section-title">The people behind the beans</h3>
+                            <div class="mock__roasters">
+                                <div class="mock__roaster"><b>Marta</b><span>Oaxaca, MX</span></div>
+                                <div class="mock__roaster"><b>Yusuf</b><span>Yirgacheffe, ET</span></div>
+                                <div class="mock__roaster"><b>Lena</b><span>Huila, CO</span></div>
                             </div>
                         </section>
                     </div>
@@ -103,7 +149,17 @@ const routineSource = `busk(root, {
             </div>
 
             <p class="splash__caption">
-                Live, not a video. Click anything and it is yours.
+                <svg
+                    class="splash__caption-icon"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 256 256"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    ><path
+                        d="M88,24V16a8,8,0,0,1,16,0v8a8,8,0,0,1-16,0ZM16,104h8a8,8,0,0,0,0-16H16a8,8,0,0,0,0,16ZM124.42,39.16a8,8,0,0,0,10.74-3.58l8-16a8,8,0,0,0-14.31-7.16l-8,16A8,8,0,0,0,124.42,39.16Zm-96,81.69-16,8a8,8,0,0,0,7.16,14.31l16-8a8,8,0,1,0-7.16-14.31ZM219.31,184a16,16,0,0,1,0,22.63l-12.68,12.68a16,16,0,0,1-22.63,0L132.7,168,115,214.09c0,.1-.08.21-.13.32a15.83,15.83,0,0,1-14.6,9.59l-.79,0a15.83,15.83,0,0,1-14.41-11L32.8,52.92A16,16,0,0,1,52.92,32.8L213,85.07a16,16,0,0,1,1.41,29.8l-.32.13L168,132.69ZM208,195.31,156.69,144h0a16,16,0,0,1,4.93-26l.32-.14,45.95-17.64L48,48l52.2,159.86,17.65-46c0-.11.08-.22.13-.33a16,16,0,0,1,11.69-9.34,16.72,16.72,0,0,1,3-.28,16,16,0,0,1,11.3,4.69L195.31,208Z"
+                    ></path></svg
+                >
+                Click around and explore
             </p>
         </section>
 
@@ -124,32 +180,46 @@ const routineSource = `busk(root, {
     const root = document.querySelector<HTMLElement>('[data-mock]');
 
     if (root) {
-        // The panel is not a scene — busker clicked the button, this handler
-        // does the rest, the same as it would for a real visitor.
-        root.querySelector('[data-why]')?.addEventListener('click', () => {
+        // The success panel is not a scene — busker clicked the button, this
+        // handler does the rest, the same as it would for a real visitor.
+        root.querySelector('[data-checkout]')?.addEventListener('click', () => {
             root.querySelector('[data-panel]')?.classList.add('is-open');
         });
         root.querySelector('[data-close]')?.addEventListener('click', () => {
             root.querySelector('[data-panel]')?.classList.remove('is-open');
         });
+        // Picking a plan updates the checkout summary, then busker routes.
+        root.querySelectorAll('[data-plan]').forEach((plan) => {
+            plan.addEventListener('click', () => {
+                const name = plan.getAttribute('data-name');
+                const price = plan.getAttribute('data-price');
+                if (name) root.querySelector('[data-summary-plan]')!.textContent = name;
+                if (price) root.querySelector('[data-summary-price]')!.textContent = price;
+            });
+        });
 
         busk(root, {
-            scene: 'home',
+            scene: 'beans',
             start: [0.55, 0.3],
             steps: [
-                {click: '[data-nav-item="alerts"]', wait: 900},
-                {click: '[data-row="p0"]', wait: 1400},
-                {click: '[data-why]', wait: 2200},
+                {click: '[data-cta]', wait: 900},
+                {click: '[data-plan="duo"]', wait: 1500},
+                {click: '[data-checkout]', wait: 2200},
                 {click: '[data-close]', wait: 2600},
-                {click: '[data-nav-item="home"]', wait: 900},
+                {click: '[data-nav-item="plans"]', wait: 900},
+                {click: '[data-plan="solo"]', wait: 1400},
                 {to: [0.55, 0.3], wait: 900},
             ],
             routes: [
-                {click: '[data-nav-item="home"]', scene: 'home'},
-                {click: '[data-nav-item="alerts"]', scene: 'alerts'},
-                {click: '[data-row="p0"]', scene: 'case'},
-                {click: '[data-why]', scene: 'case'},
-                {click: '[data-close]', scene: 'case'},
+                {click: '[data-nav-item="beans"]', scene: 'beans'},
+                {click: '[data-nav-item="plans"]', scene: 'plans'},
+                {click: '[data-nav-item="roasters"]', scene: 'roasters'},
+                {click: '[data-cta]', scene: 'plans'},
+                {click: '[data-plan="solo"]', scene: 'checkout'},
+                {click: '[data-plan="duo"]', scene: 'checkout'},
+                {click: '[data-plan="family"]', scene: 'checkout'},
+                {click: '[data-checkout]', scene: 'checkout'},
+                {click: '[data-close]', scene: 'beans'},
             ],
         });
     }
@@ -170,6 +240,7 @@ const routineSource = `busk(root, {
         font-size: clamp(2rem, 5vw, 3.1rem);
         line-height: 1.1;
         margin: 0 0 1rem;
+        text-wrap: balance;
     }
 
     .splash__lead {
@@ -188,12 +259,20 @@ const routineSource = `busk(root, {
     }
 
     .splash__btn {
+        align-items: center;
         border: 1px solid var(--sl-color-gray-5);
         border-radius: 999px;
         color: var(--sl-color-white);
+        display: inline-flex;
         font-weight: 600;
+        gap: 0.5rem;
         padding: 0.55rem 1.3rem;
         text-decoration: none;
+    }
+
+    .splash__btn :is(svg, img) {
+        height: 1.1rem;
+        width: 1.1rem;
     }
 
     .splash__btn--primary {
@@ -209,37 +288,84 @@ const routineSource = `busk(root, {
     }
 
     .splash__caption {
+        align-items: center;
         color: var(--sl-color-gray-3);
+        display: flex;
         font-size: 0.85rem;
-        text-align: center;
+        gap: 0.35rem;
+        justify-content: center;
+        margin-top: 1rem;
+        text-wrap: pretty;
+    }
+
+    .splash__caption-icon {
+        flex-shrink: 0;
+        height: 1em;
+        width: 1em;
     }
 
     .splash__code {
         margin-top: 3.5rem;
     }
 
-    /* ─── the mock ─────────────────────────────────────────────────────── */
+    .splash__code h2 {
+        margin: 0 0 1rem;
+    }
+
+    .splash__code p {
+        margin: 0 0 1.5rem;
+    }
+
+    /* ─── the mock (Crema — a coffee subscription marketing site) ─────── */
 
     .mock {
-        --busker-accent: var(--sl-color-accent-high);
-        background: var(--sl-color-black);
-        border: 1px solid var(--sl-color-gray-5);
+        --busker-accent: #b5651d;
+        --cream: #f7f1e8;
+        --cream-2: #efe6d6;
+        --chrome: #efe6d6;
+        --dot: #d8c9b0;
+        --ink: #3a2a1a;
+        --ink-soft: #7a6650;
+        --line: #e2d6c2;
+        --card: #fff;
+        --accent: #b5651d;
+        --accent-fg: #fff;
+        --pill: #e7d8c0;
+        --panel-veil: rgba(58, 42, 26, 0.34);
+        background: var(--cream);
+        border: 1px solid var(--line);
         border-radius: 0.75rem;
+        box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.55);
         overflow: hidden;
         user-select: none;
     }
 
+    html[data-theme='dark'] .mock {
+        --cream: #1b1410;
+        --cream-2: #241a14;
+        --chrome: #241a14;
+        --dot: #4a3a2c;
+        --ink: #f1e8db;
+        --ink-soft: #a89888;
+        --line: #3a2d22;
+        --card: #2a201a;
+        --accent: #d4894a;
+        --accent-fg: #1b1410;
+        --pill: #3a2d22;
+        --panel-veil: rgba(0, 0, 0, 0.5);
+    }
+
     .mock__chrome {
         align-items: center;
-        background: var(--sl-color-gray-6);
-        border-bottom: 1px solid var(--sl-color-gray-5);
+        background: var(--chrome);
+        border-bottom: 1px solid var(--line);
         display: flex;
         gap: 0.4rem;
         padding: 0.6rem 0.8rem;
     }
 
     .mock__chrome span {
-        background: var(--sl-color-gray-4);
+        background: var(--dot);
         border-radius: 999px;
         height: 0.55rem;
         width: 0.55rem;
@@ -247,162 +373,257 @@ const routineSource = `busk(root, {
 
     .mock__body {
         display: grid;
-        grid-template-columns: 9rem 1fr;
-        min-height: 15rem;
+        grid-template-rows: auto 1fr;
+        height: 20rem;
+        position: relative;
     }
 
     .mock__nav {
-        border-right: 1px solid var(--sl-color-gray-5);
+        align-items: center;
+        background: var(--cream);
+        border-bottom: 1px solid var(--line);
         display: flex;
-        flex-direction: column;
+        gap: 0.5rem;
+        justify-content: space-between;
+        padding: 0.7rem 1.1rem;
+    }
+
+    .mock__brand {
+        background: none;
+        border: 0;
+        color: var(--ink);
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+    }
+
+    .mock__nav-items {
+        display: flex;
         gap: 0.25rem;
-        padding: 0.75rem 0.6rem;
     }
 
     .mock__nav-item {
         background: none;
         border: 0;
-        border-radius: 0.4rem;
-        color: var(--sl-color-gray-3);
+        border-radius: 999px;
+        color: var(--ink-soft);
         font: inherit;
-        font-size: 0.85rem;
-        padding: 0.4rem 0.6rem;
-        text-align: left;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 0.3rem 0.75rem;
     }
 
     .mock__nav-item.is-active {
-        background: var(--sl-color-gray-6);
-        color: var(--sl-color-white);
-        font-weight: 600;
+        background: var(--pill);
+        color: var(--ink);
     }
 
     .mock__main {
-        padding: 1rem 1.1rem;
+        overflow: hidden;
+        padding: 1.4rem 1.4rem 1.6rem;
+        position: relative;
     }
 
-    .mock__cards {
+    .mock__scene {
+        display: none;
+    }
+
+    .mock__scene.is-active {
+        display: block;
+    }
+
+    /* hero */
+    .mock__hero {
+        max-width: 26rem;
+    }
+
+    .mock__hero-title {
+        color: var(--ink);
+        font-size: 1.7rem;
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin: 0 0 0.6rem;
+    }
+
+    .mock__hero-sub {
+        color: var(--ink-soft);
+        font-size: 0.92rem;
+        line-height: 1.55;
+        margin: 0 0 1.1rem;
+    }
+
+    /* section title */
+    .mock__section-title {
+        color: var(--ink);
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 0 0 0.9rem;
+    }
+
+    /* plans */
+    .mock__plans {
+        display: grid;
+        gap: 0.7rem;
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .mock__plan {
+        align-items: flex-start;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 0.6rem;
+        color: var(--ink);
+        display: grid;
+        font: inherit;
+        gap: 0.1rem;
+        padding: 0.8rem 0.8rem 0.9rem;
+        text-align: left;
+    }
+
+    .mock__plan b {
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+
+    .mock__plan-price {
+        font-size: 1.25rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .mock__plan-price span {
+        color: var(--ink-soft);
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .mock__plan-desc {
+        color: var(--ink-soft);
+        font-size: 0.78rem;
+    }
+
+    .mock__plan--featured {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 1px var(--accent) inset;
+    }
+
+    /* checkout */
+    .mock__summary {
+        align-items: baseline;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 0.6rem;
+        display: flex;
+        gap: 0.6rem;
+        justify-content: space-between;
+        padding: 0.8rem 1rem;
+    }
+
+    .mock__summary-plan {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .mock__summary-price {
+        color: var(--ink);
+        font-size: 1.05rem;
+        font-weight: 800;
+    }
+
+    /* buttons */
+    .mock__btn {
+        background: var(--accent);
+        border: 0;
+        border-radius: 999px;
+        color: var(--accent-fg);
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-top: 0.9rem;
+        padding: 0.5rem 1.1rem;
+    }
+
+    .mock__btn--quiet {
+        background: var(--pill);
+        color: var(--ink);
+    }
+
+    /* success panel — overlay so opening it never changes the mock's height */
+    .mock__panel {
+        background: var(--panel-veil);
+        display: none;
+        inset: 0;
+        padding: 1rem;
+        place-items: center;
+        position: absolute;
+        z-index: 2;
+    }
+
+    .mock__panel.is-open {
+        display: grid;
+    }
+
+    .mock__panel-card {
+        background: var(--card);
+        border-radius: 0.6rem;
+        box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.45);
+        max-width: 15rem;
+        padding: 0.9rem 1rem;
+        text-align: center;
+    }
+
+    .mock__panel-title {
+        color: var(--ink);
+        font-size: 0.95rem;
+    }
+
+    .mock__panel-sub {
+        color: var(--ink-soft);
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin: 0.3rem 0 0;
+    }
+
+    /* roasters */
+    .mock__roasters {
         display: grid;
         gap: 0.6rem;
         grid-template-columns: repeat(3, 1fr);
     }
 
-    .mock__card {
-        background: var(--sl-color-gray-6);
-        border-radius: 0.5rem;
+    .mock__roaster {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 0.6rem;
         display: grid;
-        gap: 0.15rem;
+        gap: 0.1rem;
         padding: 0.7rem 0.8rem;
     }
 
-    .mock__card b {
-        font-size: 1.15rem;
+    .mock__roaster b {
+        color: var(--ink);
+        font-size: 0.9rem;
     }
 
-    .mock__card span,
-    .mock__note {
-        color: var(--sl-color-gray-3);
-        font-size: 0.8rem;
-    }
-
-    .mock__row {
-        align-items: center;
-        border-bottom: 1px solid var(--sl-color-gray-6);
-        display: grid;
-        gap: 0.7rem;
-        grid-template-columns: 2.2rem 1fr auto;
-        padding: 0.55rem 0.4rem;
-    }
-
-    .mock__row.is-hover {
-        background: var(--sl-color-gray-6);
-    }
-
-    .mock__sev {
-        background: #e5484d;
-        border-radius: 0.3rem;
-        color: #fff;
-        font-size: 0.7rem;
-        font-weight: 700;
-        padding: 0.1rem 0.35rem;
-        text-align: center;
-    }
-
-    .mock__sev--p2 {
-        background: #f5a524;
-        color: #2a1a00;
-    }
-
-    .mock__sev--p3 {
-        background: var(--sl-color-gray-4);
-        color: var(--sl-color-black);
-    }
-
-    .mock__title {
-        font-size: 0.85rem;
-    }
-
-    .mock__age {
-        color: var(--sl-color-gray-3);
+    .mock__roaster span {
+        color: var(--ink-soft);
         font-size: 0.78rem;
     }
 
-    .mock__case-title {
-        font-size: 1rem;
-        margin: 0 0 0.35rem;
-    }
-
-    .mock__btn {
-        background: var(--sl-color-accent);
-        border: 0;
-        border-radius: 0.4rem;
-        color: var(--sl-color-black);
-        font: inherit;
-        font-size: 0.82rem;
-        font-weight: 600;
-        margin-top: 0.8rem;
-        padding: 0.4rem 0.8rem;
-    }
-
-    .mock__btn--quiet {
-        background: var(--sl-color-gray-5);
-        color: var(--sl-color-white);
-    }
-
-    .mock__panel {
-        background: var(--sl-color-gray-6);
-        border-radius: 0.5rem;
-        display: none;
-        margin-top: 0.8rem;
-        padding: 0.8rem 0.9rem;
-    }
-
-    .mock__panel.is-open {
-        display: block;
-    }
-
-    .mock__panel b {
-        font-size: 0.8rem;
-    }
-
-    .mock__panel p {
-        color: var(--sl-color-gray-2);
-        font-size: 0.85rem;
-        margin: 0.3rem 0 0;
-    }
-
     @media (max-width: 40rem) {
-        .mock__body {
+        .mock__plans,
+        .mock__roasters {
             grid-template-columns: 1fr;
         }
 
-        .mock__nav {
-            border-bottom: 1px solid var(--sl-color-gray-5);
-            border-right: 0;
-            flex-direction: row;
+        .mock__nav-items {
+            gap: 0.15rem;
         }
 
-        .mock__cards {
-            grid-template-columns: 1fr;
+        .mock__nav-item {
+            padding: 0.3rem 0.5rem;
         }
     }
 </style>
