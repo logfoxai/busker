@@ -16,9 +16,10 @@ test('compile: beats run back to back, so nothing has to be timed by hand', (ass
         {click: '#b', wait: 300, moveFor: 400, dwell: 60},
     ]);
 
+    // A beat ends when its click lands, PRESS_MS after the cursor goes down.
     assert.equal(moves[0], {to: '#a', from: 100, until: 300, press: 350});
-    assert.equal(moves[1], {to: '#b', from: 650, until: 1050, press: 1110});
-    assert.equal(duration, 1110);
+    assert.equal(moves[1], {to: '#b', from: 850, until: 1250, press: 1310});
+    assert.equal(duration, 1810);
 
 });
 
@@ -30,7 +31,17 @@ test('compile: a step with no wait sets off the moment the last one finished', (
     ]);
 
     assert.equal(moves[0].press, 110);
-    assert.equal(moves[1].from, 110);
+    assert.equal(moves[1].from, 310);
+
+});
+
+test('compile: a loop that ends on a press runs on until the ring has read', (assert) => {
+
+    const {duration} = compile([{click: '#a', moveFor: 100, dwell: 0}]);
+
+    // Press at 100, click at 300, ring done at 600. Ending on the click would
+    // wipe it — and reset the loop before the click had a frame to fire.
+    assert.equal(duration, 600);
 
 });
 

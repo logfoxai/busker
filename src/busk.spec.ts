@@ -112,10 +112,40 @@ test('the show clicks for real, so the mock changes through its own handlers', (
     assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
 
     startShow();
-    tick(150);
+    tick(350);
 
     assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
     assert.equal(root.querySelector('[data-nav-item="alerts"]')?.classList.contains('is-active'), true);
+
+});
+
+test('the page holds still until the press lifts, so the click reads first', (assert) => {
+
+    const {root, startShow, tick} = stage(routine);
+
+    startShow();
+
+    // The cursor has arrived and gone down on the nav item. Changing the scene
+    // now would take the button away mid-press, before the click could read.
+    tick(150);
+    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
+
+    tick(200);
+    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
+
+});
+
+test('a routine that ends on a click still lands it', (assert) => {
+
+    const {root, startShow, tick} = stage({
+        ...routine,
+        steps: [{click: '[data-nav-item="alerts"]', moveFor: 100, dwell: 0}],
+    });
+
+    startShow();
+    tick(350);
+
+    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
 
 });
 
@@ -124,7 +154,7 @@ test('the show does not mistake its own click for a visitor taking over', (asser
     const {root, startShow, tick} = stage(routine);
 
     startShow();
-    tick(150);
+    tick(350);
 
     assert.equal(root.classList.contains('is-aside'), false);
 
@@ -176,7 +206,7 @@ test('each beat presses once, and the loop starts over from the top', (assert) =
     });
 
     startShow();
-    tick(150);
+    tick(350);
     assert.equal(clicks, 1);
 
     // Still in the same pass — the beat must not fire again on every frame.
@@ -185,9 +215,9 @@ test('each beat presses once, and the loop starts over from the top', (assert) =
     assert.equal(clicks, 1);
 
     // Past the end of the routine: back to the top, and it presses again.
-    tick(500);
+    tick(600);
     assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
-    tick(150);
+    tick(350);
     assert.equal(clicks, 2);
 
 });

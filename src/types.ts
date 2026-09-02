@@ -40,7 +40,11 @@ export interface Move {
     from: number;
     /** When the cursor arrives. */
     until: number;
-    /** Optional moment to animate a press. Timeline moves never really click. */
+    /**
+     * Optional moment the cursor goes down. In a click-driven show the real
+     * click lands as the stroke lifts, a press later. Timeline moves never
+     * really click, so for them this is the animation and nothing more.
+     */
     press?: number;
 }
 

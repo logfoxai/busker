@@ -46,6 +46,8 @@ A drift is how you get the cursor back out of the way before the loop starts ove
 
 Time goes into `wait`, not into the glide. `wait` is how long a visitor gets to look at what just appeared; `moveFor` is only the travel. A step that opens something dense wants a long `wait` on the *next* step, not a slow glide on this one.
 
+A press is a stroke rather than an instant: the cursor goes down on the target, and the real click fires as it lifts. That is what stops a button from vanishing underneath its own click when it is the thing that changes the scene.
+
 Because the beats are relative, you can drop a step into the middle of a routine and nothing after it needs touching.
 
 ## Routes

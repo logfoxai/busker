@@ -115,12 +115,16 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         navItems.forEach((el, key) => el.classList.toggle('is-active', key === nav));
     }
 
-    /** Really click the steps whose moment has passed, each once per loop. */
+    /**
+     * Really click the steps whose press has lifted, each once per loop. The
+     * click lands at the end of the stroke, the way a real one does, so the
+     * cursor reads on the element before the click takes it away.
+     */
     function press(t: number): void {
         if (!script) return;
 
         moves.forEach((move, i) => {
-            if (move.press === undefined || t < move.press || pressed.has(i)) return;
+            if (move.press === undefined || t < move.press + PRESS_MS || pressed.has(i)) return;
             pressed.add(i);
             if (typeof move.to !== 'string') return;
 

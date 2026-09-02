@@ -26,12 +26,21 @@ export function compile(steps: Step[]): {moves: Move[]; duration: number} {
         const until = from + (step.moveFor ?? DEFAULT_MOVE_MS);
         const press = presses ? until + (step.dwell ?? DEFAULT_DWELL_MS) : undefined;
 
-        t = press ?? until;
+        // A beat runs to the click, which lands as the press lifts — not to the
+        // press itself. Otherwise the next beat starts mid-stroke.
+        t = press === undefined ? until : press + PRESS_MS;
 
         return {to: presses ? step.click : step.to, from, until, press};
     });
 
-    return {moves, duration: t};
+    const last = moves[moves.length - 1];
+
+    // A press needs its ring to finish before the loop wipes the scene. Between
+    // beats the next one's wait covers that; the last beat has no next one, and
+    // ending on the click would reset the loop before the click could fire.
+    const duration = last?.press === undefined ? t : Math.max(t, last.press + RING_MS);
+
+    return {moves, duration};
 }
 
 /** Index of the move the cursor is on at `t`, or -1 before the first one starts. */
