@@ -4,6 +4,8 @@
     "moduleResolution": "node16",
     "module": "Node16",
     "declaration": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "lib": ["ES2023", "DOM"],
     "outDir": "dist",
     "rootDir": "src",

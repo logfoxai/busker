@@ -6,7 +6,7 @@
 npm i @logfox/busker
 ```
 
-Busker has no dependencies and runs in the browser. It ships types, and works with any framework or none &mdash; it only ever touches the element you hand it.
+Busker has no dependencies and runs in the browser. It ships types and ES modules, and works with any framework or none &mdash; it only ever touches the element you hand it.
 
 ## 2. Write the mock
 
@@ -43,7 +43,7 @@ const root = document.querySelector<HTMLElement>('.app');
 
 if (root) {
     busk(root, {
-        scene: 'home',
+        initialScene: 'home',
         steps: [
             {click: '[data-nav-item="alerts"]', wait: 1200},
             {click: '[data-nav-item="home"]', wait: 2000},

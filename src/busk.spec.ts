@@ -1,7 +1,7 @@
 import {test} from 'kizu';
 import {GlobalRegistrator} from '@happy-dom/global-registrator';
-import {busk} from './busk';
-import type {Busker, Routine} from './types';
+import {busk} from './busk.ts';
+import type {Busker, Routine} from './types.ts';
 
 GlobalRegistrator.register({url: 'https://busker.test', width: 1024, height: 768});
 
@@ -34,7 +34,10 @@ class FakeObserver implements IntersectionObserver {
     readonly rootMargin = '';
     readonly thresholds: readonly number[] = [];
 
-    constructor(private readonly callback: IntersectionObserverCallback) {
+    private readonly callback: IntersectionObserverCallback;
+
+    constructor(callback: IntersectionObserverCallback) {
+        this.callback = callback;
         observers.push(this);
     }
 
@@ -94,7 +97,7 @@ function stage(routine: Routine): Stage {
 }
 
 const routine: Routine = {
-    scene: 'home',
+    initialScene: 'home',
     steps: [
         {click: '[data-nav-item="alerts"]', moveFor: 100, dwell: 0},
         {click: '[data-row="p0"]', wait: 100, moveFor: 100, dwell: 0},

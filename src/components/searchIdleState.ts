@@ -7,7 +7,7 @@
  * skeleton before Pagefind mounts. Queries shorter than 3 characters stay
  * idle — Pagefind does not search until then.
  */
-import {DOCS_SEARCH_MIN_QUERY_LENGTH} from './docsSearchQuery.js';
+import {DOCS_SEARCH_MIN_QUERY_LENGTH} from './docsSearchQuery.ts';
 
 export function isSearchIdle(
 	searchReady: boolean,

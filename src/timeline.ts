@@ -1,4 +1,4 @@
-import type {Countdown, Move, Point, Step, Toggle, Typing} from './types';
+import type {Countdown, Move, Point, Step, Toggle, Typing} from './types.ts';
 
 /** How long a glide takes when a step does not say. */
 const DEFAULT_MOVE_MS = 600;
@@ -21,16 +21,22 @@ export function compile(steps: Step[]): {moves: Move[]; duration: number} {
     let t = 0;
 
     const moves = steps.map((step): Move => {
-        const presses = 'click' in step;
         const from = t + (step.wait ?? 0);
         const until = from + (step.moveFor ?? DEFAULT_MOVE_MS);
-        const press = presses ? until + (step.dwell ?? DEFAULT_DWELL_MS) : undefined;
+
+        if (step.click === undefined) {
+            t = until;
+
+            return {to: step.to, from, until};
+        }
+
+        const press = until + (step.dwell ?? DEFAULT_DWELL_MS);
 
         // A beat runs to the click, which lands as the press lifts — not to the
         // press itself. Otherwise the next beat starts mid-stroke.
-        t = press === undefined ? until : press + PRESS_MS;
+        t = press + PRESS_MS;
 
-        return {to: presses ? step.click : step.to, from, until, press};
+        return {to: step.click, from, until, press};
     });
 
     const last = moves[moves.length - 1];
@@ -74,7 +80,7 @@ export function typedText(typing: Typing, t: number): string {
 
 /** The clock at `t`, as `m:ss`. Stops at zero rather than going negative. */
 export function countdownText(countdown: Countdown, t: number): string {
-    const left = Math.max(0, countdown.seconds - Math.floor(t / 1000));
+    const left = Math.max(0, countdown.startSeconds - Math.floor(t / 1000));
 
     return `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
 }

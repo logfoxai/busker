@@ -1,5 +1,5 @@
 import {test} from 'kizu';
-import {bindSearchClearRefocus} from './searchClearRefocus.js';
+import {bindSearchClearRefocus} from './searchClearRefocus.ts';
 
 function stubRoot(input: StubInput, clear: StubClear): Element {
 	return {

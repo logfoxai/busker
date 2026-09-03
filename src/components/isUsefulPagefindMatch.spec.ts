@@ -1,5 +1,5 @@
 import {test} from 'kizu';
-import {isUsefulMark, isUsefulPagefindMatch} from './isUsefulPagefindMatch.js';
+import {isUsefulMark, isUsefulPagefindMatch} from './isUsefulPagefindMatch.ts';
 
 test('rejects inverted short-prefix garbage (adsf → a, asdfasdf → as)', (assert) => {
 	assert.equal(isUsefulMark('adsf', 'a'), false);

@@ -5,7 +5,7 @@ import {
 	shouldCloseOnOutsideClick,
 	shouldCloseSearchOnEscape,
 	shouldHandleGlobalSlash,
-} from './searchDialog.js';
+} from './searchDialog.ts';
 
 test('shouldHandleGlobalSlash opens only when idle and not typing in a field', (assert) => {
 	const base = {

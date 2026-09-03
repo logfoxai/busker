@@ -12,7 +12,7 @@ busk(root, {
         {target: '[data-input]', text: 'why did checkout fail?', from: 4000, until: 6200, clearAt: 7000},
     ],
     countdowns: [
-        {target: '[data-clock]', seconds: 90},
+        {target: '[data-clock]', startSeconds: 90},
     ],
     moves: [
         {to: '[data-send]', from: 6400, until: 7000, press: 7100},
@@ -31,7 +31,7 @@ Pick by asking what makes the thing on screen change.
 | something was clicked | [`steps`](./routines.md) |
 | time passed | `duration` and the fields below |
 
-`steps` and `duration` are the two ways in. Give busker `steps` and the loop length comes from the routine; give it `duration` and you are timing everything yourself. A demo that is mostly clicks with one timed flourish is usually better as clicks plus a CSS animation on the element than as a hand-timed routine.
+`steps` and `duration` are the two ways in, and a routine is one or the other &mdash; TypeScript will not let you give both. Give busker `steps` and the loop length comes from the routine; give it `duration` and you are timing everything yourself. A demo that is mostly clicks with one timed flourish is usually better as clicks plus a CSS animation on the element than as a hand-timed routine.
 
 ## toggles
 
@@ -60,7 +60,7 @@ Busker sets `textContent`, so point it at a `<span>` inside your fake input rath
 Ticks a `m:ss` clock down over the loop and stops at zero.
 
 ```typescript
-{target: '[data-clock]', seconds: 90}
+{target: '[data-clock]', startSeconds: 90}
 ```
 
 ## moves

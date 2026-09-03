@@ -1,5 +1,5 @@
 import {test} from 'kizu';
-import {bindPagefindMount, type PagefindMountEl} from './pagefindMount.js';
+import {bindPagefindMount, type PagefindMountEl} from './pagefindMount.ts';
 
 function hostWith(mount: PagefindMountEl | null): {querySelector(selector: string): PagefindMountEl | null} {
 	return {

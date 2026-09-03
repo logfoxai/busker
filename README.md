@@ -19,7 +19,7 @@ import {busk} from '@logfox/busker';
 import '@logfox/busker/busker.css';
 
 busk(document.querySelector('.app'), {
-    scene: 'home',
+    initialScene: 'home',
     steps: [
         {click: '[data-nav-item="alerts"]', wait: 900},
         {click: '[data-row="p0"]', wait: 1500},

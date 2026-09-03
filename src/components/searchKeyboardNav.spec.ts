@@ -13,7 +13,7 @@ import {
 	scrollSearchSelectionIntoView,
 	shouldHandleSearchListKeyboard,
 	type KeyboardNavState,
-} from './searchKeyboardNav.js';
+} from './searchKeyboardNav.ts';
 
 test('resetSearchNavSession clears highlight and scroll for a new dialog open', (assert) => {
 	const selected = stubEl();

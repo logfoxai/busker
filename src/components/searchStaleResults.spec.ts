@@ -5,7 +5,7 @@ import {
 	resolveStaleResultsHold,
 	shouldDiscardStaleResults,
 	shouldShowStaleResults,
-} from './searchStaleResults.js';
+} from './searchStaleResults.ts';
 
 test('shouldShowStaleResults only while holding a snapshot and live results are gone', (assert) => {
 	assert.equal(shouldShowStaleResults(true, false, true, true, false, false), true);

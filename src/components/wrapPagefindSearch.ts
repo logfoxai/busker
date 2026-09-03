@@ -1,5 +1,5 @@
-import {isUsefulPagefindMatch, type PagefindMatchData} from './isUsefulPagefindMatch.js';
-import {isDocsSearchQueryReady} from './docsSearchQuery.js';
+import {isUsefulPagefindMatch, type PagefindMatchData} from './isUsefulPagefindMatch.ts';
+import {isDocsSearchQueryReady} from './docsSearchQuery.ts';
 
 type PagefindSearchResult = {
 	data: () => Promise<PagefindMatchData>;

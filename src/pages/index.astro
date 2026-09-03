@@ -5,7 +5,7 @@ import '../../busker.css';
 import '../styles/splash.css';
 
 const routineSource = `busk(root, {
-    scene: 'beans',
+    initialScene: 'beans',
     start: [0.55, 0.3],
     steps: [
         {click: '[data-cta]', wait: 900},
@@ -199,7 +199,7 @@ const routineSource = `busk(root, {
         });
 
         busk(root, {
-            scene: 'beans',
+            initialScene: 'beans',
             start: [0.55, 0.3],
             steps: [
                 {click: '[data-cta]', wait: 900},

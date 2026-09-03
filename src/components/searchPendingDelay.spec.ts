@@ -3,7 +3,7 @@ import {
 	INITIAL_SEARCH_PENDING_DELAY_STATE,
 	resolveSearchPendingDelayState,
 	shouldShowSearchPending,
-} from './searchPendingDelay.js';
+} from './searchPendingDelay.ts';
 
 test('shouldShowSearchPending only while searching with no settled results', (assert) => {
 	assert.equal(shouldShowSearchPending('searching', false, false), true);
