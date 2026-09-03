@@ -56,8 +56,8 @@ class FakeObserver implements IntersectionObserver {
 
 /**
  * happy-dom does no layout, so every rect is zero and the show would think it
- * is off screen. Give the root a size; nothing here depends on where the
- * cursor lands (that is covered in timeline.spec.ts).
+ * is off screen. Give the root a size, and give everything inside it a box
+ * that goes away when its scene is hidden, the way a real one does.
  */
 function stage(routine: Routine): Stage {
     document.body.innerHTML = `<div id="root">${MOCK}</div>`;
@@ -67,6 +67,15 @@ function stage(routine: Routine): Stage {
     if (!root) throw new Error('no root');
 
     root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
+    root.querySelectorAll('*').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => {
+            const scene = el.closest('[data-scene]');
+
+            return scene && !scene.classList.contains('is-active')
+                ? new DOMRect(0, 0, 0, 0)
+                : new DOMRect(100, 50, 80, 20);
+        };
+    });
 
     observers.length = 0;
 
@@ -149,6 +158,38 @@ test('a routine that ends on a click still lands it', (assert) => {
     tick(350);
 
     assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
+
+});
+
+test('the cursor holds its place when its own click takes the target away', (assert) => {
+
+    const {root, startShow, tick} = stage({
+        initialScene: 'list',
+        steps: [{click: '[data-row="p0"]', moveFor: 100, dwell: 0}],
+        routes: [{click: '[data-row="p0"]', scene: 'home'}],
+    });
+
+    const cursor = root.querySelector<HTMLElement>('[data-cursor]');
+
+    // Arrived on the row and pressing it.
+    tick(0);
+    startShow();
+    tick(100);
+
+    const onTheRow = cursor?.style.left;
+
+    assert.equal(cursor?.classList.contains('is-pressing'), true);
+
+    // The click has landed and taken the row out of layout with it. The ring
+    // outlives the press on purpose, so on every frame that is left it has to
+    // keep running where the row was — not wherever an unresolvable target
+    // works out to.
+    tick(210);
+    tick(16);
+
+    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
+    assert.equal(cursor?.classList.contains('is-ringing'), true);
+    assert.equal(cursor?.style.left, onTheRow);
 
 });
 

@@ -68,21 +68,29 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const typings = found(routine.typing);
     const countdowns = found(routine.countdowns);
 
+    /** Where each selector was last seen, in case it stops being anywhere. */
+    const lastSeen = new Map<string, Point>();
+
     /** Where a move target sits, in px relative to the root's top-left. */
     function resolve(target: string | Point): Point | null {
         if (Array.isArray(target)) return [target[0] * root.clientWidth, target[1] * root.clientHeight];
 
-        const el = root.querySelector(target);
+        const rect = root.querySelector(target)?.getBoundingClientRect();
 
-        if (!el) return null;
+        // A press takes its own target away whenever the click changes the
+        // scene, and the ring outlives the press. With no box left to aim at,
+        // stay where the target was rather than sliding off to the corner.
+        if (!rect || (rect.width === 0 && rect.height === 0)) return lastSeen.get(target) ?? null;
 
         const rootRect = root.getBoundingClientRect();
-        const rect = el.getBoundingClientRect();
-
-        return [
+        const at: Point = [
             rect.left - rootRect.left + rect.width / 2,
             rect.top - rootRect.top + rect.height / 2,
         ];
+
+        lastSeen.set(target, at);
+
+        return at;
     }
 
     let elapsed = 0;
