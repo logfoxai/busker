@@ -4,7 +4,7 @@ A routine is a list of places the cursor goes. At each stop it presses the eleme
 
 ```typescript
 busk(root, {
-    scene: 'home',
+    initialScene: 'home',
     start: [0.55, 0.25],
     steps: [
         {click: '[data-nav-item="alerts"]', wait: 900, moveFor: 550},

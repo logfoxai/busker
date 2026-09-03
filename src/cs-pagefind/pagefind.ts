@@ -9,7 +9,7 @@
  * loads the Starlight-generated index next to this shim.
  */
 import * as engine from '../pagefind/pagefind.js';
-import {wrapPagefindSearch} from '../components/wrapPagefindSearch.js';
+import {wrapPagefindSearch} from '../components/wrapPagefindSearch.ts';
 
 let warmPromise: Promise<void> | null = null;
 

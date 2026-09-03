@@ -25,6 +25,7 @@
   "publishConfig": {
     "access": "public"
   },
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -52,7 +53,7 @@
     "build": "tsc",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
-    "test": "c8 kizu -f 'src/**/*.spec.ts' && c8 report -r text -r html",
+    "test": "NODE_OPTIONS='--import tsx' c8 kizu -f 'src/**/*.spec.ts' && c8 report -r text -r html",
     "deadcode:check": "knip",
     "sync:fonts": "node scripts/sync-fonts.mjs",
     "astro:sync": "astro sync",
@@ -71,6 +72,7 @@
     "happy-dom": "^20.13.2",
     "kizu": "^5.1.1",
     "knip": "^6.34.0",
+    "tsx": "^4.23.13",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.69.0"
   }

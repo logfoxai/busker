@@ -5,7 +5,7 @@ import '../../busker.css';
 import '../styles/splash.css';
 
 const routineSource = `busk(root, {
-    scene: 'beans',
+    initialScene: 'beans',
     start: [0.55, 0.3],
     steps: [
         {click: '[data-cta]', wait: 900},
@@ -199,7 +199,7 @@ const routineSource = `busk(root, {
         });
 
         busk(root, {
-            scene: 'beans',
+            initialScene: 'beans',
             start: [0.55, 0.3],
             steps: [
                 {click: '[data-cta]', wait: 900},
@@ -236,19 +236,28 @@ const routineSource = `busk(root, {
         text-align: center;
     }
 
+    /* Headline and lead are set the way callspec sets them, so the two docs
+       sites read as one family. */
     .splash__hero h1 {
-        font-size: clamp(2rem, 5vw, 3.1rem);
-        line-height: 1.1;
+        font-family: var(--cs-font-heading);
+        font-size: clamp(2.35rem, 6.2vw, 4rem);
+        font-weight: 600;
+        letter-spacing: -0.045em;
+        line-height: 1.18;
         margin: 0 0 1rem;
         text-wrap: balance;
     }
 
     .splash__lead {
         color: var(--sl-color-gray-2);
-        font-size: 1.05rem;
-        line-height: 1.65;
+        font-family: var(--cs-font-heading);
+        font-size: clamp(1.05rem, 2.1vw, 1.35rem);
+        font-weight: 550;
+        letter-spacing: -0.025em;
+        line-height: 1.5;
         margin-inline: auto;
-        max-width: 42rem;
+        max-width: 48rem;
+        text-wrap: balance;
     }
 
     .splash__actions {
@@ -421,16 +430,13 @@ const routineSource = `busk(root, {
 
     .mock__main {
         overflow: hidden;
-        padding: 1.4rem 1.4rem 1.6rem;
         position: relative;
     }
 
+    /* Scenes stack and cross-fade — that comes from busker.css. This is only
+       the padding, which has to live on the scene now that it fills the main. */
     .mock__scene {
-        display: none;
-    }
-
-    .mock__scene.is-active {
-        display: block;
+        padding: 1.4rem 1.4rem 1.6rem;
     }
 
     /* hero */

@@ -37,14 +37,7 @@ The root is the element you pass to `busk()`. Two things follow from that:
 
 ## Scenes
 
-A scene is one page of the mock. Busker shows one at a time by putting `is-active` on it, and `busker.css` handles the display:
-
-```css
-.busker [data-scene] { display: none; }
-.busker [data-scene].is-active { display: block; }
-```
-
-Override those two rules if you want scenes to cross-fade, slide, or stack.
+A scene is one page of the mock. Busker shows one at a time by putting `is-active` on it, and `busker.css` does the rest: scenes are stacked and cross-fade into each other, so the mock never changes height and nothing pops. The element holding them needs a height of its own &mdash; see [Styling](./styling.md#scenes).
 
 Scenes never change on a timer. They change because something was clicked &mdash; by the cursor or by a visitor &mdash; and a [route](./routines.md#routes) said so. That is the whole point: there is one cause, so there is nothing to synchronise.
 

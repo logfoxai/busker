@@ -1,4 +1,4 @@
-export {busk} from './busk';
+export {busk} from './busk.ts';
 export type {
     Busker,
     Countdown,
@@ -6,7 +6,9 @@ export type {
     Point,
     Route,
     Routine,
+    ScriptRoutine,
     Step,
+    TimedRoutine,
     Toggle,
     Typing,
-} from './types';
+} from './types.ts';

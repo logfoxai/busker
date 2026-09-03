@@ -6,7 +6,7 @@
 npm i @logfox/busker
 ```
 
-Busker has no dependencies and runs in the browser. It ships types, and works with any framework or none &mdash; it only ever touches the element you hand it.
+Busker has no dependencies and runs in the browser. It ships types and ES modules, and works with any framework or none &mdash; it only ever touches the element you hand it.
 
 ## 2. Write the mock
 
@@ -19,19 +19,29 @@ A mock is ordinary markup. Busker needs three things from it, all `data-` attrib
         <button data-nav-item="alerts">Alerts</button>
     </nav>
 
-    <section data-scene="home" data-nav="home">
-        <p>Nothing is on fire.</p>
-    </section>
+    <div class="app__screen">
+        <section data-scene="home" data-nav="home">
+            <p>Nothing is on fire.</p>
+        </section>
 
-    <section data-scene="alerts" data-nav="alerts">
-        <p>Two things are on fire.</p>
-    </section>
+        <section data-scene="alerts" data-nav="alerts">
+            <p>Two things are on fire.</p>
+        </section>
+    </div>
 
     <span data-cursor></span>
 </div>
 ```
 
 `[data-scene]` marks each page of the mock, `[data-nav-item]` marks the nav, and `[data-cursor]` is the pointer busker moves. [Markup](./markup.md) has the full contract.
+
+Scenes are stacked on top of each other so they can cross-fade, which means they take no space of their own. Give the element that holds them a height, and the mock will keep it no matter which scene is up:
+
+```css
+.app__screen {
+    height: 20rem;
+}
+```
 
 ## 3. Put on a show
 
@@ -43,7 +53,7 @@ const root = document.querySelector<HTMLElement>('.app');
 
 if (root) {
     busk(root, {
-        scene: 'home',
+        initialScene: 'home',
         steps: [
             {click: '[data-nav-item="alerts"]', wait: 1200},
             {click: '[data-nav-item="home"]', wait: 2000},

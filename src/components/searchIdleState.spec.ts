@@ -1,5 +1,5 @@
 import {test} from 'kizu';
-import {isSearchIdle} from './searchIdleState.js';
+import {isSearchIdle} from './searchIdleState.ts';
 
 test('idle when search is ready and query is empty or shorter than 3 characters', (assert) => {
 	assert.equal(isSearchIdle(true, true, ''), true);

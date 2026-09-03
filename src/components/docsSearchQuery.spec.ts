@@ -1,5 +1,5 @@
 import {test} from 'kizu';
-import {DOCS_SEARCH_MIN_QUERY_LENGTH, DOCS_SEARCH_PAGE_SIZE, isDocsSearchQueryReady} from './docsSearchQuery.js';
+import {DOCS_SEARCH_MIN_QUERY_LENGTH, DOCS_SEARCH_PAGE_SIZE, isDocsSearchQueryReady} from './docsSearchQuery.ts';
 
 test('isDocsSearchQueryReady requires at least DOCS_SEARCH_MIN_QUERY_LENGTH characters', (assert) => {
 

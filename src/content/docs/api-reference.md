@@ -12,14 +12,24 @@ Puts on a show inside `root`, an `HTMLElement`. Returns a [`Busker`](#busker). S
 
 ## `Routine`
 
+A routine is one of two things, never a mix. A `ScriptRoutine` has `steps` and
+gets its loop length from them; a `TimedRoutine` has a `duration` you set
+yourself. Mixing the two is a type error, so a hand-set `duration` can never
+quietly cut a script short.
+
 | Field | Type | Default | What it does |
 |---|---|---|---|
-| `scene` | `string` | none | Scene shown at the top of every loop. |
+| `steps` | [`Step[]`](#step) | &mdash; | A click-driven routine. Required in a `ScriptRoutine`. |
+| `duration` | `number` | &mdash; | Loop length in ms. Required in a `TimedRoutine`. |
+| `moves` | [`Move[]`](#move) | none | Hand-timed cursor glides. `TimedRoutine` only. |
+
+Everything else is shared:
+
+| Field | Type | Default | What it does |
+|---|---|---|---|
+| `initialScene` | `string` | none | Scene shown at the top of every loop. |
 | `start` | `[number, number]` | `[0.5, 0.5]` | Where the cursor rests, as a fraction of the root's size. |
-| `steps` | [`Step[]`](#step) | none | A click-driven routine. The loop length comes from it. |
 | `routes` | [`Route[]`](#route) | none | What a click &mdash; the cursor's or a visitor's &mdash; does. |
-| `duration` | `number` | from `steps` | Loop length in ms. Required if there are no `steps`. |
-| `moves` | [`Move[]`](#move) | none | Hand-timed cursor glides. |
 | `toggles` | [`Toggle[]`](#toggle) | none | Classes held for a slice of the loop. |
 | `typing` | [`Typing[]`](#typing) | none | Text that types itself. |
 | `countdowns` | [`Countdown[]`](#countdown) | none | `m:ss` clocks. |
@@ -91,13 +101,13 @@ A hand-timed glide. See [Hand-timed routines](./timeline.md#moves).
 | Field | Type | What it does |
 |---|---|---|
 | `target` | `string` | Selector. Busker writes its `textContent`. |
-| `seconds` | `number` | Value at the top of the loop. Stops at zero. |
+| `startSeconds` | `number` | Value at the top of every loop. Counts down to zero and stops. |
 
 ## `Busker`
 
 | Member | What it does |
 |---|---|
-| `duration` | Loop length in ms, derived from `steps` if you did not give one. |
+| `duration` | Loop length in ms: what you set, or what the `steps` add up to. |
 | `play()` | Start or resume. A no-op once a visitor has taken over. |
 | `pause()` | Hold where it is. |
 | `stepAside()` | Hand the mock to the visitor: stop for good, hide the cursor. |

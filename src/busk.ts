@@ -7,8 +7,8 @@ import {
     moveIndexAt,
     positionAt,
     typedText,
-} from './timeline';
-import type {Busker, Move, Point, Routine} from './types';
+} from './timeline.ts';
+import type {Busker, Move, Point, Routine} from './types.ts';
 
 const DEFAULT_START: Point = [0.5, 0.5];
 /** IntersectionObserver ratios are floating point; 1 is rarely exactly 1. */
@@ -48,10 +48,10 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         navItems.set(el.dataset.navItem as string, el);
     });
 
-    // Script mode presses for real; timeline mode only animates the press.
+    // A script presses for real; a hand-timed routine only animates the press.
     const script = routine.steps ? compile(routine.steps) : null;
     const moves = script?.moves ?? routine.moves ?? [];
-    const duration = routine.duration ?? script?.duration ?? 0;
+    const duration = script?.duration ?? routine.duration ?? 0;
     const start = routine.start ?? DEFAULT_START;
     const routes = routine.routes ?? [];
     const visibility = routine.visibility ?? 1;
@@ -68,21 +68,29 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const typings = found(routine.typing);
     const countdowns = found(routine.countdowns);
 
+    /** Where each selector was last seen, in case it stops being anywhere. */
+    const lastSeen = new Map<string, Point>();
+
     /** Where a move target sits, in px relative to the root's top-left. */
     function resolve(target: string | Point): Point | null {
         if (Array.isArray(target)) return [target[0] * root.clientWidth, target[1] * root.clientHeight];
 
-        const el = root.querySelector(target);
+        const rect = root.querySelector(target)?.getBoundingClientRect();
 
-        if (!el) return null;
+        // A press takes its own target away whenever the click changes the
+        // scene, and the ring outlives the press. With no box left to aim at,
+        // stay where the target was rather than sliding off to the corner.
+        if (!rect || (rect.width === 0 && rect.height === 0)) return lastSeen.get(target) ?? null;
 
         const rootRect = root.getBoundingClientRect();
-        const rect = el.getBoundingClientRect();
-
-        return [
+        const at: Point = [
             rect.left - rootRect.left + rect.width / 2,
             rect.top - rootRect.top + rect.height / 2,
         ];
+
+        lastSeen.set(target, at);
+
+        return at;
     }
 
     let elapsed = 0;
@@ -213,7 +221,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         // drop the start of the routine or fire a burst of catch-up clicks.
         if (next >= duration) {
             pressed.clear();
-            activate(routine.scene ?? null);
+            activate(routine.initialScene ?? null);
             elapsed = 0;
         } else {
             elapsed = next;
@@ -307,7 +315,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         root.addEventListener('click', onClick);
     }
 
-    activate(routine.scene ?? null);
+    activate(routine.initialScene ?? null);
 
     const observer = reducedMotion
         ? undefined

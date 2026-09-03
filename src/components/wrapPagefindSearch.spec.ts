@@ -1,5 +1,5 @@
 import {test} from 'kizu';
-import {wrapPagefindSearch} from './wrapPagefindSearch.js';
+import {wrapPagefindSearch} from './wrapPagefindSearch.ts';
 
 test('wrapPagefindSearch drops inverted short-prefix hits', async (assert) => {
 	const rawSearch = async (_term: string): Promise<{

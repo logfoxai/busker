@@ -18,6 +18,8 @@ Set these on the root, or anywhere above it:
 | `--busker-cursor-size` | `0.95rem` | Diameter of the dot. |
 | `--busker-cursor-fill` | `rgb(0 0 0 / 0.42)` | The dot at rest. |
 | `--busker-cursor-edge` | `#fff` | The ring around the dot that keeps it visible on dark UI. |
+| `--busker-cursor-shadow` | `rgb(0 0 0 / 0.3)` | The dot's drop shadow. |
+| `--busker-scene-ms` | `0.4s` | How long one scene takes to cross-fade into the next. |
 
 ```css
 .my-mock {
@@ -48,29 +50,21 @@ Busker only sets `left`, `top`, and the `is-*` classes. Everything else is yours
 
 ## Scenes
 
-Two rules handle scene switching:
+Scenes are stacked on top of each other and cross-fade, so the one going out
+fades under the one coming in instead of popping. `visibility` waits out the
+fade on the way out, which keeps a scene nobody can see from being read aloud or
+tabbed into.
+
+Because they are stacked, they are out of flow, and **the element holding them
+needs a height of its own** &mdash; from a parent, a grid track, or its own
+rule. Without one it collapses and the mock looks empty. In exchange the mock
+never changes height when the scene changes.
+
+Set `--busker-scene-ms` to retime the fade, or turn it into a cut:
 
 ```css
-.busker [data-scene] { display: none; }
-.busker [data-scene].is-active { display: block; }
-```
-
-Override them for a cross-fade &mdash; but keep the inactive scene out of the accessibility tree and out of layout, or the mock will be twice as tall as it looks:
-
-```css
-.busker [data-scene] {
-    display: grid;
-    grid-area: 1 / 1;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-    visibility: hidden;
-}
-
-.busker [data-scene].is-active {
-    opacity: 1;
-    pointer-events: auto;
-    visibility: visible;
+.my-mock {
+    --busker-scene-ms: 0s;
 }
 ```
 

@@ -7,7 +7,7 @@ import {
     moveIndexAt,
     positionAt,
     typedText,
-} from './timeline';
+} from './timeline.ts';
 
 test('compile: beats run back to back, so nothing has to be timed by hand', (assert) => {
 
@@ -124,7 +124,7 @@ test('typedText: clearAt wipes it, e.g. the message was sent', (assert) => {
 
 test('countdownText: m:ss, zero padded, and it stops at zero', (assert) => {
 
-    const countdown = {target: '#a', seconds: 125};
+    const countdown = {target: '#a', startSeconds: 125};
 
     assert.equal(countdownText(countdown, 0), '2:05');
     assert.equal(countdownText(countdown, 60_000), '1:05');

@@ -9,7 +9,7 @@ import {
     isFilePathTitle,
     kindFromTitle,
     tryCopyText,
-} from './codeBlockTitles';
+} from './codeBlockTitles.ts';
 
 test('copyButtonContent idle and copied labels', (assert) => {
     assert.equal(copyButtonContent(false), {label: 'Copy', state: 'idle'});
