@@ -12,6 +12,8 @@
     --busker-cursor-size: 0.95rem;
     --busker-cursor-fill: rgb(0 0 0 / 0.42);
     --busker-cursor-edge: #fff;
+    --busker-cursor-shadow: rgb(0 0 0 / 0.3);
+    --busker-scene-ms: 0.4s;
 
     /* The cursor is positioned against the root. */
     position: relative;
@@ -27,7 +29,7 @@
     background: var(--busker-cursor-fill);
     border: 2px solid var(--busker-cursor-edge);
     border-radius: 999px;
-    box-shadow: 0 1px 6px rgb(0 0 0 / 0.3);
+    box-shadow: 0 1px 6px var(--busker-cursor-shadow);
     display: block;
     height: var(--busker-cursor-size);
     opacity: 0;
@@ -103,13 +105,37 @@
     display: none;
 }
 
-/* Scenes: one at a time. */
+/* Scenes are a stack, so the one going out can fade under the one coming in
+   rather than popping. They are out of flow, so whatever element holds them
+   needs a height of its own — from a parent, a grid track, or its own rule. */
+.busker :has(> [data-scene]) {
+    position: relative;
+}
+
 .busker [data-scene] {
-    display: none;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    translate: 0 4px;
+    visibility: hidden;
+
+    /* Visibility waits out the fade on the way out and switches at once on the
+       way in, so a scene nobody can see is not read out or tabbed into. */
+    transition:
+        opacity var(--busker-scene-ms) ease,
+        translate var(--busker-scene-ms) ease,
+        visibility 0s linear var(--busker-scene-ms);
 }
 
 .busker [data-scene].is-active {
-    display: block;
+    opacity: 1;
+    pointer-events: auto;
+    translate: none;
+    visibility: visible;
+    transition:
+        opacity var(--busker-scene-ms) ease,
+        translate var(--busker-scene-ms) ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -119,5 +145,10 @@
 
     .busker .is-hint {
         animation: none;
+    }
+
+    .busker [data-scene],
+    .busker [data-scene].is-active {
+        transition: none;
     }
 }

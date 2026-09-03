@@ -421,16 +421,13 @@ const routineSource = `busk(root, {
 
     .mock__main {
         overflow: hidden;
-        padding: 1.4rem 1.4rem 1.6rem;
         position: relative;
     }
 
+    /* Scenes stack and cross-fade — that comes from busker.css. This is only
+       the padding, which has to live on the scene now that it fills the main. */
     .mock__scene {
-        display: none;
-    }
-
-    .mock__scene.is-active {
-        display: block;
+        padding: 1.4rem 1.4rem 1.6rem;
     }
 
     /* hero */
