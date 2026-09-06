@@ -29,12 +29,16 @@ export type Step =
         dwell?: never;
     };
 
-/** A click on `click` shows scene `scene`. */
+/** A click on `click` is interactive; when `scene` is set, it also shows that scene. */
 export interface Route {
     /** Selector of the clickable element. */
     click: string;
-    /** `data-scene` value to show. */
-    scene: string;
+    /**
+     * `data-scene` value to show. Omit for filters, modals, and other controls
+     * that your own handlers drive — the target still gets the pointer and
+     * counts as a hit, so a visitor click does not light the miss hint.
+     */
+    scene?: string;
 }
 
 /** A cursor glide on a hand-set timeline. */

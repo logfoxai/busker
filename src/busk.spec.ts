@@ -231,6 +231,68 @@ test('a visitor click on nothing lights up what is clickable', (assert) => {
 
 });
 
+test('a route without a scene is still clickable and does not light the miss hint', (assert) => {
+
+    document.body.innerHTML = `<div id="root">
+        <nav>
+            <button data-nav-item="home">Home</button>
+            <button data-nav-item="alerts">Alerts</button>
+        </nav>
+        <section data-scene="home" data-nav="home">
+            <p>home</p>
+            <button data-filter>Filter</button>
+        </section>
+        <section data-scene="list" data-nav="alerts"><button data-row="p0">row</button></section>
+        <span data-cursor></span>
+    </div>`;
+
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
+    root.querySelectorAll('*').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => {
+            const scene = el.closest('[data-scene]');
+
+            return scene && !scene.classList.contains('is-active')
+                ? new DOMRect(0, 0, 0, 0)
+                : new DOMRect(100, 50, 80, 20);
+        };
+    });
+
+    observers.length = 0;
+
+    const now = 0;
+    const queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    busk(root, {
+        initialScene: 'home',
+        steps: [{click: '[data-nav-item="alerts"]', moveFor: 100, dwell: 0}],
+        routes: [
+            {click: '[data-nav-item="home"]', scene: 'home'},
+            {click: '[data-nav-item="alerts"]', scene: 'list'},
+            {click: '[data-filter]'},
+        ],
+    });
+
+    observers[0]?.fire();
+
+    assert.equal(root.querySelector('[data-filter]')?.classList.contains('is-interactive'), true);
+
+    root.querySelector<HTMLElement>('[data-filter]')?.click();
+
+    assert.equal(root.classList.contains('is-aside'), true);
+    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-nav-item="alerts"]')?.classList.contains('is-hint'), false);
+
+});
+
 test('every clickable thing looks clickable', (assert) => {
 
     const {root} = stage(routine);

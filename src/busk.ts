@@ -267,7 +267,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
             return el !== null && root.contains(el);
         });
 
-        if (hit) activate(hit.scene);
+        if (hit?.scene) activate(hit.scene);
 
         // The show's own clicks route the mock but must not take it away from itself.
         if (clickingItself) return;

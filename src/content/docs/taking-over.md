@@ -4,7 +4,7 @@ A busker plays to whoever is passing. When someone actually walks up, they stop 
 
 ## What happens on a click
 
-1. If the click hit a [route](./routines.md#routes) target, that scene comes up &mdash; the same code path the cursor's own clicks use.
+1. If the click hit a [route](./routines.md#routes) target with a `scene`, that scene comes up &mdash; the same code path the cursor's own clicks use. A route without a `scene` still counts as a hit (no miss hint); your handlers do the rest.
 2. The loop stops for good and the root gets `is-aside`, which hides the cursor.
 3. If the click hit nothing clickable, every route target gets `is-hint` for 1.5s, so they can see what is live.
 

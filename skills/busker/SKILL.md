@@ -9,8 +9,8 @@ disable-model-invocation: true
 The [README](https://raw.githubusercontent.com/logfoxai/busker/main/README.md) indexes the guides (§ Contents). Read the ones you need before changing a routine.
 
 1. **Do not time page changes.** If a click causes it, use `steps` and let the real click do it. A scene that changes on a timer will drift the first time a duration changes.
-2. **`routes` is the only list of clickable things.** Adding a route wires the scene change *and* the pointer affordance. Never hand-maintain a parallel CSS list of `cursor: pointer` selectors.
-3. **Routes are only for scenes.** Modals, filters, and toggles belong in your own click handlers — busker clicked the element, your code does the rest.
+2. **`routes` is the only list of clickable things.** Adding a route wires the pointer affordance (and a scene change when `scene` is set). Never hand-maintain a parallel CSS list of `cursor: pointer` selectors.
+3. **Filters and modals still use your handlers.** Put them in `routes` without `scene` so they look clickable and do not trip the miss hint; busker clicks the element, your code does the rest.
 4. **Put time in `wait`, not `moveFor`.** `wait` is reading time for whatever the last press opened. A slow glide reads as lag.
 5. **`press` in `moves` does not click.** Hand-timed mode animates the press only. If you want a real click, it is a `step`.
 6. **Never use `event.isTrusted` to tell busker's clicks from a visitor's.** Scripted clicks from any source are untrusted. Busker already tracks its own.
