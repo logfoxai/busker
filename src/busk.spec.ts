@@ -266,6 +266,129 @@ test('each beat presses once, and the loop starts over from the top', (assert) =
 
 });
 
+test('when initialScene is omitted, the scene marked is-active in markup wins', (assert) => {
+
+    document.body.innerHTML = `<div id="root">${MOCK.replace(
+        'data-scene="home"',
+        'data-scene="home" class="is-active"',
+    )}</div>`;
+
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
+
+    const show = busk(root, {routes: routine.routes, steps: routine.steps});
+
+    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), false);
+    show.destroy();
+
+});
+
+test('markup that already matches initialScene is not cleared on init', (assert) => {
+
+    document.body.innerHTML = `<div id="root">${MOCK.replace(
+        'data-scene="home"',
+        'data-scene="home" class="is-active"',
+    ).replace(
+        'data-nav-item="home"',
+        'data-nav-item="home" class="is-active"',
+    )}</div>`;
+
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
+
+    const show = busk(root, routine);
+
+    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-nav-item="home"]')?.classList.contains('is-active'), true);
+    show.destroy();
+
+});
+
+test('a loop with no initialScene returns to the markup opening scene', (assert) => {
+
+    document.body.innerHTML = `<div id="root">${MOCK.replace(
+        'data-scene="home"',
+        'data-scene="home" class="is-active"',
+    )}</div>`;
+
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
+    root.querySelectorAll('*').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => {
+            const scene = el.closest('[data-scene]');
+
+            return scene && !scene.classList.contains('is-active')
+                ? new DOMRect(0, 0, 0, 0)
+                : new DOMRect(100, 50, 80, 20);
+        };
+    });
+
+    observers.length = 0;
+
+    let now = 0;
+    let queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    const show = busk(root, {
+        duration: 500,
+        routes: routine.routes,
+    });
+
+    observers[0].fire();
+    now += 600;
+
+    const due = queued;
+
+    queued = [];
+    for (const cb of due) cb(now);
+
+    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
+    show.destroy();
+
+});
+
+test('t=0 toggles are applied when busk() starts', (assert) => {
+
+    document.body.innerHTML = `
+        <div id="root">
+            <button class="view-traces">traces</button>
+            <span data-cursor></span>
+        </div>
+    `;
+
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
+    root.querySelectorAll('*').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => new DOMRect(100, 50, 80, 20);
+    });
+
+    const show = busk(root, {
+        duration: 1000,
+        toggles: [{target: '.view-traces', class: 'is-on', from: 0, until: 1000}],
+    });
+
+    assert.equal(root.querySelector('.view-traces')?.classList.contains('is-on'), true);
+    show.destroy();
+
+});
+
 test('destroy puts the mock back the way it was found', (assert) => {
 
     const {root, show, clickAsVisitor} = stage(routine);

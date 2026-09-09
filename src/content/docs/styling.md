@@ -50,6 +50,8 @@ Busker only sets `left`, `top`, and the `is-*` classes. Everything else is yours
 
 ## Scenes
 
+Before `busk()` runs, inactive scene siblings are hidden with `display: none` while the active one stays in flow, so SSR and the first paint do not show every page at once or collapse the stack. Once `.busker` is on the root, scenes stack and cross-fade instead.
+
 Scenes are stacked on top of each other and cross-fade, so the one going out
 fades under the one coming in instead of popping. `visibility` waits out the
 fade on the way out, which keeps a scene nobody can see from being read aloud or
