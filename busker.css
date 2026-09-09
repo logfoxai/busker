@@ -144,9 +144,14 @@
     pointer-events: auto;
     translate: none;
     visibility: visible;
+    z-index: 1;
+
+    /* Same properties as the base rule — only the visibility delay changes.
+       Dropping `visibility` from the active transition resets opacity mid-fade. */
     transition:
         opacity var(--busker-scene-ms) ease,
-        translate var(--busker-scene-ms) ease;
+        translate var(--busker-scene-ms) ease,
+        visibility 0s linear 0s;
 }
 
 @media (prefers-reduced-motion: reduce) {

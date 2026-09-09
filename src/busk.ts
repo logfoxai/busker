@@ -116,11 +116,19 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     function activate(scene: string | null): void {
         if (scene === shownScene) return;
         shownScene = scene;
-        scenes.forEach((el, key) => el.classList.toggle('is-active', key === scene));
 
-        const nav = scene ? scenes.get(scene)?.dataset.nav : undefined;
+        // Remove every scene first, commit, then show the next one. Toggling in
+        // one pass inside press()'s rAF tick can skip the incoming opacity fade.
+        for (const el of scenes.values()) el.classList.remove('is-active');
+        for (const el of navItems.values()) el.classList.remove('is-active');
+        void root.offsetHeight;
 
-        navItems.forEach((el, key) => el.classList.toggle('is-active', key === nav));
+        if (scene) {
+            scenes.get(scene)?.classList.add('is-active');
+            const nav = scenes.get(scene)?.dataset.nav;
+
+            if (nav) navItems.get(nav)?.classList.add('is-active');
+        }
     }
 
     /**
