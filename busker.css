@@ -105,6 +105,17 @@
     display: none;
 }
 
+/* Before busk(): hide inactive scene siblings so SSR matches t=0 without
+   collapsing the stack — the active scene stays in flow. */
+:has(> [data-scene]) > [data-scene]:not(.is-active) {
+    display: none;
+}
+
+/* Once busker owns the root, cross-fade stacking takes over. */
+.busker :has(> [data-scene]) > [data-scene]:not(.is-active) {
+    display: block;
+}
+
 /* Scenes are a stack, so the one going out can fade under the one coming in
    rather than popping. They are out of flow, so whatever element holds them
    needs a height of its own — from a parent, a grid track, or its own rule. */

@@ -221,7 +221,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         // drop the start of the routine or fire a burst of catch-up clicks.
         if (next >= duration) {
             pressed.clear();
-            activate(routine.initialScene ?? null);
+            activate(openingScene);
             elapsed = 0;
         } else {
             elapsed = next;
@@ -304,7 +304,15 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         cursor?.classList.remove('is-visible', 'is-pressing', 'is-ringing');
     }
 
-    root.classList.add('busker');
+    // Match the routine's opening frame before `.busker` switches scenes to a stack.
+    for (const [key, el] of scenes) {
+        if (el.classList.contains('is-active')) {
+            shownScene = key;
+            break;
+        }
+    }
+
+    const openingScene = routine.initialScene ?? shownScene;
 
     // Anything the show can click, a visitor can click — so the pointer and the
     // wiring come from the same list, with no CSS to keep in step by hand.
@@ -315,7 +323,15 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         root.addEventListener('click', onClick);
     }
 
-    activate(routine.initialScene ?? null);
+    activate(openingScene);
+
+    if (reducedMotion) {
+        render(routine.freezeAt ?? 0);
+    } else {
+        render(elapsed);
+    }
+
+    root.classList.add('busker');
 
     const observer = reducedMotion
         ? undefined
@@ -327,13 +343,10 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
             {threshold: [...new Set([0, visibility, 1])]},
         );
 
-    if (reducedMotion) {
-        render(routine.freezeAt ?? 0);
-    } else {
+    if (!reducedMotion) {
         observer?.observe(root);
         document.addEventListener('visibilitychange', onVisibilityChange);
         cursor?.classList.add('is-visible');
-        render(elapsed);
     }
 
     return {duration, play, pause, stepAside, destroy};

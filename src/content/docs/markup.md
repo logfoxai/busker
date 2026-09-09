@@ -41,6 +41,12 @@ A scene is one page of the mock. Busker shows one at a time by putting `is-activ
 
 Scenes never change on a timer. They change because something was clicked &mdash; by the cursor or by a visitor &mdash; and a [route](./routines.md#routes) said so. That is the whole point: there is one cause, so there is nothing to synchronise.
 
+### Before JavaScript runs
+
+Put `is-active` on the opening scene and its nav item in your HTML, matching `initialScene` (or omit `initialScene` and let busker honour the markup). `busker.css` hides inactive scene siblings until `busk()` adds `.busker`, so the first paint matches t=0 without every scene flashing at once.
+
+For mocks that only use [toggles](./timeline.md#toggles) &mdash; no scenes &mdash; mirror the t=0 classes in markup too (for example the view that is on at the start of the loop). `busk()` applies the opening frame before it takes over.
+
 ## The cursor
 
 `[data-cursor]` can be any element. `busker.css` styles it as the soft dot busker's own demos use, sized by `--busker-cursor-size`. To draw your own pointer instead, put an `<svg>` in there and skip the cursor rules &mdash; see [Styling](./styling.md).
