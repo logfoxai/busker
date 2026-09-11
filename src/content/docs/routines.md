@@ -52,20 +52,21 @@ Because the beats are relative, you can drop a step into the middle of a routine
 
 ## Routes
 
-A route says what a click does:
+A route says a click is live. When it also names a scene, that scene comes up:
 
 ```typescript
 routes: [
     {click: '[data-nav-item="alerts"]', scene: 'alerts'},
+    {click: '[data-filter]'},
 ]
 ```
 
 Routes do two jobs, which is the reason they are one list:
 
-1. **They switch scenes** &mdash; for the cursor's clicks and for a visitor's, identically.
-2. **They mark what is clickable.** Every route target gets `is-interactive`, which is what gives it a pointer cursor. So the things that look clickable are exactly the things that are, with no CSS list to maintain alongside.
+1. **They mark what is clickable.** Every route target gets `is-interactive`, which is what gives it a pointer cursor. So the things that look clickable are exactly the things that are, with no CSS list to maintain alongside.
+2. **They switch scenes** when `scene` is set &mdash; for the cursor's clicks and for a visitor's, identically.
 
-Anything your own handlers do &mdash; opening a modal, filtering a table, toggling a row &mdash; needs no route at all. Busker clicked the element; your code took it from there. Routes are only for the part busker owns, which is which scene is up.
+Filters, modals, and toggles still belong in your own handlers. Put them in `routes` *without* a `scene` so they get the pointer and do not trip the miss hint; busker clicked the element, your code took it from there.
 
 ## Where the cursor starts
 

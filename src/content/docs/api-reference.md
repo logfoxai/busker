@@ -62,9 +62,9 @@ Beats run back to back: a step sets off `wait` after the last one finished.
 | Field | Type | What it does |
 |---|---|---|
 | `click` | `string` | Selector of the clickable element. |
-| `scene` | `string` | `data-scene` to show when it is clicked. |
+| `scene` | `string` | Optional. `data-scene` to show when it is clicked. |
 
-Every route target also gets `is-interactive`, which is what makes it look clickable.
+Every route target gets `is-interactive`, which is what makes it look clickable. Omit `scene` for filters and other controls your own handlers drive &mdash; they still count as a hit, so a visitor click does not light the miss hint.
 
 ## `Move`
 
