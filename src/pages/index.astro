@@ -18,7 +18,7 @@ busk(root, {
         {click: '[data-plan="solo"]', wait: 1400},
         {to: [0.55, 0.3], wait: 900},
     ],
-    routes: [
+    clickTargets: [
         '[data-nav-item="beans"]',
         '[data-nav-item="plans"]',
         '[data-nav-item="roasters"]',
@@ -168,7 +168,7 @@ busk(root, {
         <section class="splash__code">
             <h2>That demo, in full</h2>
             <p>
-                Six beats and string routes. Scenes are your handlers &mdash; they change because the
+                Six beats and click targets. Scenes are your handlers &mdash; they change because the
                 cursor pressed a button, exactly as when you press it.
             </p>
             <Code code={routineSource} lang="typescript" />
@@ -237,7 +237,7 @@ busk(root, {
                 {click: '[data-plan="solo"]', wait: 1400},
                 {to: [0.55, 0.3], wait: 900},
             ],
-            routes: [
+            clickTargets: [
                 '[data-nav-item="beans"]',
                 '[data-nav-item="plans"]',
                 '[data-nav-item="roasters"]',

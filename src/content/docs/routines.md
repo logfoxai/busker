@@ -16,7 +16,7 @@ busk(root, {
         {click: '[data-close]', wait: 2600},
         {to: [0.55, 0.25], wait: 900, moveFor: 900},
     ],
-    routes: ['[data-nav-item="home"]', '[data-nav-item="alerts"]', '[data-row="p0"]'],
+    clickTargets: ['[data-nav-item="home"]', '[data-nav-item="alerts"]', '[data-row="p0"]'],
 });
 ```
 
@@ -58,12 +58,12 @@ A press is a stroke rather than an instant: the cursor goes down on the target, 
 
 Because the beats are relative, you can drop a step into the middle of a routine and nothing after it needs touching.
 
-## Routes
+## Click targets
 
-`routes` is a list of **selectors** for elements that should look clickable and count as hits when a visitor clicks (so dead clicks still get the miss hint):
+`clickTargets` is a list of **selectors** for elements that should look clickable and count as hits when a visitor clicks (so dead clicks still get the miss hint):
 
 ```typescript
-routes: ['[data-nav-item="alerts"]', '[data-filter]'],
+clickTargets: ['[data-nav-item="alerts"]', '[data-filter]'],
 ```
 
 Busker does **not** change your UI. Wire `click` handlers (or rely on scripted `steps` clicks) for scenes, filters, and modals.

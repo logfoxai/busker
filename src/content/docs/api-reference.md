@@ -28,7 +28,7 @@ Everything else is shared:
 | Field | Type | Default | What it does |
 |---|---|---|---|
 | `start` | `[number, number]` | `[0.5, 0.5]` | Where the cursor rests, as a fraction of the root's size. |
-| `routes` | `string[]` | none | Selectors that look clickable and count for the miss hint. |
+| `clickTargets` | `string[]` | none | Selectors that look clickable and count for the miss hint. |
 | `tasks` | [`Task[]`](#task) | none | Callbacks at absolute times in the loop. |
 | `onLoop` | `() => void` | none | Called when the playhead wraps to 0. |
 | `toggles` | [`Toggle[]`](#toggle) | none | Classes held for a slice of the loop. |

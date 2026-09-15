@@ -98,7 +98,7 @@ interface CommonRoutine {
      * Selectors that look clickable and count as hits for the miss hint.
      * Scene changes and other UI state are your handlers' job.
      */
-    routes?: string[];
+    clickTargets?: string[];
     /** Timed callbacks (merged with `run` steps when using `steps`). */
     tasks?: Task[];
     /** Called when the playhead loops back to 0. */

@@ -5,14 +5,14 @@ A busker plays to whoever is passing. When someone actually walks up, they stop 
 ## What happens on a click
 
 1. The loop stops for good and the root gets `is-aside`, which hides the cursor.
-2. If the click hit a [route](./routines.md#routes) selector, nothing special &mdash; your handlers already ran from the real click.
-3. If the click hit nothing clickable, every route target gets `is-hint` for 1.5s, so they can see what is live.
+2. If the click hit a [click target](./routines.md#click-targets) selector, nothing special &mdash; your handlers already ran from the real click.
+3. If the click hit nothing clickable, every click target gets `is-hint` for 1.5s, so they can see what is live.
 
 From then on the mock is an ordinary bit of interactive markup. Busker is not going to grab the pointer back mid-thought, which is the whole reason it stops for good rather than resuming after a pause.
 
 ## Its own clicks do not count
 
-Busker's presses go through `el.click()` &mdash; real clicks, real handlers, real routes. It knows which ones are its own and does not mistake them for a visitor. You do not have to filter anything in your handlers.
+Busker's presses go through `el.click()` &mdash; real clicks, real handlers. It knows which ones are its own and does not mistake them for a visitor. You do not have to filter anything in your handlers.
 
 `event.isTrusted` will not tell you the difference either, by the way: it is `false` for anything scripted, including test-runner and devtools clicks. Busker tracks its own presses directly instead.
 
@@ -34,6 +34,6 @@ document.querySelector('#try-it')?.addEventListener('click', () => show.stepAsid
 
 ## Reduced motion
 
-Under `prefers-reduced-motion: reduce` there is no loop, no cursor, and no observer. Busker renders the [`freezeAt`](./timeline.md#freezing-for-reduced-motion) frame once and leaves it there. Routes are still wired, so the mock stays clickable &mdash; it just never moves on its own.
+Under `prefers-reduced-motion: reduce` there is no loop, no cursor, and no observer. Busker renders the [`freezeAt`](./timeline.md#freezing-for-reduced-motion) frame once and leaves it there. Click targets are still wired, so the mock stays clickable &mdash; it just never moves on its own.
 
 ← [Hand-timed routines](./timeline.md) &middot; Next: [Styling](./styling.md)

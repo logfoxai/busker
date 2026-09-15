@@ -7,7 +7,7 @@ Busker reads your mock through five `data-` attributes and writes back a handful
 | Attribute | On | What it means |
 |---|---|---|
 | `data-cursor` | one element | The pointer. Busker positions it and shows the press. |
-| `data-scene="home"` | a page of the mock | One is shown at a time. Named in `scene` and in `routes`. |
+| `data-scene="home"` | a page of the mock | Optional. You toggle `.is-active` in your own code; see [Styling](./styling.md#optional-scene-cross-fade). |
 | `data-nav="home"` | the same scene element | Which nav item is lit while this scene is up. |
 | `data-nav-item="home"` | a nav button or link | Gets `is-active` when a scene claims it. |
 
@@ -19,11 +19,11 @@ Anything else &mdash; rows, buttons, modals, inputs &mdash; is just your markup,
 |---|---|---|
 | `busker` | the root | For as long as busker is running. Everything in `busker.css` hangs off it. |
 | `is-active` | a scene, a nav item | While that scene is the one on screen. |
-| `is-interactive` | every `routes` target | Always. It is what makes clickable things look clickable. |
+| `is-interactive` | every `clickTargets` entry | Always. It is what makes clickable things look clickable. |
 | `is-hover` | the current target | From the moment the cursor lands until it sets off again. |
 | `is-pressing` | the cursor | For 200ms as it presses. |
 | `is-ringing` | the cursor | For 500ms &mdash; the ripple outlives the press so the click reads. |
-| `is-hint` | every `routes` target | For 1.5s after a visitor clicks something dead. |
+| `is-hint` | every `clickTargets` entry | For 1.5s after a visitor clicks something dead. |
 | `is-aside` | the root | Once a visitor has taken over. |
 
 Busker removes all of them on `destroy()`.
@@ -37,13 +37,13 @@ The root is the element you pass to `busk()`. Two things follow from that:
 
 ## Scenes
 
-A scene is one page of the mock. Busker shows one at a time by putting `is-active` on it, and `busker.css` does the rest: scenes are stacked and cross-fade into each other, so the mock never changes height and nothing pops. The element holding them needs a height of its own &mdash; see [Styling](./styling.md#scenes).
+A scene is one page of the mock. Busker does not switch scenes for you &mdash; your click handlers (or scripted `steps` clicks) toggle `is-active`. Optional `busker.css` can cross-fade stacked `[data-scene]` panels; see [Styling](./styling.md#optional-scene-cross-fade).
 
-Scenes never change on a timer. They change because something was clicked &mdash; by the cursor or by a visitor &mdash; and a [route](./routines.md#routes) said so. That is the whole point: there is one cause, so there is nothing to synchronise.
+Scenes should not change on a timer. They change because something was really clicked, so there is one cause and nothing to synchronise.
 
 ### Before JavaScript runs
 
-Put `is-active` on the opening scene and its nav item in your HTML, matching `initialScene` (or omit `initialScene` and let busker honour the markup). `busker.css` hides inactive scene siblings until `busk()` adds `.busker`, so the first paint matches t=0 without every scene flashing at once.
+Put `is-active` on the opening scene and its nav item in your HTML so the first paint matches t=0. `busker.css` hides inactive scene siblings until `busk()` adds `.busker`, so every scene does not flash at once.
 
 For mocks that only use [toggles](./timeline.md#toggles) &mdash; no scenes &mdash; mirror the t=0 classes in markup too (for example the view that is on at the start of the loop). `busk()` applies the opening frame before it takes over.
 

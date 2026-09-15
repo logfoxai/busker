@@ -53,14 +53,13 @@ const root = document.querySelector<HTMLElement>('.app');
 
 if (root) {
     busk(root, {
-        initialScene: 'home',
         steps: [
             {click: '[data-nav-item="alerts"]', wait: 1200},
             {click: '[data-nav-item="home"]', wait: 2000},
         ],
-        routes: [
-            {click: '[data-nav-item="home"]', scene: 'home'},
-            {click: '[data-nav-item="alerts"]', scene: 'alerts'},
+        clickTargets: [
+            '[data-nav-item="home"]',
+            '[data-nav-item="alerts"]',
         ],
     });
 }
@@ -70,7 +69,7 @@ That is the whole thing. The cursor glides to the Alerts button, presses it, and
 
 ## 4. Let people play with it
 
-Every selector in `routes` is wired for the visitor too. Click anything the show can click and busker steps aside: the loop stops, the cursor disappears, and the mock is yours. Click something dead and it flashes what *is* clickable.
+Every selector in `clickTargets` is wired for the visitor too. Click anything the show can click and busker steps aside: the loop stops, the cursor disappears, and the mock is yours. Click something dead and it flashes what *is* clickable.
 
 You get that for free &mdash; see [When a visitor takes over](./taking-over.md).
 

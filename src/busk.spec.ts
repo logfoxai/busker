@@ -142,7 +142,7 @@ const routine: Routine = {
         {click: '[data-nav-item="alerts"]', moveFor: 100, dwell: 0},
         {click: '[data-row="p0"]', wait: 100, moveFor: 100, dwell: 0},
     ],
-    routes: ['[data-nav-item="home"]', '[data-nav-item="alerts"]'],
+    clickTargets: ['[data-nav-item="home"]', '[data-nav-item="alerts"]'],
 };
 
 test('the show clicks for real, so the mock changes through its own handlers', (assert) => {
@@ -193,7 +193,7 @@ test('the cursor holds its place when its own click takes the target away', (ass
 
     const {root, startShow, tick, showScene} = stage({
         steps: [{click: '[data-row="p0"]', moveFor: 100, dwell: 0}],
-        routes: ['[data-row="p0"]'],
+        clickTargets: ['[data-row="p0"]'],
     });
 
     showScene('list');
@@ -309,7 +309,7 @@ test('busk does not change which scene is active on init', (assert) => {
     root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
     wireTestScenes(root);
 
-    const show = busk(root, {routes: routine.routes, steps: routine.steps});
+    const show = busk(root, {clickTargets: routine.clickTargets, steps: routine.steps});
 
     assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
     assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), false);

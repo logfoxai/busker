@@ -43,7 +43,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const moves = compiled?.moves ?? routine.moves ?? [];
     const duration = compiled?.duration ?? routine.duration ?? 0;
     const start = routine.start ?? DEFAULT_START;
-    const routes = routine.routes ?? [];
+    const clickTargets = routine.clickTargets ?? [];
     const visibility = routine.visibility ?? 1;
     const tasks: Task[] = [...(compiled?.tasks ?? []), ...(routine.tasks ?? [])].sort(
         (a, b) => a.at - b.at,
@@ -251,7 +251,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const onClick = (e: Event): void => {
         if (destroyed) return;
 
-        const hit = routes.some((selector) => {
+        const hit = clickTargets.some((selector) => {
             const el = (e.target as Element).closest(selector);
 
             return el !== null && root.contains(el);
@@ -265,7 +265,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
         const targets = new Set<Element>();
 
-        for (const selector of routes) {
+        for (const selector of clickTargets) {
             root.querySelectorAll(selector).forEach((el) => targets.add(el));
         }
         targets.forEach((el) => el.classList.add('is-hint'));
@@ -313,8 +313,8 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         cursor?.classList.remove('is-visible', 'is-pressing', 'is-ringing');
     }
 
-    if (routes.length) {
-        for (const selector of routes) {
+    if (clickTargets.length) {
+        for (const selector of clickTargets) {
             root.querySelectorAll(selector).forEach((el) => el.classList.add('is-interactive'));
         }
         root.addEventListener('click', onClick);
