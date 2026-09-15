@@ -284,9 +284,18 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         setTimeout(() => targets.forEach((el) => el.classList.remove('is-hint')), HINT_MS);
     };
 
+    const syncViewportPlayback = (): void => {
+        if (visibleFraction(root) >= visibility - VISIBILITY_SLACK) play();
+        else pause();
+    };
+
+    const onViewportScrollOrResize = (): void => {
+        syncViewportPlayback();
+    };
+
     const onVisibilityChange = (): void => {
         if (document.hidden) pause();
-        else if (visibleFraction(root) >= visibility - VISIBILITY_SLACK) play();
+        else syncViewportPlayback();
     };
 
     function destroy(): void {
@@ -296,6 +305,8 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         observer?.disconnect();
         root.removeEventListener('click', onClick);
         document.removeEventListener('visibilitychange', onVisibilityChange);
+        window.removeEventListener('scroll', onViewportScrollOrResize);
+        window.removeEventListener('resize', onViewportScrollOrResize);
         shownHover?.classList.remove('is-hover');
         shownHover = null;
         root.querySelectorAll('.is-hint').forEach((el) => el.classList.remove('is-hint'));
@@ -337,8 +348,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         ? undefined
         : new IntersectionObserver(
             () => {
-                if (visibleFraction(root) >= visibility - VISIBILITY_SLACK) play();
-                else pause();
+                syncViewportPlayback();
             },
             {threshold: [...new Set([0, visibility, 1])]},
         );
@@ -346,6 +356,10 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     if (!reducedMotion) {
         observer?.observe(root);
         document.addEventListener('visibilitychange', onVisibilityChange);
+        // IO only fires on threshold crossings; scroll keeps play/pause in sync.
+        window.addEventListener('scroll', onViewportScrollOrResize, {passive: true});
+        window.addEventListener('resize', onViewportScrollOrResize, {passive: true});
+        syncViewportPlayback();
         cursor?.classList.add('is-visible');
     }
 
