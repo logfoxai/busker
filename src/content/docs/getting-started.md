@@ -65,7 +65,7 @@ if (root) {
 }
 ```
 
-That is the whole thing. The cursor glides to the Alerts button, presses it, and the mock changes &mdash; because busker really clicks it. There is no separate timeline saying "and at 1.8s, switch to the alerts scene", so there is nothing to fall out of sync when you change a duration.
+That is the whole thing. The cursor glides to the Alerts button, presses it, and the mock changes &mdash; because busker clicks it. There is no separate timeline saying "and at 1.8s, switch to the alerts scene", so there is nothing to fall out of sync when you change a duration.
 
 ## 4. Let people play with it
 

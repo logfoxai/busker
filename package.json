@@ -1,7 +1,7 @@
 {
   "name": "@logfox/busker",
   "version": "1.0.0",
-  "description": "Scripted cursor demos that really click. Drive a fake product UI with a routine, not a stopwatch.",
+  "description": "Scripted cursor demos that click. Drive a fake product UI with a routine, not a stopwatch.",
   "keywords": [
     "demo",
     "product-tour",

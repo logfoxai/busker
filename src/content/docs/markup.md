@@ -39,7 +39,7 @@ The root is the element you pass to `busk()`. Two things follow from that:
 
 A scene is one page of the mock. Busker does not switch scenes for you &mdash; your click handlers (or scripted `steps` clicks) toggle `is-active`. Optional `busker.css` can cross-fade stacked `[data-scene]` panels; see [Styling](./styling.md#optional-scene-cross-fade).
 
-Scenes should not change on a timer. They change because something was really clicked, so there is one cause and nothing to synchronise.
+Scenes should not change on a timer. They change because something was clicked, so there is one cause and nothing to synchronise.
 
 ### Before JavaScript runs
 
