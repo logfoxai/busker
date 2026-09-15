@@ -8,7 +8,7 @@ import {
     positionAt,
     typedText,
 } from './timeline.ts';
-import type {Busker, Move, Point, Routine} from './types.ts';
+import type {Busker, Move, Point, Routine, Task} from './types.ts';
 
 const DEFAULT_START: Point = [0.5, 0.5];
 /** IntersectionObserver ratios are floating point; 1 is rarely exactly 1. */
@@ -33,28 +33,21 @@ function visibleFraction(el: Element): number {
 /**
  * Put on a show inside `root`.
  *
- * See the docs for the markup contract: `[data-cursor]` for the pointer,
- * `[data-scene]` for the pages, `[data-nav-item]` for the nav.
+ * Markup: `[data-cursor]` for the pointer. UI state (scenes, modals, etc.) is
+ * yours — use real click handlers and optional `tasks` / `onLoop`.
  */
 export function busk(root: HTMLElement, routine: Routine): Busker {
     const cursor = root.querySelector<HTMLElement>('[data-cursor]');
-    const scenes = new Map<string, HTMLElement>();
-    const navItems = new Map<string, HTMLElement>();
 
-    root.querySelectorAll<HTMLElement>('[data-scene]').forEach((el) => {
-        scenes.set(el.dataset.scene as string, el);
-    });
-    root.querySelectorAll<HTMLElement>('[data-nav-item]').forEach((el) => {
-        navItems.set(el.dataset.navItem as string, el);
-    });
-
-    // A script presses for real; a hand-timed routine only animates the press.
-    const script = routine.steps ? compile(routine.steps) : null;
-    const moves = script?.moves ?? routine.moves ?? [];
-    const duration = script?.duration ?? routine.duration ?? 0;
+    const compiled = routine.steps ? compile(routine.steps) : null;
+    const moves = compiled?.moves ?? routine.moves ?? [];
+    const duration = compiled?.duration ?? routine.duration ?? 0;
     const start = routine.start ?? DEFAULT_START;
     const routes = routine.routes ?? [];
     const visibility = routine.visibility ?? 1;
+    const tasks: Task[] = [...(compiled?.tasks ?? []), ...(routine.tasks ?? [])].sort(
+        (a, b) => a.at - b.at,
+    );
 
     /** Selectors are resolved once; the elements they point at may not exist. */
     const found = <T extends {target: string}>(items: T[] | undefined): (T & {el: HTMLElement})[] =>
@@ -77,9 +70,6 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
         const rect = root.querySelector(target)?.getBoundingClientRect();
 
-        // A press takes its own target away whenever the click changes the
-        // scene, and the ring outlives the press. With no box left to aim at,
-        // stay where the target was rather than sliding off to the corner.
         if (!rect || (rect.width === 0 && rect.height === 0)) return lastSeen.get(target) ?? null;
 
         const rootRect = root.getBoundingClientRect();
@@ -103,27 +93,16 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     let destroyed = false;
     /** Steps already pressed this time round, so each one fires exactly once. */
     const pressed = new Set<number>();
+    /** Tasks already run this loop. */
+    const firedTasks = new Set<number>();
     /** Set while the show clicks for itself, so it does not mistake that for a visitor. */
     let clickingItself = false;
 
-    // What the DOM already shows, so a 60fps loop is not writing the same values.
-    let shownScene: string | null = null;
     let shownHover: Element | null = null;
     let shownPressing = false;
     let shownRinging = false;
     const shownToggle = new WeakMap<HTMLElement, string>();
     const shownText = new WeakMap<HTMLElement, string>();
-
-    /** Show one scene and light up its nav item. Only ever caused by a click. */
-    function activate(scene: string | null): void {
-        if (scene === shownScene) return;
-        shownScene = scene;
-        scenes.forEach((el, key) => el.classList.toggle('is-active', key === scene));
-
-        const nav = scene ? scenes.get(scene)?.dataset.nav : undefined;
-
-        navItems.forEach((el, key) => el.classList.toggle('is-active', key === nav));
-    }
 
     /**
      * Really click the steps whose press has lifted, each once per loop. The
@@ -131,7 +110,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
      * cursor reads on the element before the click takes it away.
      */
     function press(t: number): void {
-        if (!script) return;
+        if (!compiled) return;
 
         moves.forEach((move, i) => {
             if (move.press === undefined || t < move.press + PRESS_MS || pressed.has(i)) return;
@@ -151,6 +130,14 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         });
     }
 
+    function runTasks(t: number): void {
+        tasks.forEach((task, i) => {
+            if (t < task.at || firedTasks.has(i)) return;
+            firedTasks.add(i);
+            task.run();
+        });
+    }
+
     function drawCursor(move: Move | null, index: number, t: number): void {
         if (!cursor) return;
 
@@ -164,7 +151,6 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
             cursor.style.top = `${y}px`;
         }
 
-        // Hovering starts the moment the cursor lands and ends when it sets off again.
         const hover = move && typeof move.to === 'string' && t >= move.until
             ? root.querySelector(move.to)
             : null;
@@ -211,6 +197,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         const index = moveIndexAt(moves, t);
 
         drawCursor(index >= 0 ? moves[index] : null, index, t);
+        runTasks(t);
     }
 
     function frame(now: number): void {
@@ -218,12 +205,10 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
         const next = elapsed + (now - last);
 
-        // Back to the top. Every pass restarts at 0 rather than carrying the
-        // overshoot, so a stalled frame (backgrounded tab, slow paint) cannot
-        // drop the start of the routine or fire a burst of catch-up clicks.
         if (next >= duration) {
             pressed.clear();
-            activate(openingScene);
+            firedTasks.clear();
+            routine.onLoop?.();
             elapsed = 0;
         } else {
             elapsed = next;
@@ -263,25 +248,23 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const onClick = (e: Event): void => {
         if (destroyed) return;
 
-        const hit = routes.find((route) => {
-            const el = (e.target as Element).closest(route.click);
+        const hit = routes.some((selector) => {
+            const el = (e.target as Element).closest(selector);
 
             return el !== null && root.contains(el);
         });
 
-        if (hit) activate(hit.scene);
-
-        // The show's own clicks route the mock but must not take it away from itself.
         if (clickingItself) return;
 
         stepAside();
 
-        // They clicked something dead — show them what is not.
         if (hit) return;
 
         const targets = new Set<Element>();
 
-        for (const route of routes) root.querySelectorAll(route.click).forEach((el) => targets.add(el));
+        for (const selector of routes) {
+            root.querySelectorAll(selector).forEach((el) => targets.add(el));
+        }
         targets.forEach((el) => el.classList.add('is-hint'));
         setTimeout(() => targets.forEach((el) => el.classList.remove('is-hint')), HINT_MS);
     };
@@ -327,26 +310,12 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         cursor?.classList.remove('is-visible', 'is-pressing', 'is-ringing');
     }
 
-    // Match the routine's opening frame before `.busker` switches scenes to a stack.
-    for (const [key, el] of scenes) {
-        if (el.classList.contains('is-active')) {
-            shownScene = key;
-            break;
-        }
-    }
-
-    const openingScene = routine.initialScene ?? shownScene;
-
-    // Anything the show can click, a visitor can click — so the pointer and the
-    // wiring come from the same list, with no CSS to keep in step by hand.
     if (routes.length) {
-        for (const route of routes) {
-            root.querySelectorAll(route.click).forEach((el) => el.classList.add('is-interactive'));
+        for (const selector of routes) {
+            root.querySelectorAll(selector).forEach((el) => el.classList.add('is-interactive'));
         }
         root.addEventListener('click', onClick);
     }
-
-    activate(openingScene);
 
     if (reducedMotion) {
         render(routine.freezeAt ?? 0);
@@ -368,7 +337,6 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     if (!reducedMotion) {
         observer?.observe(root);
         document.addEventListener('visibilitychange', onVisibilityChange);
-        // IO only fires on threshold crossings; scroll keeps play/pause in sync (one check per frame).
         window.addEventListener('scroll', scheduleSyncViewportPlayback, {passive: true});
         window.addEventListener('resize', scheduleSyncViewportPlayback, {passive: true});
         syncViewportPlayback();

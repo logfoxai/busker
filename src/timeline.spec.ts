@@ -54,6 +54,21 @@ test('compile: a drift has nothing to press', (assert) => {
 
 });
 
+test('compile: a run step schedules a task without moving the cursor', (assert) => {
+
+    const {moves, duration, tasks} = compile([
+        {run: (): void => {}, wait: 100},
+        {click: '#a', moveFor: 50, dwell: 0},
+    ]);
+
+    assert.equal(duration, 650);
+    assert.equal(moves.length, 1);
+    assert.equal(tasks.length, 1);
+    assert.equal(tasks[0].at, 100);
+    assert.equal(moves[0].from, 100);
+
+});
+
 test('easeInOutCubic: still at both ends, halfway at halfway', (assert) => {
 
     assert.equal(easeInOutCubic(0), 0);

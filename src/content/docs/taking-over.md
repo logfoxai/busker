@@ -4,8 +4,8 @@ A busker plays to whoever is passing. When someone actually walks up, they stop 
 
 ## What happens on a click
 
-1. If the click hit a [route](./routines.md#routes) target, that scene comes up &mdash; the same code path the cursor's own clicks use.
-2. The loop stops for good and the root gets `is-aside`, which hides the cursor.
+1. The loop stops for good and the root gets `is-aside`, which hides the cursor.
+2. If the click hit a [route](./routines.md#routes) selector, nothing special &mdash; your handlers already ran from the real click.
 3. If the click hit nothing clickable, every route target gets `is-hint` for 1.5s, so they can see what is live.
 
 From then on the mock is an ordinary bit of interactive markup. Busker is not going to grab the pointer back mid-thought, which is the whole reason it stops for good rather than resuming after a pause.
