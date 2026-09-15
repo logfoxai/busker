@@ -96,6 +96,8 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     let elapsed = 0;
     let last = 0;
     let rafId = 0;
+    let viewportSyncRafId = 0;
+    let viewportSyncQueued = false;
     let playing = false;
     let aside = false;
     let destroyed = false;
@@ -284,18 +286,39 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         setTimeout(() => targets.forEach((el) => el.classList.remove('is-hint')), HINT_MS);
     };
 
+    const syncViewportPlayback = (): void => {
+        if (document.hidden) return;
+        if (visibleFraction(root) >= visibility - VISIBILITY_SLACK) play();
+        else pause();
+    };
+
+    const scheduleSyncViewportPlayback = (): void => {
+        if (viewportSyncQueued) return;
+        viewportSyncQueued = true;
+        viewportSyncRafId = requestAnimationFrame(() => {
+            viewportSyncQueued = false;
+            viewportSyncRafId = 0;
+            syncViewportPlayback();
+        });
+    };
+
     const onVisibilityChange = (): void => {
         if (document.hidden) pause();
-        else if (visibleFraction(root) >= visibility - VISIBILITY_SLACK) play();
+        else syncViewportPlayback();
     };
 
     function destroy(): void {
         if (destroyed) return;
         destroyed = true;
         pause();
+        cancelAnimationFrame(viewportSyncRafId);
+        viewportSyncRafId = 0;
+        viewportSyncQueued = false;
         observer?.disconnect();
         root.removeEventListener('click', onClick);
         document.removeEventListener('visibilitychange', onVisibilityChange);
+        window.removeEventListener('scroll', scheduleSyncViewportPlayback);
+        window.removeEventListener('resize', scheduleSyncViewportPlayback);
         shownHover?.classList.remove('is-hover');
         shownHover = null;
         root.querySelectorAll('.is-hint').forEach((el) => el.classList.remove('is-hint'));
@@ -337,8 +360,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         ? undefined
         : new IntersectionObserver(
             () => {
-                if (visibleFraction(root) >= visibility - VISIBILITY_SLACK) play();
-                else pause();
+                syncViewportPlayback();
             },
             {threshold: [...new Set([0, visibility, 1])]},
         );
@@ -346,6 +368,10 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     if (!reducedMotion) {
         observer?.observe(root);
         document.addEventListener('visibilitychange', onVisibilityChange);
+        // IO only fires on threshold crossings; scroll keeps play/pause in sync (one check per frame).
+        window.addEventListener('scroll', scheduleSyncViewportPlayback, {passive: true});
+        window.addEventListener('resize', scheduleSyncViewportPlayback, {passive: true});
+        syncViewportPlayback();
         cursor?.classList.add('is-visible');
     }
 
