@@ -337,6 +337,42 @@ test('onLoop runs when the playhead wraps', (assert) => {
 
 });
 
+test('tasks at t=0 wait until playback starts', (assert) => {
+
+    let runs = 0;
+
+    const {startShow, tick} = stage({
+        steps: [{click: '[data-nav-item="alerts"]', moveFor: 50, dwell: 0}],
+        tasks: [{at: 0, run: (): void => {
+            runs += 1;
+        }}],
+    });
+
+    assert.equal(runs, 0);
+    startShow();
+    tick(1);
+    assert.equal(runs, 1);
+
+});
+
+test('a task at loop end runs before the playhead wraps', (assert) => {
+
+    let end = 0;
+    const {startShow, tick} = stage({
+        duration: 500,
+        moves: [],
+        tasks: [{at: 500, run: (): void => {
+            end += 1;
+        }}],
+        onLoop: (): void => {},
+    });
+
+    startShow();
+    tick(500);
+    assert.equal(end, 1);
+
+});
+
 test('a run step and tasks fire once per loop', (assert) => {
 
     let runs = 0;

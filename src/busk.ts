@@ -182,7 +182,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         el.textContent = text;
     }
 
-    function render(t: number): void {
+    function render(t: number, scheduleTasks = false): void {
         for (const toggle of toggles) {
             const key = `${toggle.class}:${isOn(toggle, t)}`;
 
@@ -197,7 +197,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         const index = moveIndexAt(moves, t);
 
         drawCursor(index >= 0 ? moves[index] : null, index, t);
-        runTasks(t);
+        if (scheduleTasks) runTasks(t);
     }
 
     function frame(now: number): void {
@@ -206,17 +206,20 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         const next = elapsed + (now - last);
 
         if (next >= duration) {
+            elapsed = duration;
+            render(elapsed, true);
+            press(elapsed);
             pressed.clear();
             firedTasks.clear();
             routine.onLoop?.();
             elapsed = 0;
         } else {
             elapsed = next;
+            render(elapsed, true);
+            press(elapsed);
         }
 
         last = now;
-        render(elapsed);
-        press(elapsed);
         rafId = requestAnimationFrame(frame);
     }
 
