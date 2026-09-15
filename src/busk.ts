@@ -285,6 +285,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     };
 
     const syncViewportPlayback = (): void => {
+        if (document.hidden) return;
         if (visibleFraction(root) >= visibility - VISIBILITY_SLACK) play();
         else pause();
     };

@@ -444,6 +444,61 @@ test('scroll re-checks visibility when the mock leaves the viewport', (assert) =
 
 });
 
+test('resize does not resume playback while the tab is hidden', (assert) => {
+
+    document.body.innerHTML = `
+        <div id="root">
+            <button class="marker">x</button>
+            <span data-cursor></span>
+        </div>
+    `;
+
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 400, 400);
+    root.querySelectorAll('*').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 400, 400);
+    });
+
+    observers.length = 0;
+
+    let now = 0;
+    const queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    const show = busk(root, {
+        duration: 10_000,
+        visibility: 0.5,
+        toggles: [{target: '.marker', class: 'is-on', from: 400, until: 800}],
+    });
+
+    observers[0].fire();
+    now += 500;
+
+    for (const cb of queued.splice(0)) cb(now);
+
+    assert.equal(root.querySelector('.marker')?.classList.contains('is-on'), true);
+
+    Object.defineProperty(document, 'hidden', {configurable: true, value: true});
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    window.dispatchEvent(new Event('resize'));
+    now += 2000;
+
+    for (const cb of queued.splice(0)) cb(now);
+
+    assert.equal(root.querySelector('.marker')?.classList.contains('is-on'), true);
+    Object.defineProperty(document, 'hidden', {configurable: true, value: false});
+    show.destroy();
+
+});
+
 test('destroy puts the mock back the way it was found', (assert) => {
 
     const {root, show, clickAsVisitor} = stage(routine);
