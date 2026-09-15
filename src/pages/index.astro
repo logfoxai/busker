@@ -4,9 +4,11 @@ import {Code, Icon} from '@astrojs/starlight/components';
 import '../../busker.css';
 import '../styles/splash.css';
 
-const routineSource = `busk(root, {
-    initialScene: 'beans',
+const routineSource = `wireScenes(root);
+
+busk(root, {
     start: [0.55, 0.3],
+    onLoop: () => wireScenes(root, 'beans'),
     steps: [
         {click: '[data-cta]', wait: 900},
         {click: '[data-plan="duo"]', wait: 1500},
@@ -16,16 +18,16 @@ const routineSource = `busk(root, {
         {click: '[data-plan="solo"]', wait: 1400},
         {to: [0.55, 0.3], wait: 900},
     ],
-    routes: [
-        {click: '[data-nav-item="beans"]', scene: 'beans'},
-        {click: '[data-nav-item="plans"]', scene: 'plans'},
-        {click: '[data-nav-item="roasters"]', scene: 'roasters'},
-        {click: '[data-cta]', scene: 'plans'},
-        {click: '[data-plan="solo"]', scene: 'checkout'},
-        {click: '[data-plan="duo"]', scene: 'checkout'},
-        {click: '[data-plan="family"]', scene: 'checkout'},
-        {click: '[data-checkout]', scene: 'checkout'},
-        {click: '[data-close]', scene: 'beans'},
+    clickTargets: [
+        '[data-nav-item="beans"]',
+        '[data-nav-item="plans"]',
+        '[data-nav-item="roasters"]',
+        '[data-cta]',
+        '[data-plan="solo"]',
+        '[data-plan="duo"]',
+        '[data-plan="family"]',
+        '[data-checkout]',
+        '[data-close]',
     ],
 });`;
 ---
@@ -166,8 +168,8 @@ const routineSource = `busk(root, {
         <section class="splash__code">
             <h2>That demo, in full</h2>
             <p>
-                Six beats and three routes. The scenes are not timed &mdash; they change because the
-                cursor pressed a button, exactly as they do when you press it.
+                Six beats and click targets. Scenes are your handlers &mdash; they change because the
+                cursor pressed a button, exactly as when you press it.
             </p>
             <Code code={routineSource} lang="typescript" />
         </section>
@@ -180,15 +182,38 @@ const routineSource = `busk(root, {
     const root = document.querySelector<HTMLElement>('[data-mock]');
 
     if (root) {
-        // The success panel is not a scene — busker clicked the button, this
-        // handler does the rest, the same as it would for a real visitor.
+        const showScene = (scene: string): void => {
+            root.querySelectorAll<HTMLElement>('[data-scene]').forEach((el) => {
+                el.classList.toggle('is-active', el.dataset.scene === scene);
+            });
+
+            const nav = root.querySelector<HTMLElement>(`[data-scene="${scene}"]`)?.dataset.nav;
+
+            root.querySelectorAll<HTMLElement>('[data-nav-item]').forEach((el) => {
+                el.classList.toggle('is-active', el.dataset.navItem === nav);
+            });
+        };
+
+        const wireScenes = (open: string = 'beans'): void => {
+            showScene(open);
+            root.querySelector('[data-panel]')?.classList.remove('is-open');
+        };
+
+        root.querySelector('[data-nav-item="beans"]')?.addEventListener('click', () => showScene('beans'));
+        root.querySelector('[data-nav-item="plans"]')?.addEventListener('click', () => showScene('plans'));
+        root.querySelector('[data-nav-item="roasters"]')?.addEventListener('click', () => showScene('roasters'));
+        root.querySelector('[data-cta]')?.addEventListener('click', () => showScene('plans'));
+        root.querySelectorAll('[data-plan]').forEach((plan) => {
+            plan.addEventListener('click', () => showScene('checkout'));
+        });
         root.querySelector('[data-checkout]')?.addEventListener('click', () => {
             root.querySelector('[data-panel]')?.classList.add('is-open');
         });
         root.querySelector('[data-close]')?.addEventListener('click', () => {
             root.querySelector('[data-panel]')?.classList.remove('is-open');
+            showScene('beans');
         });
-        // Picking a plan updates the checkout summary, then busker routes.
+
         root.querySelectorAll('[data-plan]').forEach((plan) => {
             plan.addEventListener('click', () => {
                 const name = plan.getAttribute('data-name');
@@ -198,9 +223,11 @@ const routineSource = `busk(root, {
             });
         });
 
+        wireScenes('beans');
+
         busk(root, {
-            initialScene: 'beans',
             start: [0.55, 0.3],
+            onLoop: () => wireScenes('beans'),
             steps: [
                 {click: '[data-cta]', wait: 900},
                 {click: '[data-plan="duo"]', wait: 1500},
@@ -210,16 +237,16 @@ const routineSource = `busk(root, {
                 {click: '[data-plan="solo"]', wait: 1400},
                 {to: [0.55, 0.3], wait: 900},
             ],
-            routes: [
-                {click: '[data-nav-item="beans"]', scene: 'beans'},
-                {click: '[data-nav-item="plans"]', scene: 'plans'},
-                {click: '[data-nav-item="roasters"]', scene: 'roasters'},
-                {click: '[data-cta]', scene: 'plans'},
-                {click: '[data-plan="solo"]', scene: 'checkout'},
-                {click: '[data-plan="duo"]', scene: 'checkout'},
-                {click: '[data-plan="family"]', scene: 'checkout'},
-                {click: '[data-checkout]', scene: 'checkout'},
-                {click: '[data-close]', scene: 'beans'},
+            clickTargets: [
+                '[data-nav-item="beans"]',
+                '[data-nav-item="plans"]',
+                '[data-nav-item="roasters"]',
+                '[data-cta]',
+                '[data-plan="solo"]',
+                '[data-plan="duo"]',
+                '[data-plan="family"]',
+                '[data-checkout]',
+                '[data-close]',
             ],
         });
     }

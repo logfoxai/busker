@@ -2,9 +2,8 @@
 export type Point = [number, number];
 
 /**
- * One beat of a routine. Either press something, or drift somewhere without
- * pressing. Both are laid out back to back, so a routine reads top to bottom
- * in the order a visitor would see it.
+ * One beat of a routine. Press something, drift somewhere, or run your own code.
+ * Beats are laid out back to back in the order a visitor would see them.
  */
 export type Step =
     | {
@@ -18,6 +17,7 @@ export type Step =
         dwell?: number;
         /** A press goes to the thing it clicks. */
         to?: never;
+        run?: never;
     }
     | {
         /** Where to glide, with no press at the end. */
@@ -27,14 +27,22 @@ export type Step =
         click?: never;
         /** Nothing is pressed, so there is no hover to hold before it. */
         dwell?: never;
+        run?: never;
+    }
+    | {
+        /** Run arbitrary code at this beat (reset state, sync another loop, etc.). */
+        run: () => void;
+        wait?: number;
+        click?: never;
+        to?: never;
+        moveFor?: never;
+        dwell?: never;
     };
 
-/** A click on `click` shows scene `scene`. */
-export interface Route {
-    /** Selector of the clickable element. */
-    click: string;
-    /** `data-scene` value to show. */
-    scene: string;
+/** Code to run once when the playhead reaches `at` (ms from loop start). */
+export interface Task {
+    at: number;
+    run: () => void;
 }
 
 /** A cursor glide on a hand-set timeline. */
@@ -47,7 +55,7 @@ export interface Move {
     until: number;
     /**
      * Optional moment to animate a press. A `TimedRoutine` never really clicks
-     * — whatever the press appears to do, drive it with a `Toggle`.
+     * — whatever the press appears to do, drive it with a `Toggle` or `Task`.
      */
     press?: number;
 }
@@ -84,12 +92,17 @@ export interface Countdown {
 
 /** What every routine has, however the cursor is driven. */
 interface CommonRoutine {
-    /** Scene shown at the top of every loop. */
-    initialScene?: string;
     /** Where the cursor rests before the first beat. Default `[0.5, 0.5]`. */
     start?: Point;
-    /** How clicks — the cursor's and the visitor's — change the scene. */
-    routes?: Route[];
+    /**
+     * Selectors that look clickable and count as hits for the miss hint.
+     * Scene changes and other UI state are your handlers' job.
+     */
+    clickTargets?: string[];
+    /** Timed callbacks (merged with `run` steps when using `steps`). */
+    tasks?: Task[];
+    /** Called when the playhead loops back to 0. */
+    onLoop?: () => void;
     toggles?: Toggle[];
     typing?: Typing[];
     countdowns?: Countdown[];

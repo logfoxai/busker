@@ -27,9 +27,10 @@ Everything else is shared:
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
-| `initialScene` | `string` | none | Scene shown at the top of every loop. |
 | `start` | `[number, number]` | `[0.5, 0.5]` | Where the cursor rests, as a fraction of the root's size. |
-| `routes` | [`Route[]`](#route) | none | What a click &mdash; the cursor's or a visitor's &mdash; does. |
+| `clickTargets` | `string[]` | none | Selectors that look clickable and count for the miss hint. |
+| `tasks` | [`Task[]`](#task) | none | Callbacks at absolute times in the loop. |
+| `onLoop` | `() => void` | none | Called when the playhead wraps to 0. |
 | `toggles` | [`Toggle[]`](#toggle) | none | Classes held for a slice of the loop. |
 | `typing` | [`Typing[]`](#typing) | none | Text that types itself. |
 | `countdowns` | [`Countdown[]`](#countdown) | none | `m:ss` clocks. |
@@ -47,6 +48,13 @@ One beat of a click-driven routine. Either a press:
 | `moveFor` | `number` | `600` |
 | `dwell` | `number` | `250` |
 
+…or run your code (no cursor move):
+
+| Field | Type | Default |
+|---|---|---|
+| `run` | `() => void` | &mdash; |
+| `wait` | `number` | `0` |
+
 …or a drift, which never clicks:
 
 | Field | Type | Default |
@@ -57,14 +65,12 @@ One beat of a click-driven routine. Either a press:
 
 Beats run back to back: a step sets off `wait` after the last one finished.
 
-## `Route`
+## `Task`
 
 | Field | Type | What it does |
 |---|---|---|
-| `click` | `string` | Selector of the clickable element. |
-| `scene` | `string` | `data-scene` to show when it is clicked. |
-
-Every route target also gets `is-interactive`, which is what makes it look clickable.
+| `at` | `number` | Ms from loop start when `run` fires once. |
+| `run` | `() => void` | Your code. |
 
 ## `Move`
 

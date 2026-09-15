@@ -19,15 +19,14 @@ import {busk} from '@logfox/busker';
 import '@logfox/busker/busker.css';
 
 busk(document.querySelector('.app'), {
-    initialScene: 'home',
     steps: [
         {click: '[data-nav-item="alerts"]', wait: 900},
         {click: '[data-row="p0"]', wait: 1500},
         {to: [0.55, 0.25], wait: 2600},
     ],
-    routes: [
-        {click: '[data-nav-item="alerts"]', scene: 'alerts'},
-        {click: '[data-row="p0"]', scene: 'case'},
+    clickTargets: [
+        '[data-nav-item="alerts"]',
+        '[data-row="p0"]',
     ],
 });
 ```
@@ -55,7 +54,7 @@ Same guides as [busker.logfox.ai](https://busker.logfox.ai). Links are repo-rela
 
 ### Routines
 
-- [Click-driven routines](src/content/docs/routines.md) &mdash; steps, timing, and routes
+- [Click-driven routines](src/content/docs/routines.md) &mdash; steps, timing, and click targets
 - [Hand-timed routines](src/content/docs/timeline.md) &mdash; for what no click causes: streaming logs, typing, countdowns
 - [When a visitor takes over](src/content/docs/taking-over.md)
 

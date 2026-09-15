@@ -1,6 +1,6 @@
 # Styling
 
-`busker.css` is optional. It styles the cursor, the ripple, the pointer affordance, the miss hint, and scene switching &mdash; about 100 lines, all scoped to `.busker`.
+`busker.css` is optional. It styles the cursor, the ripple, the pointer affordance, the miss hint, and an optional `[data-scene]` cross-fade recipe &mdash; about 100 lines, all scoped to `.busker`.
 
 ```typescript
 import '@logfox/busker/busker.css';
@@ -48,19 +48,13 @@ The default cursor is a soft dot rather than an arrow, because an arrow on a scr
 
 Busker only sets `left`, `top`, and the `is-*` classes. Everything else is yours.
 
-## Scenes
+## Optional scene cross-fade
 
-Before `busk()` runs, inactive scene siblings are hidden with `display: none` while the active one stays in flow, so SSR and the first paint do not show every page at once or collapse the stack. Once `.busker` is on the root, scenes stack and cross-fade instead.
+Busker does not activate scenes. If your mock uses `[data-scene]` and toggles `.is-active` in your own JavaScript, `busker.css` can cross-fade them.
 
-Scenes are stacked on top of each other and cross-fade, so the one going out
-fades under the one coming in instead of popping. `visibility` waits out the
-fade on the way out, which keeps a scene nobody can see from being read aloud or
-tabbed into.
+Before `busk()` runs, inactive scene siblings are hidden with `display: none` while the active one stays in flow, so SSR and the first paint do not show every page at once. Once `.busker` is on the root, scenes stack and cross-fade instead.
 
-Because they are stacked, they are out of flow, and **the element holding them
-needs a height of its own** &mdash; from a parent, a grid track, or its own
-rule. Without one it collapses and the mock looks empty. In exchange the mock
-never changes height when the scene changes.
+Because stacked scenes are out of flow, **the element holding them needs a height of its own** &mdash; from a parent, a grid track, or its own rule.
 
 Set `--busker-scene-ms` to retime the fade, or turn it into a cut:
 

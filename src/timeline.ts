@@ -1,4 +1,4 @@
-import type {Countdown, Move, Point, Step, Toggle, Typing} from './types.ts';
+import type {Countdown, Move, Point, Step, Task, Toggle, Typing} from './types.ts';
 
 /** How long a glide takes when a step does not say. */
 const DEFAULT_MOVE_MS = 600;
@@ -17,17 +17,27 @@ export function easeInOutCubic(t: number): number {
  * Lay a routine out on a timeline, back to back. A step's press and the page
  * change it causes are one event, so there is nothing to keep in sync by hand.
  */
-export function compile(steps: Step[]): {moves: Move[]; duration: number} {
+export function compile(steps: Step[]): {moves: Move[]; duration: number; tasks: Task[]} {
     let t = 0;
+    const moves: Move[] = [];
+    const tasks: Task[] = [];
 
-    const moves = steps.map((step): Move => {
+    for (const step of steps) {
+        if (step.run) {
+            const at = t + (step.wait ?? 0);
+
+            tasks.push({at, run: step.run});
+            t = at;
+            continue;
+        }
+
         const from = t + (step.wait ?? 0);
         const until = from + (step.moveFor ?? DEFAULT_MOVE_MS);
 
         if (step.click === undefined) {
             t = until;
-
-            return {to: step.to, from, until};
+            moves.push({to: step.to, from, until});
+            continue;
         }
 
         const press = until + (step.dwell ?? DEFAULT_DWELL_MS);
@@ -35,18 +45,17 @@ export function compile(steps: Step[]): {moves: Move[]; duration: number} {
         // A beat runs to the click, which lands as the press lifts — not to the
         // press itself. Otherwise the next beat starts mid-stroke.
         t = press + PRESS_MS;
-
-        return {to: step.click, from, until, press};
-    });
+        moves.push({to: step.click, from, until, press});
+    }
 
     const last = moves[moves.length - 1];
 
-    // A press needs its ring to finish before the loop wipes the scene. Between
-    // beats the next one's wait covers that; the last beat has no next one, and
-    // ending on the click would reset the loop before the click could fire.
+    // A press needs its ring to finish before the loop restarts. Between beats
+    // the next one's wait covers that; the last beat has no next one, and ending
+    // on the click would reset the loop before the click could fire.
     const duration = last?.press === undefined ? t : Math.max(t, last.press + RING_MS);
 
-    return {moves, duration};
+    return {moves, duration, tasks};
 }
 
 /** Index of the move the cursor is on at `t`, or -1 before the first one starts. */

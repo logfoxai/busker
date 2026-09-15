@@ -59,7 +59,31 @@ class FakeObserver implements IntersectionObserver {
  * is off screen. Give the root a size, and give everything inside it a box
  * that goes away when its scene is hidden, the way a real one does.
  */
-function stage(routine: Routine): Stage {
+function wireTestScenes(root: HTMLElement): {showScene: (scene: string) => void} {
+    const showScene = (scene: string): void => {
+        root.querySelectorAll<HTMLElement>('[data-scene]').forEach((el) => {
+            el.classList.toggle('is-active', el.dataset.scene === scene);
+        });
+
+        const navKey = root.querySelector<HTMLElement>(`[data-scene="${scene}"]`)?.dataset.nav;
+
+        root.querySelectorAll<HTMLElement>('[data-nav-item]').forEach((el) => {
+            el.classList.toggle('is-active', el.dataset.navItem === navKey);
+        });
+    };
+
+    root.querySelector('[data-nav-item="home"]')?.addEventListener('click', () => showScene('home'));
+    root.querySelector('[data-nav-item="alerts"]')?.addEventListener('click', () => showScene('list'));
+    root.querySelector('[data-row="p0"]')?.addEventListener('click', () => showScene('home'));
+
+    const initial = root.querySelector<HTMLElement>('[data-scene].is-active')?.dataset.scene ?? 'home';
+
+    showScene(initial);
+
+    return {showScene};
+}
+
+function stage(routine: Routine): Stage & {showScene: (scene: string) => void} {
     document.body.innerHTML = `<div id="root">${MOCK}</div>`;
 
     const root = document.getElementById('root');
@@ -87,11 +111,19 @@ function stage(routine: Routine): Stage {
     globalThis.cancelAnimationFrame = (): void => {};
     performance.now = (): number => now;
 
-    const show = busk(root, routine);
+    const {showScene} = wireTestScenes(root);
+
+    const show = busk(root, {
+        ...routine,
+        onLoop: routine.onLoop ?? ((): void => {
+            showScene('home');
+        }),
+    });
 
     return {
         root,
         show,
+        showScene,
         startShow: () => observers[0].fire(),
         tick: (ms): void => {
             now += ms;
@@ -106,15 +138,11 @@ function stage(routine: Routine): Stage {
 }
 
 const routine: Routine = {
-    initialScene: 'home',
     steps: [
         {click: '[data-nav-item="alerts"]', moveFor: 100, dwell: 0},
         {click: '[data-row="p0"]', wait: 100, moveFor: 100, dwell: 0},
     ],
-    routes: [
-        {click: '[data-nav-item="home"]', scene: 'home'},
-        {click: '[data-nav-item="alerts"]', scene: 'list'},
-    ],
+    clickTargets: ['[data-nav-item="home"]', '[data-nav-item="alerts"]'],
 };
 
 test('the show clicks for real, so the mock changes through its own handlers', (assert) => {
@@ -163,11 +191,12 @@ test('a routine that ends on a click still lands it', (assert) => {
 
 test('the cursor holds its place when its own click takes the target away', (assert) => {
 
-    const {root, startShow, tick} = stage({
-        initialScene: 'list',
+    const {root, startShow, tick, showScene} = stage({
         steps: [{click: '[data-row="p0"]', moveFor: 100, dwell: 0}],
-        routes: [{click: '[data-row="p0"]', scene: 'home'}],
+        clickTargets: ['[data-row="p0"]'],
     });
+
+    showScene('list');
 
     const cursor = root.querySelector<HTMLElement>('[data-cursor]');
 
@@ -266,98 +295,108 @@ test('each beat presses once, and the loop starts over from the top', (assert) =
 
 });
 
-test('when initialScene is omitted, the scene marked is-active in markup wins', (assert) => {
+test('busk does not change which scene is active on init', (assert) => {
 
     document.body.innerHTML = `<div id="root">${MOCK.replace(
-        'data-scene="home"',
-        'data-scene="home" class="is-active"',
-    )}</div>`;
+        'data-scene="list"',
+        'data-scene="list" class="is-active"',
+    ).replace('data-scene="home"', 'data-scene="home"')}</div>`;
 
     const root = document.getElementById('root');
 
     if (!root) throw new Error('no root');
 
     root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
+    wireTestScenes(root);
 
-    const show = busk(root, {routes: routine.routes, steps: routine.steps});
+    const show = busk(root, {clickTargets: routine.clickTargets, steps: routine.steps});
 
-    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
-    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), false);
+    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), false);
     show.destroy();
 
 });
 
-test('markup that already matches initialScene is not cleared on init', (assert) => {
+test('onLoop runs when the playhead wraps', (assert) => {
 
-    document.body.innerHTML = `<div id="root">${MOCK.replace(
-        'data-scene="home"',
-        'data-scene="home" class="is-active"',
-    ).replace(
-        'data-nav-item="home"',
-        'data-nav-item="home" class="is-active"',
-    )}</div>`;
-
-    const root = document.getElementById('root');
-
-    if (!root) throw new Error('no root');
-
-    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
-
-    const show = busk(root, routine);
-
-    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
-    assert.equal(root.querySelector('[data-nav-item="home"]')?.classList.contains('is-active'), true);
-    show.destroy();
-
-});
-
-test('a loop with no initialScene returns to the markup opening scene', (assert) => {
-
-    document.body.innerHTML = `<div id="root">${MOCK.replace(
-        'data-scene="home"',
-        'data-scene="home" class="is-active"',
-    )}</div>`;
-
-    const root = document.getElementById('root');
-
-    if (!root) throw new Error('no root');
-
-    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
-    root.querySelectorAll('*').forEach((el) => {
-        el.getBoundingClientRect = (): DOMRect => {
-            const scene = el.closest('[data-scene]');
-
-            return scene && !scene.classList.contains('is-active')
-                ? new DOMRect(0, 0, 0, 0)
-                : new DOMRect(100, 50, 80, 20);
-        };
+    let loops = 0;
+    const {root, startShow, tick, showScene} = stage({
+        ...routine,
+        onLoop: () => {
+            loops += 1;
+            showScene('home');
+        },
     });
 
-    observers.length = 0;
+    showScene('list');
+    startShow();
+    tick(2000);
 
-    let now = 0;
-    let queued: FrameRequestCallback[] = [];
+    assert.equal(loops >= 1, true);
+    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
 
-    globalThis.IntersectionObserver = FakeObserver;
-    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
-    globalThis.cancelAnimationFrame = (): void => {};
-    performance.now = (): number => now;
+});
 
-    const show = busk(root, {
+test('tasks at t=0 wait until playback starts', (assert) => {
+
+    let runs = 0;
+
+    const {startShow, tick} = stage({
+        steps: [{click: '[data-nav-item="alerts"]', moveFor: 50, dwell: 0}],
+        tasks: [{at: 0, run: (): void => {
+            runs += 1;
+        }}],
+    });
+
+    assert.equal(runs, 0);
+    startShow();
+    tick(1);
+    assert.equal(runs, 1);
+
+});
+
+test('a task at loop end runs before the playhead wraps', (assert) => {
+
+    let end = 0;
+    const {startShow, tick} = stage({
         duration: 500,
-        routes: routine.routes,
+        moves: [],
+        tasks: [{at: 500, run: (): void => {
+            end += 1;
+        }}],
+        onLoop: (): void => {},
     });
 
-    observers[0].fire();
-    now += 600;
+    startShow();
+    tick(500);
+    assert.equal(end, 1);
 
-    const due = queued;
+});
 
-    queued = [];
-    for (const cb of due) cb(now);
+test('a run step and tasks fire once per loop', (assert) => {
 
-    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
-    show.destroy();
+    let runs = 0;
+
+    const {startShow, tick} = stage({
+        steps: [
+            {run: (): void => {
+                runs += 1;
+            }, wait: 50},
+            {click: '[data-nav-item="alerts"]', moveFor: 50, dwell: 0},
+        ],
+        tasks: [{at: 200, run: (): void => {
+            runs += 10;
+        }}],
+    });
+
+    startShow();
+    tick(80);
+    assert.equal(runs, 1);
+    tick(150);
+    assert.equal(runs, 11);
+    tick(2000);
+    tick(80);
+    assert.equal(runs, 12);
 
 });
 
