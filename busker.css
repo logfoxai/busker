@@ -13,7 +13,7 @@
     --busker-cursor-fill: rgb(0 0 0 / 0.42);
     --busker-cursor-edge: #fff;
     --busker-cursor-shadow: rgb(0 0 0 / 0.3);
-    --busker-cursor-z-index: 99999;
+    --busker-cursor-z-index: 2147483647;
     --busker-scene-ms: 0.4s;
 
     /* The cursor is positioned against the root. */
@@ -34,14 +34,18 @@
     display: block;
     height: var(--busker-cursor-size);
     opacity: 0;
+    backface-visibility: hidden;
+    contain: layout style;
+    left: 0;
     pointer-events: none;
     position: absolute;
     scale: 1;
+    top: 0;
     transition:
         background 0.15s ease,
         scale 0.15s ease;
-    translate: -50% -50%;
     width: var(--busker-cursor-size);
+    will-change: translate, scale, opacity;
     z-index: var(--busker-cursor-z-index);
 }
 

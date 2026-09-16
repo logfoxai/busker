@@ -147,8 +147,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         if (from && to) {
             const [x, y] = positionAt(from, to, move, t);
 
-            cursor.style.left = `${x}px`;
-            cursor.style.top = `${y}px`;
+            cursor.style.translate = `calc(${x}px - 50%) calc(${y}px - 50%)`;
         }
 
         const hover = move && typeof move.to === 'string' && t >= move.until
