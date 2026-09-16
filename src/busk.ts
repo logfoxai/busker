@@ -57,11 +57,34 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     /** Where each selector was last seen, in case it stops being anywhere. */
     const lastSeen = new Map<string, Point>();
 
+    /** Skip stacked duplicates (e.g. two view layers) that are hidden but still in layout. */
+    function isShown(el: Element): boolean {
+        if (!root.contains(el)) return false;
+
+        for (let node: Element | null = el; node && node !== root; node = node.parentElement) {
+            const style = getComputedStyle(node);
+
+            if (style.display === 'none' || style.visibility === 'hidden') return false;
+        }
+
+        const rect = el.getBoundingClientRect();
+
+        return rect.width > 0 && rect.height > 0;
+    }
+
+    function queryShown(selector: string): HTMLElement | null {
+        for (const el of root.querySelectorAll<HTMLElement>(selector)) {
+            if (isShown(el)) return el;
+        }
+
+        return root.querySelector<HTMLElement>(selector);
+    }
+
     /** Where a move target sits, in px relative to the root's top-left. */
     function resolve(target: string | Point): Point | null {
         if (Array.isArray(target)) return [target[0] * root.clientWidth, target[1] * root.clientHeight];
 
-        const rect = root.querySelector(target)?.getBoundingClientRect();
+        const rect = queryShown(target)?.getBoundingClientRect();
 
         if (!rect || (rect.width === 0 && rect.height === 0)) return lastSeen.get(target) ?? null;
 
@@ -113,8 +136,6 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     let shownRinging = false;
     let shownCursorX = Number.NaN;
     let shownCursorY = Number.NaN;
-    let hoverLookupKey = '';
-    let hoverLookupEl: Element | null = null;
     const shownToggle = new WeakMap<HTMLElement, string>();
     const shownText = new WeakMap<HTMLElement, string>();
 
@@ -129,7 +150,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
             pressed.add(i);
             if (typeof move.to !== 'string') return;
 
-            const el = root.querySelector<HTMLElement>(move.to);
+            const el = queryShown(move.to);
 
             if (!el) return;
 
@@ -148,6 +169,38 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
             firedTasks.add(i);
             task.run();
         });
+    }
+
+    /** Topmost wired click target under the demo cursor (viewport coords). */
+    function resolveInteractiveAt(clientX: number, clientY: number): Element | null {
+        if (!clickTargets.length) return null;
+
+        const stack =
+            typeof document.elementsFromPoint === 'function'
+                ? document.elementsFromPoint(clientX, clientY)
+                : ([document.elementFromPoint(clientX, clientY)].filter(Boolean) as Element[]);
+
+        for (const el of stack) {
+            if (!root.contains(el)) continue;
+            if (cursor && (el === cursor || cursor.contains(el))) continue;
+
+            for (const selector of clickTargets) {
+                if (!(el instanceof Element)) continue;
+
+                const hit = el.closest(selector);
+
+                if (hit instanceof HTMLElement && root.contains(hit) && isShown(hit)) return hit;
+            }
+        }
+
+        return null;
+    }
+
+    function setShownHover(hover: Element | null): void {
+        if (hover === shownHover) return;
+        shownHover?.classList.remove('is-hover');
+        shownHover = hover;
+        hover?.classList.add('is-hover');
     }
 
     function prepareGlide(index: number, t: number): void {
@@ -207,24 +260,19 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
             }
         }
 
-        let hover: Element | null = null;
+        if (
+            !aside &&
+            clickTargets.length &&
+            Number.isFinite(shownCursorX) &&
+            Number.isFinite(shownCursorY)
+        ) {
+            const rootRect = root.getBoundingClientRect();
 
-        if (move && typeof move.to === 'string' && t >= move.until) {
-            if (move.to !== hoverLookupKey) {
-                hoverLookupKey = move.to;
-                hoverLookupEl = root.querySelector(move.to);
-            }
-
-            hover = hoverLookupEl;
-        } else if (hoverLookupKey) {
-            hoverLookupKey = '';
-            hoverLookupEl = null;
-        }
-
-        if (hover !== shownHover) {
-            shownHover?.classList.remove('is-hover');
-            shownHover = hover;
-            hover?.classList.add('is-hover');
+            setShownHover(
+                resolveInteractiveAt(rootRect.left + shownCursorX, rootRect.top + shownCursorY),
+            );
+        } else {
+            setShownHover(null);
         }
 
         const pressing = move?.press !== undefined && t >= move.press && t < move.press + PRESS_MS;
@@ -274,8 +322,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         glideEndpoints.clear();
         shownCursorX = Number.NaN;
         shownCursorY = Number.NaN;
-        hoverLookupKey = '';
-        hoverLookupEl = null;
+        setShownHover(null);
 
         scriptSchedule = scheduleScript();
         moves = scriptSchedule.moves;
@@ -334,8 +381,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         aside = true;
         pause();
         root.classList.add('is-aside');
-        shownHover?.classList.remove('is-hover');
-        shownHover = null;
+        setShownHover(null);
         shownPressing = false;
         shownRinging = false;
     }
@@ -397,8 +443,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         document.removeEventListener('visibilitychange', onVisibilityChange);
         window.removeEventListener('scroll', scheduleSyncViewportPlayback);
         window.removeEventListener('resize', scheduleSyncViewportPlayback);
-        shownHover?.classList.remove('is-hover');
-        shownHover = null;
+        setShownHover(null);
         root.querySelectorAll('.is-hint').forEach((el) => el.classList.remove('is-hint'));
         root.querySelectorAll('.is-interactive').forEach((el) => el.classList.remove('is-interactive'));
         root.classList.remove('busker', 'is-aside');
@@ -408,7 +453,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     /** Selectors are resolved once; the elements they point at may not exist. */
     const found = <T extends {target: string}>(items: T[] | undefined): (T & {el: HTMLElement})[] =>
         (items ?? []).flatMap((item) => {
-            const el = root.querySelector<HTMLElement>(item.target);
+            const el = queryShown(item.target);
 
             return el ? [{...item, el}] : [];
         });

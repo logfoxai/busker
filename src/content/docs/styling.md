@@ -49,6 +49,20 @@ The default cursor is a soft dot rather than an arrow, because an arrow on a scr
 
 Busker only sets `translate` (position) and the `is-*` classes. Everything else is yours.
 
+## Demo hover
+
+The demo cursor does not move the real pointer, so CSS `:hover` will not fire while the show is running. Busker hit-tests under the cursor each frame and toggles `is-hover` on the topmost `clickTargets` match.
+
+Pair your hover styles for wired controls:
+
+```css
+.busker:not(.is-aside) .my-button.is-interactive:is(:hover, .is-hover) {
+    background: var(--accent-muted);
+}
+```
+
+After a visitor takes over (`.is-aside`), only `:hover` applies and busker clears `is-hover`.
+
 ## Optional scene cross-fade
 
 Busker does not activate scenes. If your mock uses `[data-scene]` and toggles `.is-active` in your own JavaScript, `busker.css` can cross-fade them.

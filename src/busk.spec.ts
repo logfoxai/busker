@@ -773,6 +773,128 @@ test('resize does not resume playback while the tab is hidden', (assert) => {
 
 });
 
+test('clicks the shown match when the same selector exists in a hidden stack layer', (assert) => {
+
+    document.body.innerHTML = `
+        <div id="root">
+            <div data-layer="a">
+                <button type="button" data-pick data-id="a">A</button>
+            </div>
+            <div data-layer="b">
+                <button type="button" data-pick data-id="b">B</button>
+            </div>
+            <span data-cursor></span>
+        </div>
+    `;
+
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 400, 300);
+    root.querySelectorAll<HTMLElement>('[data-pick]').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => new DOMRect(120, 40, 40, 20);
+    });
+
+    let picked = '';
+
+    root.querySelectorAll<HTMLElement>('[data-pick]').forEach((el) => {
+        el.addEventListener('click', () => {
+            picked = el.dataset.id ?? '';
+        });
+    });
+
+    root.querySelector<HTMLElement>('[data-layer="a"]')!.style.visibility = 'hidden';
+
+    observers.length = 0;
+
+    let now = 0;
+    const queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    const show = busk(root, {
+        motion: TEST_MOTION,
+        steps: [{click: '[data-pick]'}],
+        clickTargets: ['[data-pick]'],
+    });
+
+    observers[0].fire();
+    tickLoop: {
+        for (let i = 0; i < 40; i += 1) {
+            now += 50;
+            for (const cb of queued.splice(0)) cb(now);
+        }
+    }
+
+    assert.equal(picked, 'b');
+    show.destroy();
+
+});
+
+test('is-hover tracks the click target under the demo cursor', (assert) => {
+
+    document.body.innerHTML = `
+        <div id="root">
+            <button type="button" data-pick>A</button>
+            <button type="button" data-pick-other>B</button>
+            <span data-cursor></span>
+        </div>
+    `;
+
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 400, 300);
+    root.querySelector<HTMLElement>('[data-pick]')!.getBoundingClientRect = (): DOMRect =>
+        new DOMRect(120, 40, 40, 20);
+    root.querySelector<HTMLElement>('[data-pick-other]')!.getBoundingClientRect = (): DOMRect =>
+        new DOMRect(220, 40, 40, 20);
+
+    const pick = root.querySelector<HTMLElement>('[data-pick]')!;
+    const pickOther = root.querySelector<HTMLElement>('[data-pick-other]')!;
+
+    document.elementsFromPoint = (x: number, y: number): Element[] => {
+        if (Math.hypot(x - 140, y - 50) < 25) return [pick];
+        if (Math.hypot(x - 240, y - 50) < 25) return [pickOther];
+
+        return [root];
+    };
+
+    observers.length = 0;
+
+    let now = 0;
+    const queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    const show = busk(root, {
+        motion: TEST_MOTION,
+        steps: [{move: '[data-pick]'}, {wait: 200}],
+        clickTargets: ['[data-pick]', '[data-pick-other]'],
+    });
+
+    observers[0].fire();
+
+    for (let i = 0; i < 30; i += 1) {
+        now += 50;
+        for (const cb of queued.splice(0)) cb(now);
+    }
+
+    assert.equal(pick.classList.contains('is-hover'), true);
+    assert.equal(pickOther.classList.contains('is-hover'), false);
+
+    show.destroy();
+
+});
+
 test('destroy puts the mock back the way it was found', (assert) => {
 
     const {root, show, clickAsVisitor} = stage(routine);
