@@ -205,7 +205,7 @@ test('the cursor holds its place when its own click takes the target away', (ass
     startShow();
     tick(100);
 
-    const onTheRow = cursor?.style.left;
+    const onTheRow = cursor?.style.translate;
 
     assert.equal(cursor?.classList.contains('is-pressing'), true);
 
@@ -218,7 +218,7 @@ test('the cursor holds its place when its own click takes the target away', (ass
 
     assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
     assert.equal(cursor?.classList.contains('is-ringing'), true);
-    assert.equal(cursor?.style.left, onTheRow);
+    assert.equal(cursor?.style.translate, onTheRow);
 
 });
 
