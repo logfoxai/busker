@@ -37,4 +37,6 @@ Guides are plain markdown with a `# Title` and no frontmatter, so they read corr
 
 ## Releases
 
-Merges to `main` release through [autorel](https://github.com/mhweiner/autorel): the PR title's conventional-commit type decides the version bump, and the docs site publishes in the same run. Use `feat:` and `fix:` for anything that ships, `docs:` for guides.
+Merges to `main` release through [AutoRel](https://github.com/mhweiner/autorel): the squash-merge title's conventional-commit type decides the semver bump, npm publish runs with `--publish`, and the docs site deploys in the same workflow. **`package.json` version is always `0.0.0-autorel` in git** — never bump it in a PR; AutoRel writes the released version to the tag/changelog/npm.
+
+Use `feat:` and `fix:` for anything that ships, `feat!:` / `fix!:` for breaking changes, `docs:` for guides only.

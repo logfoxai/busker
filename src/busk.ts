@@ -370,7 +370,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     }
 
     return {
-        get duration() {
+        get duration(): number {
             return duration;
         },
         play,

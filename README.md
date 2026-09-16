@@ -1,3 +1,6 @@
+[![CI](https://github.com/logfoxai/busker/actions/workflows/ci.yml/badge.svg)](https://github.com/logfoxai/busker/actions/workflows/ci.yml)
+[![AutoRel](https://img.shields.io/badge/%F0%9F%9A%80%20AutoRel-2D4DDE)](https://github.com/mhweiner/autorel)
+
 <div align="center">
   <picture>
     <source srcset="assets/busker-lockup-dark.svg" media="(prefers-color-scheme: dark)" />
@@ -69,6 +72,10 @@ Same guides as [busker.logfox.ai](https://busker.logfox.ai). Links are repo-rela
 ### Project
 
 - [Development](src/content/docs/development.md)
+
+## Releases
+
+Merges to `main` release through [AutoRel](https://github.com/mhweiner/autorel). The squash-merge title's conventional commit type sets the semver bump (`feat!:` → major). Do not hand-edit `package.json` version — it stays `0.0.0-autorel` in git; npm gets the real version at publish time.
 
 ## License
 
