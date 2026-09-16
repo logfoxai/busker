@@ -137,10 +137,20 @@ function stage(routine: Routine): Stage & {showScene: (scene: string) => void} {
     };
 }
 
+const TEST_MOTION = {
+    baseMoveMs: 100,
+    minMoveMs: 100,
+    maxMoveMs: 100,
+    pxPerSecond: 1e9,
+    dwellMs: 0,
+};
+
 const routine: Routine = {
+    motion: TEST_MOTION,
     steps: [
-        {click: '[data-nav-item="alerts"]', moveFor: 100, dwell: 0},
-        {click: '[data-row="p0"]', wait: 100, moveFor: 100, dwell: 0},
+        {click: '[data-nav-item="alerts"]'},
+        {wait: 100},
+        {click: '[data-row="p0"]'},
     ],
     clickTargets: ['[data-nav-item="home"]', '[data-nav-item="alerts"]'],
 };
@@ -179,7 +189,8 @@ test('a routine that ends on a click still lands it', (assert) => {
 
     const {root, startShow, tick} = stage({
         ...routine,
-        steps: [{click: '[data-nav-item="alerts"]', moveFor: 100, dwell: 0}],
+        motion: TEST_MOTION,
+        steps: [{click: '[data-nav-item="alerts"]'}],
     });
 
     startShow();
@@ -192,7 +203,8 @@ test('a routine that ends on a click still lands it', (assert) => {
 test('the cursor holds its place when its own click takes the target away', (assert) => {
 
     const {root, startShow, tick, showScene} = stage({
-        steps: [{click: '[data-row="p0"]', moveFor: 100, dwell: 0}],
+        motion: TEST_MOTION,
+        steps: [{click: '[data-row="p0"]'}],
         clickTargets: ['[data-row="p0"]'],
     });
 
@@ -342,7 +354,8 @@ test('tasks at t=0 wait until playback starts', (assert) => {
     let runs = 0;
 
     const {startShow, tick} = stage({
-        steps: [{click: '[data-nav-item="alerts"]', moveFor: 50, dwell: 0}],
+        motion: {...TEST_MOTION, baseMoveMs: 50, minMoveMs: 50, maxMoveMs: 50},
+        steps: [{click: '[data-nav-item="alerts"]'}],
         tasks: [{at: 0, run: (): void => {
             runs += 1;
         }}],
@@ -378,11 +391,13 @@ test('a run step and tasks fire once per loop', (assert) => {
     let runs = 0;
 
     const {startShow, tick} = stage({
+        motion: {...TEST_MOTION, baseMoveMs: 50, minMoveMs: 50, maxMoveMs: 50},
         steps: [
+            {wait: 50},
             {run: (): void => {
                 runs += 1;
-            }, wait: 50},
-            {click: '[data-nav-item="alerts"]', moveFor: 50, dwell: 0},
+            }},
+            {click: '[data-nav-item="alerts"]'},
         ],
         tasks: [{at: 200, run: (): void => {
             runs += 10;

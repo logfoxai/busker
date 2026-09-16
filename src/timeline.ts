@@ -1,58 +1,92 @@
-import type {Countdown, Move, Point, Step, Task, Toggle, Typing} from './types.ts';
+import type {Countdown, MotionConfig, Move, Point, Step, Task, Toggle, Typing} from './types.ts';
 
-/** How long a glide takes when a step does not say. */
-const DEFAULT_MOVE_MS = 600;
-/** How long the cursor hovers before pressing when a step does not say. */
-const DEFAULT_DWELL_MS = 250;
 /** How long the cursor stays squashed after a press. */
 export const PRESS_MS = 200;
 /** How long the ripple ring lingers. Outlives the press so the click reads. */
 export const RING_MS = 500;
 
+export const DEFAULT_MOTION: Required<MotionConfig> = {
+    baseMoveMs: 200,
+    pxPerSecond: 500,
+    minMoveMs: 280,
+    maxMoveMs: 900,
+    dwellMs: 250,
+};
+
 export function easeInOutCubic(t: number): number {
     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
+export function distancePx(from: Point, to: Point): number {
+    return Math.hypot(to[0] - from[0], to[1] - from[1]);
+}
+
+/** How long a glide should take for a given distance and motion settings. */
+export function moveDurationMs(distancePx: number, motion: MotionConfig = {}): number {
+    const m = {...DEFAULT_MOTION, ...motion};
+    const scaled = m.baseMoveMs + (distancePx / m.pxPerSecond) * 1000;
+
+    return Math.round(Math.min(m.maxMoveMs, Math.max(m.minMoveMs, scaled)));
+}
+
+/** Resolve a step target to px in the root; return null if it is not on screen yet. */
+export type ResolveTarget = (to: string | Point, from: Point) => Point | null;
+
 /**
- * Lay a routine out on a timeline, back to back. A step's press and the page
- * change it causes are one event, so there is nothing to keep in sync by hand.
+ * Lay a script out on a timeline. Waits and runs use fixed times; glides use
+ * `resolveTarget` and `motion` so travel stays in one place, not on every step.
  */
-export function compile(steps: Step[]): {moves: Move[]; duration: number; tasks: Task[]} {
+export function compile(
+    steps: Step[],
+    resolveTarget: ResolveTarget,
+    motion: MotionConfig = {},
+    start: Point = [0, 0],
+): {moves: Move[]; duration: number; tasks: Task[]} {
+    const m = {...DEFAULT_MOTION, ...motion};
     let t = 0;
     const moves: Move[] = [];
     const tasks: Task[] = [];
+    let cursorAt = start;
 
     for (const step of steps) {
-        if (step.run) {
-            const at = t + (step.wait ?? 0);
+        const from = t;
 
-            tasks.push({at, run: step.run});
-            t = at;
+        if ('click' in step && step.click !== undefined) {
+            const dest = resolveTarget(step.click, cursorAt) ?? cursorAt;
+            const dist = distancePx(cursorAt, dest);
+            const moveMs = moveDurationMs(dist, m);
+            const until = from + moveMs;
+            const press = until + m.dwellMs;
+
+            cursorAt = dest;
+            t = press + PRESS_MS;
+            moves.push({to: step.click, from, until, press});
             continue;
         }
 
-        const from = t + (step.wait ?? 0);
-        const until = from + (step.moveFor ?? DEFAULT_MOVE_MS);
+        if ('move' in step && step.move !== undefined) {
+            const dest = resolveTarget(step.move, cursorAt) ?? cursorAt;
+            const dist = distancePx(cursorAt, dest);
+            const moveMs = moveDurationMs(dist, m);
+            const until = from + moveMs;
 
-        if (step.click === undefined) {
+            cursorAt = dest;
             t = until;
-            moves.push({to: step.to, from, until});
+            moves.push({to: step.move, from, until});
             continue;
         }
 
-        const press = until + (step.dwell ?? DEFAULT_DWELL_MS);
+        if ('run' in step) {
+            tasks.push({at: t, run: step.run});
+            continue;
+        }
 
-        // A beat runs to the click, which lands as the press lifts — not to the
-        // press itself. Otherwise the next beat starts mid-stroke.
-        t = press + PRESS_MS;
-        moves.push({to: step.click, from, until, press});
+        if ('wait' in step) {
+            t += step.wait;
+        }
     }
 
     const last = moves[moves.length - 1];
-
-    // A press needs its ring to finish before the loop restarts. Between beats
-    // the next one's wait covers that; the last beat has no next one, and ending
-    // on the click would reset the loop before the click could fire.
     const duration = last?.press === undefined ? t : Math.max(t, last.press + RING_MS);
 
     return {moves, duration, tasks};

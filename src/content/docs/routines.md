@@ -1,8 +1,6 @@
 # Click-driven routines
 
-A routine is a list of places the cursor goes. At each stop it presses the element for real, so the mock changes through the handlers you already wrote. You never say *when* a page should change, only *what* gets clicked &mdash; the change is caused, not timed.
-
-Scene changes, modals, and loop resets are **your** click handlers, `tasks`, `onLoop`, or `{ run }` steps &mdash; busker only drives the pointer and the clock.
+A routine is a **script**: a list of steps that run top to bottom, loop after loop. Each step does exactly one thing — click, wait, move the cursor, or run your code. There is no second timeline for UI state: if a click causes a change, you list the click and your handler does the rest. Change a `{ wait: … }` and nothing else drifts.
 
 ```typescript
 wireScenes(root);
@@ -11,10 +9,14 @@ busk(root, {
     start: [0.55, 0.25],
     onLoop: () => wireScenes(root, 'home'),
     steps: [
-        {click: '[data-nav-item="alerts"]', wait: 900, moveFor: 550},
-        {click: '[data-row="p0"]', wait: 1500, moveFor: 700},
-        {click: '[data-close]', wait: 2600},
-        {to: [0.55, 0.25], wait: 900, moveFor: 900},
+        {wait: 900},
+        {click: '[data-nav-item="alerts"]'},
+        {wait: 1500},
+        {click: '[data-row="p0"]'},
+        {wait: 2600},
+        {click: '[data-close]'},
+        {wait: 900},
+        {move: [0.55, 0.25]},
     ],
     clickTargets: ['[data-nav-item="home"]', '[data-nav-item="alerts"]', '[data-row="p0"]'],
 });
@@ -22,69 +24,72 @@ busk(root, {
 
 ## Steps
 
-Each step is one beat, and they run back to back. The loop is as long as the beats add up to &mdash; there is no `duration` to keep in step.
+| Step | What it does |
+|---|---|
+| `{ click: 'selector' }` | Glide to the element, dwell, press, and **really** `.click()` it. |
+| `{ wait: ms }` | Pause — reading time after whatever just opened or happened. |
+| `{ move: selector \| [x, y] }` | Glide somewhere **without** pressing (park the cursor before the loop ends). |
+| `{ run: () => void }` | Your code once, cursor stays put (keyboard shortcut, sync another animation, etc.). |
 
-A step either presses something:
+That is the whole vocabulary for click-driven shows. Pauses are never folded into click steps, so the script reads like a storyboard.
 
-| Field | Default | What it does |
-|---|---|---|
-| `click` | &mdash; | Selector of the element to press. Clicked. |
-| `wait` | `0` | Pause before the cursor sets off. This is reading time for whatever the last press opened. |
-| `moveFor` | `600` | How long the glide takes. |
-| `dwell` | `250` | How long the cursor hovers on the target before pressing. |
+## Cursor motion (`motion`)
 
-…or drifts somewhere without pressing:
+Glide speed is **not** on each step. Pass `motion` once on the routine (defaults are tuned for product mocks):
 
-| Field | Default | What it does |
-|---|---|---|
-| `to` | &mdash; | A selector, or `[x, y]` as a fraction of the root's size. |
-| `wait` | `0` | Pause before setting off. |
-| `moveFor` | `600` | How long the glide takes. |
+```typescript
+busk(root, {
+    motion: {
+        baseMoveMs: 200,
+        pxPerSecond: 500,
+        minMoveMs: 280,
+        maxMoveMs: 900,
+        dwellMs: 250,
+    },
+    steps: [/* … */],
+});
+```
 
-…or runs your code (no cursor move):
+Busker measures distance in pixels when each glide starts, picks a duration from `motion`, and eases with an in-out cubic curve. Short hops stay snappy; long crosses get more time, capped so nothing feels sluggish.
 
-| Field | Default | What it does |
-|---|---|---|
-| `run` | &mdash; | Function called once when this beat starts. |
-| `wait` | `0` | Pause before `run` fires. |
-
-A drift is how you get the cursor back out of the way before the loop starts over, or park it somewhere neutral while something animates on its own.
-
-## Timing a routine
-
-Time goes into `wait`, not into the glide. `wait` is how long a visitor gets to look at what just appeared; `moveFor` is only the travel. A step that opens something dense wants a long `wait` on the *next* step, not a slow glide on this one.
-
-A press is a stroke rather than an instant: the cursor goes down on the target, and the real click fires as it lifts.
-
-Because the beats are relative, you can drop a step into the middle of a routine and nothing after it needs touching.
+Re-schedule on every loop uses fresh layout measurements, so reflow and breakpoints stay in sync without editing the script.
 
 ## Click targets
 
-`clickTargets` is a list of **selectors** for elements that should look clickable and count as hits when a visitor clicks (so dead clicks still get the miss hint):
+`clickTargets` is the list of **selectors** that should look clickable and count as hits when a visitor clicks (dead clicks still get the miss hint):
 
 ```typescript
 clickTargets: ['[data-nav-item="alerts"]', '[data-filter]'],
 ```
 
-Busker does **not** change your UI. Wire `click` handlers (or rely on scripted `steps` clicks) for scenes, filters, and modals.
+Busker does **not** change your UI. Wire `click` handlers (or rely on scripted `{ click }` steps) for scenes, filters, and modals.
 
 ## Tasks and `onLoop`
 
-For hand-timed routines, or extra beats without cursor motion:
+Absolute-time `tasks` and `onLoop` are for hand-timed extras or loop reset — not for UI that a click should cause:
 
 ```typescript
-tasks: [{at: 16_000, run: () => resetMyMock()}],
-onLoop: () => resetMyMock(),
+tasks: [{at: 16_000, run: () => resetAmbientAnimation()}],
+onLoop: () => wireScenes(root, 'home'),
 ```
 
-`onLoop` runs when the playhead wraps to 0. `tasks` fire once per loop when `elapsed` reaches `at`.
+`onLoop` runs when the playhead wraps to 0, after the last step (including ring-out on a final click).
 
 ## Where the cursor starts
 
-`start` is where the cursor rests before the first beat and after a drift, as a fraction of the root: `[0.55, 0.25]` is a bit right of centre, a quarter of the way down. It defaults to the middle.
+`start` is where the cursor rests before the first step, as a fraction of the root: `[0.55, 0.25]` is a bit right of centre, a quarter of the way down. It defaults to the middle.
 
-## Reading positions
+## Migrating from v1
 
-Targets are resolved from the DOM on every frame, so a routine keeps working when the mock reflows, when the container resizes, and at every breakpoint.
+v1 let you bundle `wait`, `moveFor`, and `dwell` on the same step as `click`, and used `{ to: … }` for drifts. v2 splits those apart:
+
+| v1 | v2 |
+|---|---|
+| `{ click: '…', wait: 900, moveFor: 550 }` | `{ wait: 900 }, { click: '…' }` |
+| `{ to: [0.5, 0.5], wait: 900 }` | `{ wait: 900 }, { move: [0.5, 0.5] }` |
+| `{ run: fn, wait: 400 }` | `{ wait: 400 }, { run: fn }` |
+| per-step `moveFor` / `dwell` | optional routine `motion` |
+
+Need the loop length for hand-timed toggles or typing? Use `compile()` from `@logfox/busker` with the same steps and a distance resolver — see [API reference](./api-reference.md).
 
 ← [Markup](./markup.md) &middot; Next: [Hand-timed routines](./timeline.md)

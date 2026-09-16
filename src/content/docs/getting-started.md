@@ -54,8 +54,10 @@ const root = document.querySelector<HTMLElement>('.app');
 if (root) {
     busk(root, {
         steps: [
-            {click: '[data-nav-item="alerts"]', wait: 1200},
-            {click: '[data-nav-item="home"]', wait: 2000},
+            {wait: 1200},
+            {click: '[data-nav-item="alerts"]'},
+            {wait: 2000},
+            {click: '[data-nav-item="home"]'},
         ],
         clickTargets: [
             '[data-nav-item="home"]',
@@ -65,7 +67,7 @@ if (root) {
 }
 ```
 
-That is the whole thing. The cursor glides to the Alerts button, presses it, and the mock changes &mdash; because busker clicks it. There is no separate timeline saying "and at 1.8s, switch to the alerts scene", so there is nothing to fall out of sync when you change a duration.
+That is the whole thing. Each `{ wait }` is a pause; each `{ click }` is a real press through your handlers. Glide speed comes from the routine's `motion` settings, not from the script, so you never maintain two clocks for the same UI change.
 
 ## 4. Let people play with it
 

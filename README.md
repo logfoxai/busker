@@ -20,9 +20,12 @@ import '@logfox/busker/busker.css';
 
 busk(document.querySelector('.app'), {
     steps: [
-        {click: '[data-nav-item="alerts"]', wait: 900},
-        {click: '[data-row="p0"]', wait: 1500},
-        {to: [0.55, 0.25], wait: 2600},
+        {wait: 900},
+        {click: '[data-nav-item="alerts"]'},
+        {wait: 1500},
+        {click: '[data-row="p0"]'},
+        {wait: 2600},
+        {move: [0.55, 0.25]},
     ],
     clickTargets: [
         '[data-nav-item="alerts"]',

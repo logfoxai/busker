@@ -3,12 +3,13 @@ import {
     RING_MS,
     compile,
     countdownText,
+    DEFAULT_MOTION,
     isOn,
     moveIndexAt,
     positionAt,
     typedText,
 } from './timeline.ts';
-import type {Busker, Move, Point, Routine, Task} from './types.ts';
+import type {Busker, MotionConfig, Move, Point, Routine, Task} from './types.ts';
 
 const DEFAULT_START: Point = [0.5, 0.5];
 /** IntersectionObserver ratios are floating point; 1 is rarely exactly 1. */
@@ -39,27 +40,11 @@ function visibleFraction(el: Element): number {
 export function busk(root: HTMLElement, routine: Routine): Busker {
     const cursor = root.querySelector<HTMLElement>('[data-cursor]');
 
-    const compiled = routine.steps ? compile(routine.steps) : null;
-    const moves = compiled?.moves ?? routine.moves ?? [];
-    const duration = compiled?.duration ?? routine.duration ?? 0;
+    const motion: MotionConfig = {...DEFAULT_MOTION, ...routine.motion};
     const start = routine.start ?? DEFAULT_START;
     const clickTargets = routine.clickTargets ?? [];
     const visibility = routine.visibility ?? 1;
-    const tasks: Task[] = [...(compiled?.tasks ?? []), ...(routine.tasks ?? [])].sort(
-        (a, b) => a.at - b.at,
-    );
-
-    /** Selectors are resolved once; the elements they point at may not exist. */
-    const found = <T extends {target: string}>(items: T[] | undefined): (T & {el: HTMLElement})[] =>
-        (items ?? []).flatMap((item) => {
-            const el = root.querySelector<HTMLElement>(item.target);
-
-            return el ? [{...item, el}] : [];
-        });
-
-    const toggles = found(routine.toggles);
-    const typings = found(routine.typing);
-    const countdowns = found(routine.countdowns);
+    const scriptSteps = routine.steps;
 
     /** Where each selector was last seen, in case it stops being anywhere. */
     const lastSeen = new Map<string, Point>();
@@ -83,6 +68,22 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         return at;
     }
 
+    const resolveTarget = (to: string | Point, _from: Point): Point | null => resolve(to);
+
+    function scheduleScript(): {moves: Move[]; duration: number; tasks: Task[]} {
+        const startPx = resolve(start) ?? [root.clientWidth / 2, root.clientHeight / 2];
+
+        return compile(scriptSteps ?? [], resolveTarget, motion, startPx);
+    }
+
+    let scriptSchedule = scriptSteps ? scheduleScript() : null;
+    let moves = scriptSchedule?.moves ?? routine.moves ?? [];
+    let duration = scriptSchedule?.duration ?? routine.duration ?? 0;
+    let tasks: Task[] = [
+        ...(scriptSchedule?.tasks ?? []),
+        ...(routine.tasks ?? []),
+    ].sort((a, b) => a.at - b.at);
+
     let elapsed = 0;
     let last = 0;
     let rafId = 0;
@@ -105,12 +106,12 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const shownText = new WeakMap<HTMLElement, string>();
 
     /**
-     * Click the steps whose press has lifted, each once per loop. The
+     * Really click the steps whose press has lifted, each once per loop. The
      * click lands at the end of the stroke, the way a real one does, so the
      * cursor reads on the element before the click takes it away.
      */
     function press(t: number): void {
-        if (!compiled) return;
+        if (!scriptSteps) return;
 
         moves.forEach((move, i) => {
             if (move.press === undefined || t < move.press + PRESS_MS || pressed.has(i)) return;
@@ -199,6 +200,17 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         if (scheduleTasks) runTasks(t);
     }
 
+    function wrapLoop(): void {
+        routine.onLoop?.();
+
+        if (scriptSteps) {
+            scriptSchedule = scheduleScript();
+            moves = scriptSchedule.moves;
+            duration = scriptSchedule.duration;
+            tasks = [...scriptSchedule.tasks, ...(routine.tasks ?? [])].sort((a, b) => a.at - b.at);
+        }
+    }
+
     function frame(now: number): void {
         if (!playing) return;
 
@@ -210,7 +222,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
             press(elapsed);
             pressed.clear();
             firedTasks.clear();
-            routine.onLoop?.();
+            wrapLoop();
             elapsed = 0;
         } else {
             elapsed = next;
@@ -312,6 +324,18 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         cursor?.classList.remove('is-visible', 'is-pressing', 'is-ringing');
     }
 
+    /** Selectors are resolved once; the elements they point at may not exist. */
+    const found = <T extends {target: string}>(items: T[] | undefined): (T & {el: HTMLElement})[] =>
+        (items ?? []).flatMap((item) => {
+            const el = root.querySelector<HTMLElement>(item.target);
+
+            return el ? [{...item, el}] : [];
+        });
+
+    const toggles = found(routine.toggles);
+    const typings = found(routine.typing);
+    const countdowns = found(routine.countdowns);
+
     if (clickTargets.length) {
         for (const selector of clickTargets) {
             root.querySelectorAll(selector).forEach((el) => el.classList.add('is-interactive'));
@@ -345,5 +369,13 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         cursor?.classList.add('is-visible');
     }
 
-    return {duration, play, pause, stepAside, destroy};
+    return {
+        get duration() {
+            return duration;
+        },
+        play,
+        pause,
+        stepAside,
+        destroy,
+    };
 }

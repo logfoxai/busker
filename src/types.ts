@@ -2,42 +2,28 @@
 export type Point = [number, number];
 
 /**
- * One beat of a routine. Press something, drift somewhere, or run your own code.
- * Beats are laid out back to back in the order a visitor would see them.
+ * One line in a click-driven script. Each step does exactly one thing; they run
+ * in order. Pauses are their own steps so the story stays easy to read.
  */
 export type Step =
-    | {
-        /** Selector of the element to press. It gets clicked. */
-        click: string;
-        /** Pause before the cursor sets off — time to read whatever just opened. */
-        wait?: number;
-        /** How long the glide takes. Default 600. */
-        moveFor?: number;
-        /** How long the cursor hovers before pressing. Default 250. */
-        dwell?: number;
-        /** A press goes to the thing it clicks. */
-        to?: never;
-        run?: never;
-    }
-    | {
-        /** Where to glide, with no press at the end. */
-        to: string | Point;
-        wait?: number;
-        moveFor?: number;
-        click?: never;
-        /** Nothing is pressed, so there is no hover to hold before it. */
-        dwell?: never;
-        run?: never;
-    }
-    | {
-        /** Run arbitrary code at this beat (reset state, sync another loop, etc.). */
-        run: () => void;
-        wait?: number;
-        click?: never;
-        to?: never;
-        moveFor?: never;
-        dwell?: never;
-    };
+    | {click: string}
+    | {move: string | Point}
+    | {wait: number}
+    | {run: () => void};
+
+/** Global cursor motion — not per step. Glides use distance and these limits. */
+export interface MotionConfig {
+    /** Added to every glide before distance scaling. Default 200. */
+    baseMoveMs?: number;
+    /** Pixels per second once distance is applied. Default 500. */
+    pxPerSecond?: number;
+    /** Shortest glide. Default 280. */
+    minMoveMs?: number;
+    /** Longest glide. Default 900. */
+    maxMoveMs?: number;
+    /** Hover on target before a click step presses. Default 250. */
+    dwellMs?: number;
+}
 
 /** Code to run once when the playhead reaches `at` (ms from loop start). */
 export interface Task {
@@ -54,7 +40,7 @@ export interface Move {
     /** When the cursor arrives. */
     until: number;
     /**
-     * Optional moment to animate a press. A `TimedRoutine` never clicks
+     * Optional moment to animate a press. A `TimedRoutine` never really clicks
      * — whatever the press appears to do, drive it with a `Toggle` or `Task`.
      */
     press?: number;
@@ -94,14 +80,16 @@ export interface Countdown {
 interface CommonRoutine {
     /** Where the cursor rests before the first beat. Default `[0.5, 0.5]`. */
     start?: Point;
+    /** Cursor glide timing. Same for every click and move step. */
+    motion?: MotionConfig;
     /**
      * Selectors that look clickable and count as hits for the miss hint.
      * Scene changes and other UI state are your handlers' job.
      */
     clickTargets?: string[];
-    /** Timed callbacks (merged with `run` steps when using `steps`). */
+    /** Timed callbacks at absolute ms in the loop (hand-timed extras). */
     tasks?: Task[];
-    /** Called when the playhead loops back to 0. */
+    /** Called when the playhead wraps to 0. */
     onLoop?: () => void;
     toggles?: Toggle[];
     typing?: Typing[];
@@ -124,7 +112,7 @@ export interface ScriptRoutine extends CommonRoutine {
     moves?: never;
 }
 
-/** A hand-timed show. Nothing is clicked; a press is animation only. */
+/** A hand-timed show. Nothing is really clicked; a press is animation only. */
 export interface TimedRoutine extends CommonRoutine {
     /** Loop length in ms. */
     duration: number;

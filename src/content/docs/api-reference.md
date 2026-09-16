@@ -1,7 +1,7 @@
 # API reference
 
 ```typescript
-import {busk} from '@logfox/busker';
+import {busk, compile} from '@logfox/busker';
 
 const show = busk(root, routine);
 ```
@@ -14,20 +14,20 @@ Puts on a show inside `root`, an `HTMLElement`. Returns a [`Busker`](#busker). S
 
 A routine is one of two things, never a mix. A `ScriptRoutine` has `steps` and
 gets its loop length from them; a `TimedRoutine` has a `duration` you set
-yourself. Mixing the two is a type error, so a hand-set `duration` can never
-quietly cut a script short.
+yourself. Mixing the two is a type error.
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
-| `steps` | [`Step[]`](#step) | &mdash; | A click-driven routine. Required in a `ScriptRoutine`. |
+| `steps` | [`Step[]`](#step) | &mdash; | A click-driven script. Required in a `ScriptRoutine`. |
 | `duration` | `number` | &mdash; | Loop length in ms. Required in a `TimedRoutine`. |
 | `moves` | [`Move[]`](#move) | none | Hand-timed cursor glides. `TimedRoutine` only. |
 
-Everything else is shared:
+Shared fields:
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
 | `start` | `[number, number]` | `[0.5, 0.5]` | Where the cursor rests, as a fraction of the root's size. |
+| `motion` | [`MotionConfig`](#motionconfig) | see below | Glide timing for all `{ click }` and `{ move }` steps. |
 | `clickTargets` | `string[]` | none | Selectors that look clickable and count for the miss hint. |
 | `tasks` | [`Task[]`](#task) | none | Callbacks at absolute times in the loop. |
 | `onLoop` | `() => void` | none | Called when the playhead wraps to 0. |
@@ -39,31 +39,30 @@ Everything else is shared:
 
 ## `Step`
 
-One beat of a click-driven routine. Either a press:
+One line in a click-driven script — exactly one of:
 
-| Field | Type | Default |
+| Shape | What it does |
+|---|---|
+| `{ click: string }` | Glide, dwell, press, real click. |
+| `{ wait: number }` | Pause the playhead (ms). |
+| `{ move: string \| [number, number] }` | Glide without pressing. |
+| `{ run: () => void }` | Run code once; cursor unchanged. |
+
+## `MotionConfig`
+
+| Field | Default | What it does |
 |---|---|---|
-| `click` | `string` | &mdash; |
-| `wait` | `number` | `0` |
-| `moveFor` | `number` | `600` |
-| `dwell` | `number` | `250` |
+| `baseMoveMs` | `200` | Added to every glide before distance scaling. |
+| `pxPerSecond` | `500` | Travel speed once distance is known. |
+| `minMoveMs` | `280` | Shortest glide. |
+| `maxMoveMs` | `900` | Longest glide. |
+| `dwellMs` | `250` | Hover on target before a `{ click }` presses. |
 
-…or run your code (no cursor move):
+Easing is fixed in-out cubic (`easeInOutCubic` in the package exports).
 
-| Field | Type | Default |
-|---|---|---|
-| `run` | `() => void` | &mdash; |
-| `wait` | `number` | `0` |
+## `compile(steps, resolveTarget, motion?, start?)`
 
-…or a drift, which never clicks:
-
-| Field | Type | Default |
-|---|---|---|
-| `to` | `string \| [number, number]` | &mdash; |
-| `wait` | `number` | `0` |
-| `moveFor` | `number` | `600` |
-
-Beats run back to back: a step sets off `wait` after the last one finished.
+Lays a script out on a timeline for tests or syncing hand-timed toggles. `resolveTarget(to, from)` returns the destination in px relative to the root (or `null` if missing). Returns `{ moves, duration, tasks }` — same shape the runtime uses internally.
 
 ## `Task`
 
@@ -113,10 +112,10 @@ A hand-timed glide. See [Hand-timed routines](./timeline.md#moves).
 
 | Member | What it does |
 |---|---|
-| `duration` | Loop length in ms: what you set, or what the `steps` add up to. |
+| `duration` | Loop length in ms: what you set, or what the `steps` add up to after scheduling. |
 | `play()` | Start or resume. A no-op once a visitor has taken over. |
 | `pause()` | Hold where it is. |
 | `stepAside()` | Hand the mock to the visitor: stop for good, hide the cursor. |
 | `destroy()` | Stop everything and remove every class, listener, and observer busker added. |
 
-← [Styling](./styling.md) &middot; Next: [Development](./development.md)
+← [Hand-timed routines](./timeline.md) &middot; [Styling](./styling.md)

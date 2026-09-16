@@ -4,68 +4,100 @@ import {
     countdownText,
     easeInOutCubic,
     isOn,
+    moveDurationMs,
     moveIndexAt,
     positionAt,
     typedText,
 } from './timeline.ts';
+import type {Point} from './types.ts';
 
-test('compile: beats run back to back, so nothing has to be timed by hand', (assert) => {
+const FIXED_GLIDE: Parameters<typeof compile>[2] = {
+    baseMoveMs: 100,
+    minMoveMs: 100,
+    maxMoveMs: 100,
+    pxPerSecond: 1e9,
+    dwellMs: 50,
+};
 
-    const {moves, duration} = compile([
-        {click: '#a', wait: 100, moveFor: 200, dwell: 50},
-        {click: '#b', wait: 300, moveFor: 400, dwell: 60},
-    ]);
+const resolveTestTarget = (to: string | Point, from: Point): Point | null => {
+    if (Array.isArray(to)) return [to[0] * 100, to[1] * 100];
+    if (to === '#a') return [10, 0];
+    if (to === '#b') return [20, 0];
 
-    // A beat ends when its click lands, PRESS_MS after the cursor goes down.
-    assert.equal(moves[0], {to: '#a', from: 100, until: 300, press: 350});
-    assert.equal(moves[1], {to: '#b', from: 850, until: 1250, press: 1310});
-    assert.equal(duration, 1810);
+    return from;
+};
+
+test('compile: waits and clicks run in order with auto glide timing', (assert) => {
+
+    const {moves, duration} = compile(
+        [{wait: 100}, {click: '#a'}, {wait: 300}, {click: '#b'}],
+        resolveTestTarget,
+        FIXED_GLIDE,
+        [0, 0],
+    );
+
+    assert.equal(moves[0], {to: '#a', from: 100, until: 200, press: 250});
+    assert.equal(moves[1], {to: '#b', from: 750, until: 850, press: 900});
+    assert.equal(duration, 1400);
 
 });
 
-test('compile: a step with no wait sets off the moment the last one finished', (assert) => {
+test('compile: a click step follows the previous beat immediately when there is no wait', (assert) => {
 
-    const {moves} = compile([
-        {click: '#a', moveFor: 100, dwell: 10},
-        {click: '#b', moveFor: 100, dwell: 10},
-    ]);
+    const {moves} = compile(
+        [{click: '#a'}, {click: '#b'}],
+        resolveTestTarget,
+        {...FIXED_GLIDE, dwellMs: 10},
+        [0, 0],
+    );
 
     assert.equal(moves[0].press, 110);
     assert.equal(moves[1].from, 310);
 
 });
 
-test('compile: a loop that ends on a press runs on until the ring has read', (assert) => {
+test('compile: a loop that ends on a click still runs until the ring has read', (assert) => {
 
-    const {duration} = compile([{click: '#a', moveFor: 100, dwell: 0}]);
+    const {duration} = compile([{click: '#a'}], resolveTestTarget, {...FIXED_GLIDE, dwellMs: 0}, [0, 0]);
 
-    // Press at 100, click at 300, ring done at 600. Ending on the click would
-    // wipe it — and reset the loop before the click had a frame to fire.
     assert.equal(duration, 600);
 
 });
 
-test('compile: a drift has nothing to press', (assert) => {
+test('compile: a move step glides without a press', (assert) => {
 
-    const {moves, duration} = compile([{to: [0.5, 0.5], wait: 100, moveFor: 200}]);
+    const {moves, duration} = compile(
+        [{wait: 100}, {move: [0.5, 0.5]}],
+        resolveTestTarget,
+        FIXED_GLIDE,
+        [0, 0],
+    );
 
     assert.equal(moves[0].press, undefined);
-    assert.equal(duration, 300);
+    assert.equal(duration, 200);
 
 });
 
 test('compile: a run step schedules a task without moving the cursor', (assert) => {
 
-    const {moves, duration, tasks} = compile([
-        {run: (): void => {}, wait: 100},
-        {click: '#a', moveFor: 50, dwell: 0},
-    ]);
+    const {moves, duration, tasks} = compile(
+        [{wait: 100}, {run: (): void => {}}, {click: '#a'}],
+        resolveTestTarget,
+        {...FIXED_GLIDE, dwellMs: 0},
+        [0, 0],
+    );
 
-    assert.equal(duration, 650);
-    assert.equal(moves.length, 1);
     assert.equal(tasks.length, 1);
     assert.equal(tasks[0].at, 100);
     assert.equal(moves[0].from, 100);
+    assert.equal(duration, 700);
+
+});
+
+test('moveDurationMs: clamps to min and max', (assert) => {
+
+    assert.equal(moveDurationMs(0), 280);
+    assert.equal(moveDurationMs(10_000), 900);
 
 });
 
