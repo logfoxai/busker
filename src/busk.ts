@@ -177,46 +177,31 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         });
     }
 
-    /** Topmost wired click target under the demo cursor (viewport coords). */
-    function resolveInteractiveAt(clientX: number, clientY: number): Element | null {
-        if (!clickTargets.length) return null;
-
-        let stack: Element[];
-
-        try {
-            stack =
-                typeof document.elementsFromPoint === 'function'
-                    ? document.elementsFromPoint(clientX, clientY)
-                    : ([document.elementFromPoint(clientX, clientY)].filter(Boolean) as Element[]);
-        } catch {
-            return null;
-        }
-
-        for (const el of stack) {
-            if (!(el instanceof Element) || !root.contains(el)) continue;
-            if (cursor && (el === cursor || cursor.contains(el))) continue;
-
-            for (const selector of clickTargets) {
-                let hit: Element | null = null;
-
-                try {
-                    hit = el.closest(selector);
-                } catch {
-                    continue;
-                }
-
-                if (hit instanceof HTMLElement && root.contains(hit) && isShown(hit)) return hit;
-            }
-        }
-
-        return null;
-    }
-
     function setShownHover(hover: Element | null): void {
         if (hover === shownHover) return;
         shownHover?.classList.remove('is-hover');
         shownHover = hover;
         hover?.classList.add('is-hover');
+    }
+
+    /**
+     * Demo hover for the step target only — not everything under the cursor mid-glide.
+     * Starts when the cursor arrives; for clicks, through dwell and press.
+     */
+    function scriptedHoverTarget(move: Move | null, index: number, t: number): HTMLElement | null {
+        if (aside || !move || typeof move.to !== 'string' || t < move.until) return null;
+
+        if (move.press !== undefined) {
+            if (t >= move.press + PRESS_MS) return null;
+        } else {
+            const nextFrom = moves[index + 1]?.from ?? Number.POSITIVE_INFINITY;
+
+            if (t >= nextFrom) return null;
+        }
+
+        const el = queryShown(move.to);
+
+        return el && isShown(el) ? el : null;
     }
 
     function prepareGlide(index: number, t: number): void {
@@ -276,20 +261,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
             }
         }
 
-        if (
-            !aside &&
-            clickTargets.length &&
-            Number.isFinite(shownCursorX) &&
-            Number.isFinite(shownCursorY)
-        ) {
-            const rootRect = root.getBoundingClientRect();
-
-            setShownHover(
-                resolveInteractiveAt(rootRect.left + shownCursorX, rootRect.top + shownCursorY),
-            );
-        } else {
-            setShownHover(null);
-        }
+        setShownHover(scriptedHoverTarget(move, index, t));
 
         const pressing = move?.press !== undefined && t >= move.press && t < move.press + PRESS_MS;
 

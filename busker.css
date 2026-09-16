@@ -87,7 +87,7 @@
     cursor: pointer;
 }
 
-/* is-hover is toggled by hit-testing under [data-cursor]; mirror :hover in your mock. */
+/* is-hover is toggled on the current step target after arrival; mirror :hover in your mock. */
 
 /* The visitor clicked something dead — show them what is not. */
 .busker .is-hint {

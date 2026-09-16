@@ -20,7 +20,7 @@ Anything else &mdash; rows, buttons, modals, inputs &mdash; is just your markup,
 | `busker` | the root | For as long as busker is running. Everything in `busker.css` hangs off it. |
 | `is-active` | a scene, a nav item | While that scene is the one on screen. |
 | `is-interactive` | every `clickTargets` entry | Always. It is what makes clickable things look clickable. |
-| `is-hover` | a `clickTargets` element | While the demo cursor is over it (`elementsFromPoint` each frame). Style it like `:hover`; see [Styling](./styling.md#demo-hover). |
+| `is-hover` | the current step target | After the cursor reaches that target (through dwell and press for clicks). Style it like `:hover`; see [Styling](./styling.md#demo-hover). |
 | `is-pressing` | the cursor | For 200ms as it presses. |
 | `is-ringing` | the cursor | For 500ms &mdash; the ripple outlives the press so the click reads. |
 | `is-hint` | every `clickTargets` entry | For 1.5s after a visitor clicks something dead. |

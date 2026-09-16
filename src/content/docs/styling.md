@@ -51,7 +51,7 @@ Busker only sets `translate` (position) and the `is-*` classes. Everything else 
 
 ## Demo hover
 
-The demo cursor does not move the real pointer, so CSS `:hover` will not fire while the show is running. Busker hit-tests under the cursor each frame and toggles `is-hover` on the topmost `clickTargets` match.
+The demo cursor does not move the real pointer, so CSS `:hover` will not fire while the show is running. Busker toggles `is-hover` on the **current step target** once the cursor arrives (through dwell and press for clicks), not on everything it passes over.
 
 Pair your hover styles for wired controls:
 

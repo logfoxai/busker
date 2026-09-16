@@ -835,7 +835,7 @@ test('clicks the shown match when the same selector exists in a hidden stack lay
 
 });
 
-test('is-hover tracks the click target under the demo cursor', (assert) => {
+test('is-hover applies only to the step target after the cursor arrives', (assert) => {
 
     document.body.innerHTML = `
         <div id="root">
@@ -858,13 +858,6 @@ test('is-hover tracks the click target under the demo cursor', (assert) => {
     const pick = root.querySelector<HTMLElement>('[data-pick]')!;
     const pickOther = root.querySelector<HTMLElement>('[data-pick-other]')!;
 
-    document.elementsFromPoint = (x: number, y: number): Element[] => {
-        if (Math.hypot(x - 140, y - 50) < 25) return [pick];
-        if (Math.hypot(x - 240, y - 50) < 25) return [pickOther];
-
-        return [root];
-    };
-
     observers.length = 0;
 
     let now = 0;
@@ -882,6 +875,12 @@ test('is-hover tracks the click target under the demo cursor', (assert) => {
     });
 
     observers[0].fire();
+
+    now += 50;
+    for (const cb of queued.splice(0)) cb(now);
+
+    assert.equal(pick.classList.contains('is-hover'), false);
+    assert.equal(pickOther.classList.contains('is-hover'), false);
 
     for (let i = 0; i < 30; i += 1) {
         now += 50;
