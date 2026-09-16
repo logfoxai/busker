@@ -184,9 +184,24 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         hover?.classList.add('is-hover');
     }
 
+    /** Whether the demo cursor (root-relative px) is over `el`'s box. */
+    function demoCursorOverElement(el: HTMLElement, rootX: number, rootY: number): boolean {
+        const rootRect = root.getBoundingClientRect();
+        const clientX = rootRect.left + rootX;
+        const clientY = rootRect.top + rootY;
+        const rect = el.getBoundingClientRect();
+
+        return (
+            clientX >= rect.left &&
+            clientX <= rect.right &&
+            clientY >= rect.top &&
+            clientY <= rect.bottom
+        );
+    }
+
     /**
-     * Demo hover on the current step target only (never waypoints under the glide path).
-     * From when that glide starts through dwell and press for clicks.
+     * Demo hover on the current step target only — not other clickTargets along the path.
+     * Lights up when the cursor reaches that element, then holds through dwell and press.
      */
     function scriptedHoverTarget(move: Move | null, index: number, t: number): HTMLElement | null {
         if (aside || !move || typeof move.to !== 'string' || t < move.from) return null;
@@ -201,7 +216,15 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
         const el = queryShown(move.to);
 
-        return el && isShown(el) ? el : null;
+        if (!el || !isShown(el)) return null;
+
+        const parked = t >= move.until;
+        const over =
+            Number.isFinite(shownCursorX) &&
+            Number.isFinite(shownCursorY) &&
+            demoCursorOverElement(el, shownCursorX, shownCursorY);
+
+        return parked || over ? el : null;
     }
 
     function prepareGlide(index: number, t: number): void {

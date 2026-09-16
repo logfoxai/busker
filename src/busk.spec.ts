@@ -835,7 +835,7 @@ test('clicks the shown match when the same selector exists in a hidden stack lay
 
 });
 
-test('is-hover applies only to the step target after the cursor arrives', (assert) => {
+test('is-hover applies only to the step target once the cursor reaches it', (assert) => {
 
     document.body.innerHTML = `
         <div id="root">
@@ -879,7 +879,7 @@ test('is-hover applies only to the step target after the cursor arrives', (asser
     now += 50;
     for (const cb of queued.splice(0)) cb(now);
 
-    assert.equal(pick.classList.contains('is-hover'), true);
+    assert.equal(pick.classList.contains('is-hover'), false);
     assert.equal(pickOther.classList.contains('is-hover'), false);
 
     for (let i = 0; i < 30; i += 1) {

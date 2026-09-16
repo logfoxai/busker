@@ -51,7 +51,7 @@ Busker only sets `translate` (position) and the `is-*` classes. Everything else 
 
 ## Demo hover
 
-The demo cursor does not move the real pointer, so CSS `:hover` will not fire while the show is running. Busker toggles `is-hover` on the **current step target** for that glide or click (through dwell and press), not on other controls the cursor passes over.
+The demo cursor does not move the real pointer, so CSS `:hover` will not fire while the show is running. Busker toggles `is-hover` on the **current step target** when the demo cursor reaches that element (through dwell and press), not on other controls the cursor passes over.
 
 Pair your hover styles for wired controls:
 
