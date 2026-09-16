@@ -1,7 +1,10 @@
 export {busk} from './busk.ts';
+export {cubicBezierEasing} from './easing.ts';
+export type {CubicBezier} from './easing.ts';
 export {
     compile,
     countdownText,
+    DEFAULT_EASING,
     DEFAULT_MOTION,
     distancePx,
     easeInOutCubic,

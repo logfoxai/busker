@@ -1,3 +1,4 @@
+import {cubicBezierEasing} from './easing.ts';
 import {
     PRESS_MS,
     RING_MS,
@@ -41,6 +42,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const cursor = root.querySelector<HTMLElement>('[data-cursor]');
 
     const motion: MotionConfig = {...DEFAULT_MOTION, ...routine.motion};
+    const glideEase = cubicBezierEasing(motion.easing ?? DEFAULT_MOTION.easing);
     const start = routine.start ?? DEFAULT_START;
     const clickTargets = routine.clickTargets ?? [];
     const visibility = routine.visibility ?? 1;
@@ -146,7 +148,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         const to = resolve(move ? move.to : start);
 
         if (from && to) {
-            const [x, y] = positionAt(from, to, move, t);
+            const [x, y] = positionAt(from, to, move, t, glideEase);
 
             cursor.style.translate = `calc(${x}px - 50%) calc(${y}px - 50%)`;
         }

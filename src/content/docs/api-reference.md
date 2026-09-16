@@ -52,13 +52,12 @@ One line in a click-driven script — exactly one of:
 
 | Field | Default | What it does |
 |---|---|---|
-| `baseMoveMs` | `200` | Added to every glide before distance scaling. |
-| `pxPerSecond` | `500` | Travel speed once distance is known. |
-| `minMoveMs` | `280` | Shortest glide. |
-| `maxMoveMs` | `900` | Longest glide. |
+| `pxPerSecond` | `720` | Constant travel speed (px/s). Glide ms = distance ÷ speed. |
+| `minMoveMs` | `80` | Floor when distance is ~0. |
 | `dwellMs` | `250` | Hover on target before a `{ click }` presses. |
+| `easing` | `[0.4, 0, 0.2, 1]` | CSS cubic-bezier control points for glide progress. |
 
-Easing is fixed in-out cubic (`easeInOutCubic` in the package exports).
+Exports: `cubicBezierEasing`, `DEFAULT_EASING`, `DEFAULT_MOTION`.
 
 ## `compile(steps, resolveTarget, motion?, start?)`
 

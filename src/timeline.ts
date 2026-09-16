@@ -1,3 +1,4 @@
+import {cubicBezierEasing, type CubicBezier} from './easing.ts';
 import type {Countdown, MotionConfig, Move, Point, Step, Task, Toggle, Typing} from './types.ts';
 
 /** How long the cursor stays squashed after a press. */
@@ -5,12 +6,14 @@ export const PRESS_MS = 200;
 /** How long the ripple ring lingers. Outlives the press so the click reads. */
 export const RING_MS = 500;
 
+/** Material-style ease — smooth start and end on every glide. */
+export const DEFAULT_EASING: CubicBezier = [0.4, 0, 0.2, 1];
+
 export const DEFAULT_MOTION: Required<MotionConfig> = {
-    baseMoveMs: 200,
-    pxPerSecond: 500,
-    minMoveMs: 280,
-    maxMoveMs: 900,
+    pxPerSecond: 720,
+    minMoveMs: 80,
     dwellMs: 250,
+    easing: DEFAULT_EASING,
 };
 
 export function easeInOutCubic(t: number): number {
@@ -21,12 +24,13 @@ export function distancePx(from: Point, to: Point): number {
     return Math.hypot(to[0] - from[0], to[1] - from[1]);
 }
 
-/** How long a glide should take for a given distance and motion settings. */
+/** Glide duration from distance at constant `pxPerSecond` (no max cap). */
 export function moveDurationMs(distancePx: number, motion: MotionConfig = {}): number {
     const m = {...DEFAULT_MOTION, ...motion};
-    const scaled = m.baseMoveMs + (distancePx / m.pxPerSecond) * 1000;
 
-    return Math.round(Math.min(m.maxMoveMs, Math.max(m.minMoveMs, scaled)));
+    if (distancePx <= 0) return m.minMoveMs;
+
+    return Math.max(m.minMoveMs, Math.round((distancePx / m.pxPerSecond) * 1000));
 }
 
 /** Resolve a step target to px in the root; return null if it is not on screen yet. */
@@ -98,10 +102,17 @@ export function moveIndexAt(moves: Move[], t: number): number {
 }
 
 /** Where the cursor sits at `t`: mid-glide between `from` and `to`, or parked on `to`. */
-export function positionAt(from: Point, to: Point, move: Move | null, t: number): Point {
+export function positionAt(
+    from: Point,
+    to: Point,
+    move: Move | null,
+    t: number,
+    ease: (u: number) => number = cubicBezierEasing(DEFAULT_EASING),
+): Point {
     if (!move || t >= move.until) return to;
 
-    const p = easeInOutCubic((t - move.from) / (move.until - move.from));
+    const linear = (t - move.from) / (move.until - move.from);
+    const p = ease(linear);
 
     return [from[0] + (to[0] - from[0]) * p, from[1] + (to[1] - from[1]) * p];
 }

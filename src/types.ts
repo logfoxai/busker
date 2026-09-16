@@ -1,3 +1,5 @@
+import type {CubicBezier} from './easing.ts';
+
 /** A spot in the root element, as a fraction of its size: `[0.5, 0.5]` is the middle. */
 export type Point = [number, number];
 
@@ -11,18 +13,16 @@ export type Step =
     | {wait: number}
     | {run: () => void};
 
-/** Global cursor motion — not per step. Glides use distance and these limits. */
+/** Global cursor motion — not per step. Every glide uses the same speed and easing curve. */
 export interface MotionConfig {
-    /** Added to every glide before distance scaling. Default 200. */
-    baseMoveMs?: number;
-    /** Pixels per second once distance is applied. Default 500. */
+    /** Travel speed in pixels per second. Duration = distance ÷ speed. Default 720. */
     pxPerSecond?: number;
-    /** Shortest glide. Default 280. */
+    /** When distance is ~0, still wait this long (ms). Default 80. */
     minMoveMs?: number;
-    /** Longest glide. Default 900. */
-    maxMoveMs?: number;
     /** Hover on target before a click step presses. Default 250. */
     dwellMs?: number;
+    /** CSS cubic-bezier control points for glide easing. Default `[0.4, 0, 0.2, 1]`. */
+    easing?: CubicBezier;
 }
 
 /** Code to run once when the playhead reaches `at` (ms from loop start). */

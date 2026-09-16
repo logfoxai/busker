@@ -12,7 +12,7 @@ The [README](https://raw.githubusercontent.com/logfoxai/busker/main/README.md) i
 2. **`clickTargets` is the only list of visitor-clickable things.** Each selector gets `is-interactive` and counts for the miss hint. Never hand-maintain a parallel CSS list of `cursor: pointer` selectors.
 3. **Scenes, modals, and filters are yours.** Busker does not switch views. Wire `click` handlers (or rely on scripted clicks). Use `{ run }`, `tasks`, or `onLoop` when you need timed code without moving the cursor.
 4. **One step, one job.** `{ click }`, `{ wait: ms }`, `{ move }`, or `{ run }` — never bundle pauses or glide times onto a click step.
-5. **Glide timing lives in `motion` on the routine**, not in steps. Distance-based duration + global easing keeps travel consistent.
+5. **Glide timing lives in `motion` on the routine**, not in steps. Constant `pxPerSecond` + shared `easing` cubic-bezier — never cap long glides with `maxMoveMs`.
 6. **`press` in hand-timed `moves` does not click.** If you want a real click, it is a `{ click }` step.
 7. **Never use `event.isTrusted` to tell busker's clicks from a visitor's.** Scripted clicks from any source are untrusted. Busker already tracks its own.
 8. **Set `freezeAt`** to a frame that shows the point of the demo. It is what people on `prefers-reduced-motion` see.

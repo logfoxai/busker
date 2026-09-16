@@ -12,9 +12,7 @@ import {
 import type {Point} from './types.ts';
 
 const FIXED_GLIDE: Parameters<typeof compile>[2] = {
-    baseMoveMs: 100,
     minMoveMs: 100,
-    maxMoveMs: 100,
     pxPerSecond: 1e9,
     dwellMs: 50,
 };
@@ -94,10 +92,11 @@ test('compile: a run step schedules a task without moving the cursor', (assert) 
 
 });
 
-test('moveDurationMs: clamps to min and max', (assert) => {
+test('moveDurationMs: constant speed with a floor at zero distance', (assert) => {
 
-    assert.equal(moveDurationMs(0), 280);
-    assert.equal(moveDurationMs(10_000), 900);
+    assert.equal(moveDurationMs(0), 80);
+    assert.equal(moveDurationMs(720), 1000);
+    assert.equal(moveDurationMs(1440), 2000);
 
 });
 
@@ -132,9 +131,12 @@ test('positionAt: parks on the target once it has arrived', (assert) => {
 
 });
 
-test('positionAt: halfway through the glide is halfway there', (assert) => {
+test('positionAt: default easing sits between start and end at halfway through time', (assert) => {
 
-    assert.equal(positionAt([0, 0], [10, 20], {to: '#a', from: 0, until: 100}, 50), [5, 10]);
+    const mid = positionAt([0, 0], [10, 20], {to: '#a', from: 0, until: 100}, 50);
+
+    assert.equal(mid[0] > 3 && mid[0] < 7, true);
+    assert.equal(mid[1] > 6 && mid[1] < 14, true);
 
 });
 

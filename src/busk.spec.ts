@@ -138,9 +138,7 @@ function stage(routine: Routine): Stage & {showScene: (scene: string) => void} {
 }
 
 const TEST_MOTION = {
-    baseMoveMs: 100,
     minMoveMs: 100,
-    maxMoveMs: 100,
     pxPerSecond: 1e9,
     dwellMs: 0,
 };
@@ -354,7 +352,7 @@ test('tasks at t=0 wait until playback starts', (assert) => {
     let runs = 0;
 
     const {startShow, tick} = stage({
-        motion: {...TEST_MOTION, baseMoveMs: 50, minMoveMs: 50, maxMoveMs: 50},
+        motion: {...TEST_MOTION, minMoveMs: 50, pxPerSecond: 1e9},
         steps: [{click: '[data-nav-item="alerts"]'}],
         tasks: [{at: 0, run: (): void => {
             runs += 1;
@@ -391,7 +389,7 @@ test('a run step and tasks fire once per loop', (assert) => {
     let runs = 0;
 
     const {startShow, tick} = stage({
-        motion: {...TEST_MOTION, baseMoveMs: 50, minMoveMs: 50, maxMoveMs: 50},
+        motion: {...TEST_MOTION, minMoveMs: 50, pxPerSecond: 1e9},
         steps: [
             {wait: 50},
             {run: (): void => {
