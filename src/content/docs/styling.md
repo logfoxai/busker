@@ -19,6 +19,7 @@ Set these on the root, or anywhere above it:
 | `--busker-cursor-fill` | `rgb(0 0 0 / 0.42)` | The dot at rest. |
 | `--busker-cursor-edge` | `#fff` | The ring around the dot that keeps it visible on dark UI. |
 | `--busker-cursor-shadow` | `rgb(0 0 0 / 0.3)` | The dot's drop shadow. |
+| `--busker-cursor-z-index` | `99999` | Keeps the pointer above in-mock overlays and modals. |
 | `--busker-scene-ms` | `0.4s` | How long one scene takes to cross-fade into the next. |
 
 ```css

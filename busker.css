@@ -13,6 +13,7 @@
     --busker-cursor-fill: rgb(0 0 0 / 0.42);
     --busker-cursor-edge: #fff;
     --busker-cursor-shadow: rgb(0 0 0 / 0.3);
+    --busker-cursor-z-index: 99999;
     --busker-scene-ms: 0.4s;
 
     /* The cursor is positioned against the root. */
@@ -41,7 +42,7 @@
         scale 0.15s ease;
     translate: -50% -50%;
     width: var(--busker-cursor-size);
-    z-index: 20;
+    z-index: var(--busker-cursor-z-index);
 }
 
 .busker [data-cursor].is-visible {
