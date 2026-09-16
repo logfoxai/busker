@@ -28,7 +28,7 @@ A step either presses something:
 
 | Field | Default | What it does |
 |---|---|---|
-| `click` | &mdash; | Selector of the element to press. Really clicked. |
+| `click` | &mdash; | Selector of the element to press. Clicked. |
 | `wait` | `0` | Pause before the cursor sets off. This is reading time for whatever the last press opened. |
 | `moveFor` | `600` | How long the glide takes. |
 | `dwell` | `250` | How long the cursor hovers on the target before pressing. |

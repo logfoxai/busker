@@ -4,7 +4,7 @@
     <source srcset="assets/busker-lockup-light.svg" media="(prefers-color-scheme: light)" />
     <img src="assets/busker-lockup-light.svg" width="220" alt="busker" />
   </picture>
-  <h3 align="center">Scripted cursor demos that really click.</h3>
+  <h3 align="center">Scripted cursor demos that click.</h3>
   <p align="center">
     <a href="https://busker.logfox.ai">busker.logfox.ai</a>
   </p>
@@ -12,7 +12,7 @@
 
 Fake product demos on a landing page usually rot. The cursor is on one timeline, the page state is on another, and the moment you change a duration they drift &mdash; the cursor presses a button 200ms before the modal it opened, forever.
 
-Busker gets rid of the second timeline. You give it a list of places the cursor goes, it glides there and **really clicks the element**, and your own handlers change the page. Nothing is timed except the pauses, so there is nothing to keep in sync.
+Busker gets rid of the second timeline. You give it a list of places the cursor goes, it glides there and **clicks the element**, and your own handlers change the page. Nothing is timed except the pauses, so there is nothing to keep in sync.
 
 ```typescript
 import {busk} from '@logfox/busker';

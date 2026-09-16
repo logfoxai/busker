@@ -10,9 +10,9 @@ import {rehypeWrapTables} from './src/integrations/rehype-wrap-tables.mjs';
 const isDev = process.env.NODE_ENV !== 'production';
 const site = 'https://busker.logfox.ai';
 const ogImage = `${site}/og.png`;
-const ogImageAlt = 'busker — scripted cursor demos that really click';
+const ogImageAlt = 'busker — scripted cursor demos that click';
 const description =
-    'Drive a fake product UI with a routine, not a stopwatch. The cursor really clicks, so the page changes through your own handlers — and visitors can take over.';
+    'Drive a fake product UI with a routine, not a stopwatch. The cursor clicks, so the page changes through your own handlers — and visitors can take over.';
 
 const ogTag = (property, content) => ({tag: 'meta', attrs: {property, content}});
 

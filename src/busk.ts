@@ -105,7 +105,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const shownText = new WeakMap<HTMLElement, string>();
 
     /**
-     * Really click the steps whose press has lifted, each once per loop. The
+     * Click the steps whose press has lifted, each once per loop. The
      * click lands at the end of the stroke, the way a real one does, so the
      * cursor reads on the element before the click takes it away.
      */

@@ -28,11 +28,11 @@ const required = [
 	'data-cursor',
 	'busk(root,',
 	'Scripted cursor demos',
-	'really click',
+	'that click',
 	'Zero dependencies',
 	'/getting-started/',
 	'https://github.com/logfoxai/busker',
-	'<title>busker — scripted cursor demos that really click</title>',
+	'<title>busker — scripted cursor demos that click</title>',
 	'property="og:image" content="https://busker.logfox.ai/og.png"',
 	'name="twitter:image" content="https://busker.logfox.ai/og.png"',
 ];

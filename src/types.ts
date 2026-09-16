@@ -7,7 +7,7 @@ export type Point = [number, number];
  */
 export type Step =
     | {
-        /** Selector of the element to press. It really gets clicked. */
+        /** Selector of the element to press. It gets clicked. */
         click: string;
         /** Pause before the cursor sets off — time to read whatever just opened. */
         wait?: number;
@@ -54,7 +54,7 @@ export interface Move {
     /** When the cursor arrives. */
     until: number;
     /**
-     * Optional moment to animate a press. A `TimedRoutine` never really clicks
+     * Optional moment to animate a press. A `TimedRoutine` never clicks
      * — whatever the press appears to do, drive it with a `Toggle` or `Task`.
      */
     press?: number;
@@ -124,7 +124,7 @@ export interface ScriptRoutine extends CommonRoutine {
     moves?: never;
 }
 
-/** A hand-timed show. Nothing is really clicked; a press is animation only. */
+/** A hand-timed show. Nothing is clicked; a press is animation only. */
 export interface TimedRoutine extends CommonRoutine {
     /** Loop length in ms. */
     duration: number;
