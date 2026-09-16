@@ -157,6 +157,8 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
             clickingItself = true;
             try {
                 el.click();
+            } catch {
+                // Mock handlers must not take down the show mid-loop.
             } finally {
                 clickingItself = false;
             }
@@ -167,7 +169,11 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         tasks.forEach((task, i) => {
             if (t < task.at || firedTasks.has(i)) return;
             firedTasks.add(i);
-            task.run();
+            try {
+                task.run();
+            } catch {
+                // Routine `run` steps must not take down the show mid-loop.
+            }
         });
     }
 
@@ -175,19 +181,29 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     function resolveInteractiveAt(clientX: number, clientY: number): Element | null {
         if (!clickTargets.length) return null;
 
-        const stack =
-            typeof document.elementsFromPoint === 'function'
-                ? document.elementsFromPoint(clientX, clientY)
-                : ([document.elementFromPoint(clientX, clientY)].filter(Boolean) as Element[]);
+        let stack: Element[];
+
+        try {
+            stack =
+                typeof document.elementsFromPoint === 'function'
+                    ? document.elementsFromPoint(clientX, clientY)
+                    : ([document.elementFromPoint(clientX, clientY)].filter(Boolean) as Element[]);
+        } catch {
+            return null;
+        }
 
         for (const el of stack) {
-            if (!root.contains(el)) continue;
+            if (!(el instanceof Element) || !root.contains(el)) continue;
             if (cursor && (el === cursor || cursor.contains(el))) continue;
 
             for (const selector of clickTargets) {
-                if (!(el instanceof Element)) continue;
+                let hit: Element | null = null;
 
-                const hit = el.closest(selector);
+                try {
+                    hit = el.closest(selector);
+                } catch {
+                    continue;
+                }
 
                 if (hit instanceof HTMLElement && root.contains(hit) && isShown(hit)) return hit;
             }
@@ -357,8 +373,14 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     function frame(now: number): void {
         if (!playing) return;
 
-        advancePlayhead(elapsed + (now - last));
-        last = now;
+        try {
+            advancePlayhead(elapsed + (now - last));
+            last = now;
+        } catch {
+            pause();
+            return;
+        }
+
         rafId = requestAnimationFrame(frame);
     }
 
@@ -388,14 +410,20 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
     const onClick = (e: Event): void => {
         if (destroyed) return;
-
-        const hit = clickTargets.some((selector) => {
-            const el = (e.target as Element).closest(selector);
-
-            return el !== null && root.contains(el);
-        });
-
         if (clickingItself) return;
+
+        const target = e.target instanceof Element ? e.target : null;
+        const hit =
+            target !== null &&
+            clickTargets.some((selector) => {
+                try {
+                    const el = target.closest(selector);
+
+                    return el !== null && root.contains(el);
+                } catch {
+                    return false;
+                }
+            });
 
         stepAside();
 
@@ -411,7 +439,11 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     };
 
     const syncViewportPlayback = (): void => {
-        if (document.hidden) return;
+        if (document.hidden) {
+            pause();
+            return;
+        }
+
         if (visibleFraction(root) >= visibility - VISIBILITY_SLACK) play();
         else pause();
     };
@@ -491,6 +523,8 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         document.addEventListener('visibilitychange', onVisibilityChange);
         window.addEventListener('scroll', scheduleSyncViewportPlayback, {passive: true});
         window.addEventListener('resize', scheduleSyncViewportPlayback, {passive: true});
+        window.addEventListener('load', scheduleSyncViewportPlayback, {once: true});
+        document.fonts?.ready.then(scheduleSyncViewportPlayback);
         syncViewportPlayback();
         cursor?.classList.add('is-visible');
     }
