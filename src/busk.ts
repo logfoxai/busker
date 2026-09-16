@@ -185,11 +185,11 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     }
 
     /**
-     * Demo hover for the step target only — not everything under the cursor mid-glide.
-     * Starts when the cursor arrives; for clicks, through dwell and press.
+     * Demo hover on the current step target only (never waypoints under the glide path).
+     * From when that glide starts through dwell and press for clicks.
      */
     function scriptedHoverTarget(move: Move | null, index: number, t: number): HTMLElement | null {
-        if (aside || !move || typeof move.to !== 'string' || t < move.until) return null;
+        if (aside || !move || typeof move.to !== 'string' || t < move.from) return null;
 
         if (move.press !== undefined) {
             if (t >= move.press + PRESS_MS) return null;

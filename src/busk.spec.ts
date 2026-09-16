@@ -879,7 +879,7 @@ test('is-hover applies only to the step target after the cursor arrives', (asser
     now += 50;
     for (const cb of queued.splice(0)) cb(now);
 
-    assert.equal(pick.classList.contains('is-hover'), false);
+    assert.equal(pick.classList.contains('is-hover'), true);
     assert.equal(pickOther.classList.contains('is-hover'), false);
 
     for (let i = 0; i < 30; i += 1) {
