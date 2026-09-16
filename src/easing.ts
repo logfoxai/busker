@@ -36,3 +36,25 @@ export function cubicBezierEasing(curve: CubicBezier): (t: number) => number {
         return sample((lo + hi) / 2, curve).y;
     };
 }
+
+/** Same curve as {@link cubicBezierEasing}, pre-sampled for rAF hot paths. */
+export function cubicBezierEasingCached(curve: CubicBezier, steps = 256): (t: number) => number {
+    const exact = cubicBezierEasing(curve);
+    const lut = new Float32Array(steps + 1);
+
+    for (let i = 0; i <= steps; i += 1) {
+        lut[i] = exact(i / steps);
+    }
+
+    return (t: number): number => {
+        if (t <= 0) return 0;
+        if (t >= 1) return 1;
+
+        const f = t * steps;
+        const lo = Math.floor(f);
+        const hi = Math.min(lo + 1, steps);
+        const w = f - lo;
+
+        return lut[lo]! * (1 - w) + lut[hi]! * w;
+    };
+}

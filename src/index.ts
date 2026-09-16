@@ -1,5 +1,5 @@
 export {busk} from './busk.ts';
-export {cubicBezierEasing} from './easing.ts';
+export {cubicBezierEasing, cubicBezierEasingCached} from './easing.ts';
 export type {CubicBezier} from './easing.ts';
 export {
     compile,
@@ -27,7 +27,6 @@ export type {
     ScriptRoutine,
     Step,
     Task,
-    TimedRoutine,
     Toggle,
     Typing,
 } from './types.ts';

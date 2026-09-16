@@ -167,6 +167,89 @@ test('the show clicks for real, so the mock changes through its own handlers', (
 
 });
 
+test('a glide to a hidden scene uses the same px/s once that scene is visible', (assert) => {
+
+    document.body.innerHTML = `<div id="root">${MOCK}</div>`;
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
+    root.querySelectorAll('*').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => {
+            if (el.matches('[data-nav-item="alerts"]')) return new DOMRect(0, 0, 80, 20);
+            if (el.matches('[data-row="p0"]')) {
+                const scene = el.closest('[data-scene]');
+
+                return scene?.classList.contains('is-active')
+                    ? new DOMRect(400, 0, 80, 20)
+                    : new DOMRect(0, 0, 0, 0);
+            }
+
+            const scene = el.closest('[data-scene]');
+
+            return scene && !scene.classList.contains('is-active')
+                ? new DOMRect(0, 0, 0, 0)
+                : new DOMRect(100, 50, 80, 20);
+        };
+    });
+
+    observers.length = 0;
+
+    let now = 0;
+    let queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    const {showScene} = wireTestScenes(root);
+
+    const show = busk(root, {
+        motion: {pxPerSecond: 400, minMoveMs: 80, dwellMs: 0},
+        steps: [
+            {click: '[data-nav-item="alerts"]'},
+            {wait: 300},
+            {click: '[data-row="p0"]'},
+        ],
+        clickTargets: ['[data-nav-item="alerts"]', '[data-row="p0"]'],
+        onLoop: () => showScene('home'),
+    });
+
+    const cursor = root.querySelector<HTMLElement>('[data-cursor]');
+    const tick = (ms: number): void => {
+        now += ms;
+        const due = queued;
+
+        queued = [];
+        for (const cb of due) cb(now);
+    };
+
+    observers[0].fire();
+
+    tick(200);
+    const midFirst = cursor?.style.translate;
+
+    for (let i = 0; i < 24; i += 1) {
+        tick(50);
+    }
+
+    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
+
+    const samples = new Set<string>();
+
+    for (let i = 0; i < 20; i += 1) {
+        tick(50);
+        samples.add(cursor?.style.translate ?? '');
+    }
+
+    assert.equal(midFirst !== '', true);
+    assert.equal(samples.size >= 3, true);
+    assert.equal(show.duration > 1500, true);
+
+});
+
 test('the page holds still until the press lifts, so the click reads first', (assert) => {
 
     const {root, startShow, tick} = stage(routine);
@@ -210,8 +293,7 @@ test('the cursor holds its place when its own click takes the target away', (ass
 
     const cursor = root.querySelector<HTMLElement>('[data-cursor]');
 
-    // Arrived on the row and pressing it.
-    tick(0);
+    // Arrived on the row and pressing it (compile used a hidden target; stretch shortens on first frame).
     startShow();
     tick(100);
 
@@ -229,6 +311,71 @@ test('the cursor holds its place when its own click takes the target away', (ass
     assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
     assert.equal(cursor?.classList.contains('is-ringing'), true);
     assert.equal(cursor?.style.translate, onTheRow);
+
+});
+
+test('the cursor does not chase a target that moves after the glide ends', (assert) => {
+
+    document.body.innerHTML = `<div id="root">${MOCK}</div>`;
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    let rowTop = 50;
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
+    root.querySelectorAll('*').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => {
+            if (el.matches('[data-row="p0"]')) {
+                return new DOMRect(100, rowTop, 80, 20);
+            }
+
+            const scene = el.closest('[data-scene]');
+
+            return scene && !scene.classList.contains('is-active')
+                ? new DOMRect(0, 0, 0, 0)
+                : new DOMRect(100, 50, 80, 20);
+        };
+    });
+
+    observers.length = 0;
+
+    let now = 0;
+    let queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    const {showScene} = wireTestScenes(root);
+
+    busk(root, {
+        motion: {pxPerSecond: 1e9, minMoveMs: 100, dwellMs: 200},
+        steps: [{click: '[data-row="p0"]'}],
+        clickTargets: ['[data-row="p0"]'],
+        onLoop: () => showScene('home'),
+    });
+
+    showScene('list');
+
+    const cursor = root.querySelector<HTMLElement>('[data-cursor]');
+    const tick = (ms: number): void => {
+        now += ms;
+        const due = queued;
+
+        queued = [];
+        for (const cb of due) cb(now);
+    };
+
+    observers[0].fire();
+    tick(150);
+    const parked = cursor?.style.translate;
+
+    rowTop = 400;
+    tick(300);
+
+    assert.equal(cursor?.style.translate, parked);
 
 });
 
@@ -298,9 +445,28 @@ test('each beat presses once, and the loop starts over from the top', (assert) =
     assert.equal(clicks, 1);
 
     // Past the end of the routine: back to the top, and it presses again.
-    tick(600);
+    tick(1150);
     assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
     tick(350);
+    assert.equal(clicks, 2);
+
+});
+
+test('a frame jump past loop end keeps leftover time in the next loop', (assert) => {
+
+    let clicks = 0;
+    const {root, startShow, tick} = stage(routine);
+
+    root.querySelector('[data-nav-item="alerts"]')?.addEventListener('click', () => {
+        clicks += 1;
+    });
+
+    startShow();
+    tick(350);
+    assert.equal(clicks, 1);
+
+    // One big delta past duration — second loop should still reach the alerts press.
+    tick(2000);
     assert.equal(clicks, 2);
 
 });
@@ -340,7 +506,7 @@ test('onLoop runs when the playhead wraps', (assert) => {
 
     showScene('list');
     startShow();
-    tick(2000);
+    tick(60_000);
 
     assert.equal(loops >= 1, true);
     assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
@@ -370,8 +536,8 @@ test('a task at loop end runs before the playhead wraps', (assert) => {
 
     let end = 0;
     const {startShow, tick} = stage({
-        duration: 500,
-        moves: [],
+        motion: {...TEST_MOTION, minMoveMs: 50, pxPerSecond: 1e9},
+        steps: [{wait: 500}],
         tasks: [{at: 500, run: (): void => {
             end += 1;
         }}],
@@ -432,7 +598,7 @@ test('t=0 toggles are applied when busk() starts', (assert) => {
     });
 
     const show = busk(root, {
-        duration: 1000,
+        steps: [{wait: 1000}],
         toggles: [{target: '.view-traces', class: 'is-on', from: 0, until: 1000}],
     });
 
@@ -472,7 +638,7 @@ test('scroll re-checks visibility when the mock leaves the viewport', (assert) =
     performance.now = (): number => now;
 
     const show = busk(root, {
-        duration: 10_000,
+        steps: [{wait: 10_000}],
         visibility: 0.5,
         toggles: [{target: '.marker', class: 'is-on', from: 400, until: 800}],
     });
@@ -533,7 +699,7 @@ test('scroll coalesces viewport sync to one animation frame', (assert) => {
     performance.now = (): number => now;
 
     const show = busk(root, {
-        duration: 0,
+        steps: [{wait: 1}],
         visibility: 0.5,
     });
 
@@ -581,7 +747,7 @@ test('resize does not resume playback while the tab is hidden', (assert) => {
     performance.now = (): number => now;
 
     const show = busk(root, {
-        duration: 10_000,
+        steps: [{wait: 10_000}],
         visibility: 0.5,
         toggles: [{target: '.marker', class: 'is-on', from: 400, until: 800}],
     });

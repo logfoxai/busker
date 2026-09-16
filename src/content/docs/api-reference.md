@@ -12,17 +12,11 @@ Puts on a show inside `root`, an `HTMLElement`. Returns a [`Busker`](#busker). S
 
 ## `Routine`
 
-A routine is one of two things, never a mix. A `ScriptRoutine` has `steps` and
-gets its loop length from them; a `TimedRoutine` has a `duration` you set
-yourself. Mixing the two is a type error.
+Every routine has a non-empty **`steps`** array. Loop length is compiled from those steps (plus the ring on the last click). Hand-timed **`duration`** / **`moves`** were removed in v2 — `busk()` throws if you pass them.
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
-| `steps` | [`Step[]`](#step) | &mdash; | A click-driven script. Required in a `ScriptRoutine`. |
-| `duration` | `number` | &mdash; | Loop length in ms. Required in a `TimedRoutine`. |
-| `moves` | [`Move[]`](#move) | none | Hand-timed cursor glides. `TimedRoutine` only. |
-
-Shared fields:
+| `steps` | [`Step[]`](#step) | &mdash; | **Required.** Click-driven script. |
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
@@ -52,9 +46,9 @@ One line in a click-driven script — exactly one of:
 
 | Field | Default | What it does |
 |---|---|---|
-| `pxPerSecond` | `720` | Constant travel speed (px/s). Glide ms = distance ÷ speed. |
-| `minMoveMs` | `80` | Floor when distance is ~0. |
-| `dwellMs` | `250` | Hover on target before a `{ click }` presses. |
+| `pxPerSecond` | `580` | Constant travel speed (px/s). Glide ms = distance ÷ speed (+ short-hop floor below ~150px). |
+| `minMoveMs` | `115` | Minimum glide time before short-hop extras. |
+| `dwellMs` | `300` | Hover on target before a `{ click }` presses. |
 | `easing` | `[0.4, 0, 0.2, 1]` | CSS cubic-bezier control points for glide progress. |
 
 Exports: `cubicBezierEasing`, `DEFAULT_EASING`, `DEFAULT_MOTION`.
@@ -72,14 +66,7 @@ Lays a script out on a timeline for tests or syncing hand-timed toggles. `resolv
 
 ## `Move`
 
-A hand-timed glide. See [Hand-timed routines](./timeline.md#moves).
-
-| Field | Type | What it does |
-|---|---|---|
-| `to` | `string \| [number, number]` | Where to glide. |
-| `from` | `number` | When it sets off. |
-| `until` | `number` | When it arrives. |
-| `press` | `number` | Optional. Animates a press. Does **not** click. |
+Compiled glide shape returned by [`compile()`](#compilesteps-resolvetarget-motion-start) — not passed on `Routine`.
 
 ## `Toggle`
 
@@ -117,4 +104,4 @@ A hand-timed glide. See [Hand-timed routines](./timeline.md#moves).
 | `stepAside()` | Hand the mock to the visitor: stop for good, hide the cursor. |
 | `destroy()` | Stop everything and remove every class, listener, and observer busker added. |
 
-← [Hand-timed routines](./timeline.md) &middot; [Styling](./styling.md)
+← [Timed extras](./timeline.md) &middot; [Styling](./styling.md)

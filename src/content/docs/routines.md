@@ -40,7 +40,7 @@ Glide speed is **not** on each step. Pass `motion` once on the routine (defaults
 ```typescript
 busk(root, {
     motion: {
-        pxPerSecond: 720,
+        pxPerSecond: 580,
         easing: [0.4, 0, 0.2, 1],
         dwellMs: 250,
     },
@@ -50,7 +50,7 @@ busk(root, {
 
 Busker measures distance in pixels when each glide starts. **Duration = distance ÷ `pxPerSecond`** — same speed on every glide, no max cap that turns long crosses into teleports. Progress along the line uses **`easing`**, a CSS-style cubic-bezier (default `[0.4, 0, 0.2, 1]`).
 
-Re-schedule on every loop uses fresh layout measurements, so reflow and breakpoints stay in sync without editing the script.
+Each loop re-compiles the script from fresh layout. If a step target sits in a scene that is hidden on that compile (typical for multi-scene mocks), busker **remeasures that glide when the playhead reaches it** and stretches the rest of the timeline so every glide still uses the same `pxPerSecond` and `easing`.
 
 ## Click targets
 

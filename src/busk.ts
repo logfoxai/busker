@@ -1,15 +1,19 @@
-import {cubicBezierEasing} from './easing.ts';
+import {cubicBezierEasingCached} from './easing.ts';
 import {
     PRESS_MS,
     RING_MS,
     compile,
     countdownText,
     DEFAULT_MOTION,
+    distancePx,
     isOn,
+    moveDurationMs,
     moveIndexAt,
     positionAt,
+    stretchMoveGlide,
     typedText,
 } from './timeline.ts';
+import {assertScriptRoutine} from './assert-routine.ts';
 import type {Busker, MotionConfig, Move, Point, Routine, Task} from './types.ts';
 
 const DEFAULT_START: Point = [0.5, 0.5];
@@ -39,10 +43,12 @@ function visibleFraction(el: Element): number {
  * yours — use real click handlers and optional `tasks` / `onLoop`.
  */
 export function busk(root: HTMLElement, routine: Routine): Busker {
+    assertScriptRoutine(routine as Routine & Record<string, unknown>);
+
     const cursor = root.querySelector<HTMLElement>('[data-cursor]');
 
     const motion: MotionConfig = {...DEFAULT_MOTION, ...routine.motion};
-    const glideEase = cubicBezierEasing(motion.easing ?? DEFAULT_MOTION.easing);
+    const glideEase = cubicBezierEasingCached(motion.easing ?? DEFAULT_MOTION.easing);
     const start = routine.start ?? DEFAULT_START;
     const clickTargets = routine.clickTargets ?? [];
     const visibility = routine.visibility ?? 1;
@@ -78,13 +84,10 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         return compile(scriptSteps ?? [], resolveTarget, motion, startPx);
     }
 
-    let scriptSchedule = scriptSteps ? scheduleScript() : null;
-    let moves = scriptSchedule?.moves ?? routine.moves ?? [];
-    let duration = scriptSchedule?.duration ?? routine.duration ?? 0;
-    let tasks: Task[] = [
-        ...(scriptSchedule?.tasks ?? []),
-        ...(routine.tasks ?? []),
-    ].sort((a, b) => a.at - b.at);
+    let scriptSchedule = scheduleScript();
+    let moves = scriptSchedule.moves;
+    let duration = scriptSchedule.duration;
+    let tasks: Task[] = [...scriptSchedule.tasks, ...(routine.tasks ?? [])].sort((a, b) => a.at - b.at);
 
     let elapsed = 0;
     let last = 0;
@@ -101,9 +104,17 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     /** Set while the show clicks for itself, so it does not mistake that for a visitor. */
     let clickingItself = false;
 
+    /** Px endpoints for each move, fixed when the glide starts (DOM may move after click). */
+    const glideEndpoints = new Map<number, {from: Point; to: Point}>();
+    let glidePreparedThrough = -1;
+
     let shownHover: Element | null = null;
     let shownPressing = false;
     let shownRinging = false;
+    let shownCursorX = Number.NaN;
+    let shownCursorY = Number.NaN;
+    let hoverLookupKey = '';
+    let hoverLookupEl: Element | null = null;
     const shownToggle = new WeakMap<HTMLElement, string>();
     const shownText = new WeakMap<HTMLElement, string>();
 
@@ -113,8 +124,6 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
      * cursor reads on the element before the click takes it away.
      */
     function press(t: number): void {
-        if (!scriptSteps) return;
-
         moves.forEach((move, i) => {
             if (move.press === undefined || t < move.press + PRESS_MS || pressed.has(i)) return;
             pressed.add(i);
@@ -141,21 +150,76 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         });
     }
 
+    function prepareGlide(index: number, t: number): void {
+        if (index < 0 || index <= glidePreparedThrough) return;
+
+        const move = moves[index];
+
+        if (!move || t < move.from) return;
+
+        const fromPt =
+            index === 0
+                ? resolve(start)
+                : (glideEndpoints.get(index - 1)?.to ?? resolve(moves[index - 1].to));
+        const toPt = resolve(move.to);
+
+        if (!fromPt || !toPt) return;
+
+        glideEndpoints.set(index, {from: fromPt, to: toPt});
+
+        const glideMs = moveDurationMs(distancePx(fromPt, toPt), motion);
+        const delta = stretchMoveGlide(moves, tasks, index, glideMs, t);
+
+        if (delta !== 0) duration += delta;
+
+        glidePreparedThrough = index;
+    }
+
     function drawCursor(move: Move | null, index: number, t: number): void {
         if (!cursor) return;
 
-        const from = resolve(index > 0 ? moves[index - 1].to : start);
-        const to = resolve(move ? move.to : start);
+        let from: Point | null = null;
+        let to: Point | null = null;
+
+        if (index >= 0) {
+            const locked = glideEndpoints.get(index);
+
+            if (locked) {
+                from = locked.from;
+                to = locked.to;
+            }
+        }
+
+        if (!from || !to) {
+            from = resolve(index > 0 ? moves[index - 1].to : start);
+            to = resolve(move ? move.to : start);
+        }
 
         if (from && to) {
             const [x, y] = positionAt(from, to, move, t, glideEase);
+            const rx = Math.round(x * 10) / 10;
+            const ry = Math.round(y * 10) / 10;
 
-            cursor.style.translate = `calc(${x}px - 50%) calc(${y}px - 50%)`;
+            if (rx !== shownCursorX || ry !== shownCursorY) {
+                shownCursorX = rx;
+                shownCursorY = ry;
+                cursor.style.translate = `calc(${rx}px - 50%) calc(${ry}px - 50%)`;
+            }
         }
 
-        const hover = move && typeof move.to === 'string' && t >= move.until
-            ? root.querySelector(move.to)
-            : null;
+        let hover: Element | null = null;
+
+        if (move && typeof move.to === 'string' && t >= move.until) {
+            if (move.to !== hoverLookupKey) {
+                hoverLookupKey = move.to;
+                hoverLookupEl = root.querySelector(move.to);
+            }
+
+            hover = hoverLookupEl;
+        } else if (hoverLookupKey) {
+            hoverLookupKey = '';
+            hoverLookupEl = null;
+        }
 
         if (hover !== shownHover) {
             shownHover?.classList.remove('is-hover');
@@ -198,6 +262,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
         const index = moveIndexAt(moves, t);
 
+        prepareGlide(index, t);
         drawCursor(index >= 0 ? moves[index] : null, index, t);
         if (scheduleTasks) runTasks(t);
     }
@@ -205,33 +270,47 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     function wrapLoop(): void {
         routine.onLoop?.();
 
-        if (scriptSteps) {
-            scriptSchedule = scheduleScript();
-            moves = scriptSchedule.moves;
-            duration = scriptSchedule.duration;
-            tasks = [...scriptSchedule.tasks, ...(routine.tasks ?? [])].sort((a, b) => a.at - b.at);
+        glidePreparedThrough = -1;
+        glideEndpoints.clear();
+        shownCursorX = Number.NaN;
+        shownCursorY = Number.NaN;
+        hoverLookupKey = '';
+        hoverLookupEl = null;
+
+        scriptSchedule = scheduleScript();
+        moves = scriptSchedule.moves;
+        duration = scriptSchedule.duration;
+        tasks = [...scriptSchedule.tasks, ...(routine.tasks ?? [])].sort((a, b) => a.at - b.at);
+    }
+
+    function advancePlayhead(next: number): void {
+        if (duration > 0 && next >= duration) {
+            const finishedAt = duration;
+
+            elapsed = finishedAt;
+            press(elapsed);
+            render(elapsed, true);
+            pressed.clear();
+            firedTasks.clear();
+            wrapLoop();
+
+            const remainder = next - finishedAt;
+
+            // One loop boundary per frame. Small overrun keeps remainder; big jumps restart the loop.
+            elapsed = remainder >= duration ? 0 : remainder;
+        } else {
+            elapsed = next;
         }
+
+        // Clicks before glides so the same frame can open a scene before remeasuring targets.
+        press(elapsed);
+        render(elapsed, true);
     }
 
     function frame(now: number): void {
         if (!playing) return;
 
-        const next = elapsed + (now - last);
-
-        if (next >= duration) {
-            elapsed = duration;
-            render(elapsed, true);
-            press(elapsed);
-            pressed.clear();
-            firedTasks.clear();
-            wrapLoop();
-            elapsed = 0;
-        } else {
-            elapsed = next;
-            render(elapsed, true);
-            press(elapsed);
-        }
-
+        advancePlayhead(elapsed + (now - last));
         last = now;
         rafId = requestAnimationFrame(frame);
     }

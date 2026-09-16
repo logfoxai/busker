@@ -6,13 +6,14 @@ export const PRESS_MS = 200;
 /** How long the ripple ring lingers. Outlives the press so the click reads. */
 export const RING_MS = 500;
 
-/** Material-style ease — smooth start and end on every glide. */
-export const DEFAULT_EASING: CubicBezier = [0.4, 0, 0.2, 1];
+/** Smooth ease-in-out for pointer demos (default glide curve). */
+export const DEFAULT_EASING: CubicBezier = [0.36, 0.03, 0.22, 1];
 
+/** Defaults tuned for human-like pointer demos — long glides stay brisk, short hops never snap. */
 export const DEFAULT_MOTION: Required<MotionConfig> = {
-    pxPerSecond: 720,
-    minMoveMs: 80,
-    dwellMs: 250,
+    pxPerSecond: 580,
+    minMoveMs: 115,
+    dwellMs: 300,
     easing: DEFAULT_EASING,
 };
 
@@ -24,13 +25,33 @@ export function distancePx(from: Point, to: Point): number {
     return Math.hypot(to[0] - from[0], to[1] - from[1]);
 }
 
+/** Below this distance, glides get extra time so easing reads (long glides unchanged). */
+const SHORT_HOP_TAPER_PX = 150;
+const SHORT_HOP_READ_MS = 380;
+/** Floor for in-taper hops so speed math never wins over readability. */
+const SHORT_HOP_MIN_GLIDE_MS = 320;
+
+function shortHopReadabilityMs(distancePx: number): number {
+    if (distancePx >= SHORT_HOP_TAPER_PX) return 0;
+
+    const t = 1 - distancePx / SHORT_HOP_TAPER_PX;
+
+    return Math.round(SHORT_HOP_READ_MS * t * t);
+}
+
 /** Glide duration from distance at constant `pxPerSecond` (no max cap). */
 export function moveDurationMs(distancePx: number, motion: MotionConfig = {}): number {
     const m = {...DEFAULT_MOTION, ...motion};
+    const fromSpeed =
+        distancePx <= 0 ? 0 : Math.round((distancePx / m.pxPerSecond) * 1000);
+    const base = Math.max(m.minMoveMs, fromSpeed);
+    let ms = base + shortHopReadabilityMs(distancePx);
 
-    if (distancePx <= 0) return m.minMoveMs;
+    if (distancePx > 0 && distancePx < SHORT_HOP_TAPER_PX) {
+        ms = Math.max(ms, SHORT_HOP_MIN_GLIDE_MS);
+    }
 
-    return Math.max(m.minMoveMs, Math.round((distancePx / m.pxPerSecond) * 1000));
+    return ms;
 }
 
 /** Resolve a step target to px in the root; return null if it is not on screen yet. */
@@ -94,6 +115,50 @@ export function compile(
     const duration = last?.press === undefined ? t : Math.max(t, last.press + RING_MS);
 
     return {moves, duration, tasks};
+}
+
+/**
+ * Lengthen one glide and push every later beat by the same amount. Used when
+ * compile() could not measure a hidden target and guessed ~zero distance.
+ */
+export function stretchMoveGlide(
+    moves: Move[],
+    tasks: Task[],
+    index: number,
+    glideMs: number,
+    playheadMs?: number,
+): number {
+    const move = moves[index];
+
+    if (!move) return 0;
+
+    const delta = glideMs - (move.until - move.from);
+
+    if (delta === 0) return 0;
+
+    const t = playheadMs ?? move.from;
+
+    // Shortening mid-glide would teleport the cursor; only safe at the start of the hop.
+    if (delta < 0 && t > move.from + glideMs) return 0;
+
+    move.until += delta;
+    if (move.press !== undefined) move.press += delta;
+
+    for (let j = index + 1; j < moves.length; j++) {
+        const later = moves[j];
+
+        if (!later) continue;
+
+        later.from += delta;
+        later.until += delta;
+        if (later.press !== undefined) later.press += delta;
+    }
+
+    for (const task of tasks) {
+        if (task.at >= move.from) task.at += delta;
+    }
+
+    return delta;
 }
 
 /** Index of the move the cursor is on at `t`, or -1 before the first one starts. */

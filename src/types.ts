@@ -31,7 +31,7 @@ export interface Task {
     run: () => void;
 }
 
-/** A cursor glide on a hand-set timeline. */
+/** A compiled cursor glide (from `compile()` — not passed on `Routine`). */
 export interface Move {
     /** Where to glide. */
     to: string | Point;
@@ -39,10 +39,7 @@ export interface Move {
     from: number;
     /** When the cursor arrives. */
     until: number;
-    /**
-     * Optional moment to animate a press. A `TimedRoutine` never really clicks
-     * — whatever the press appears to do, drive it with a `Toggle` or `Task`.
-     */
+    /** Moment to animate a press and fire a `{ click }` step. */
     press?: number;
 }
 
@@ -76,8 +73,10 @@ export interface Countdown {
     startSeconds: number;
 }
 
-/** What every routine has, however the cursor is driven. */
-interface CommonRoutine {
+/** A click-driven show. Loop length comes from `steps` (plus ring on the last click). */
+export interface Routine {
+    /** Script the cursor follows — required. */
+    steps: Step[];
     /** Where the cursor rests before the first beat. Default `[0.5, 0.5]`. */
     start?: Point;
     /** Cursor glide timing. Same for every click and move step. */
@@ -87,7 +86,7 @@ interface CommonRoutine {
      * Scene changes and other UI state are your handlers' job.
      */
     clickTargets?: string[];
-    /** Timed callbacks at absolute ms in the loop (hand-timed extras). */
+    /** Timed callbacks at absolute ms in the loop (extras aligned to compiled timing). */
     tasks?: Task[];
     /** Called when the playhead wraps to 0. */
     onLoop?: () => void;
@@ -103,29 +102,8 @@ interface CommonRoutine {
     freezeAt?: number;
 }
 
-/** A click-driven show. The loop is as long as the steps add up to. */
-export interface ScriptRoutine extends CommonRoutine {
-    steps: Step[];
-    /** The steps set the loop length. */
-    duration?: never;
-    /** The steps say where the cursor goes. */
-    moves?: never;
-}
-
-/** A hand-timed show. Nothing is really clicked; a press is animation only. */
-export interface TimedRoutine extends CommonRoutine {
-    /** Loop length in ms. */
-    duration: number;
-    moves?: Move[];
-    /** `duration` sets the loop length, so there are no steps to add up. */
-    steps?: never;
-}
-
-/**
- * A routine is one of two things, never a mix: `steps` for a click-driven show,
- * or `duration` for a hand-timed one.
- */
-export type Routine = ScriptRoutine | TimedRoutine;
+/** @deprecated Use {@link Routine}. Kept as an alias for docs migration. */
+export type ScriptRoutine = Routine;
 
 export interface Busker {
     /** Loop length in ms. */
