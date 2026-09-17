@@ -478,6 +478,12 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         viewportSyncRafId = requestAnimationFrame(() => {
             viewportSyncQueued = false;
             viewportSyncRafId = 0;
+
+            if (root.clientWidth > 0 && root.clientHeight > 0) {
+                remeasureScript();
+                render(elapsed, playing);
+            }
+
             syncViewportPlayback();
         });
     };
