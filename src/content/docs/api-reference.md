@@ -12,22 +12,18 @@ Puts on a show inside `root`, an `HTMLElement`. Returns a [`Busker`](#busker). S
 
 ## `Routine`
 
-Every routine has a non-empty **`steps`** array. Loop length is compiled from those steps (plus the ring on the last click). `busk()` validates the routine up front (runtyp) and throws before touching the DOM if the shape is wrong or includes unknown fields.
+Every routine has a non-empty **`steps`** array. Loop length is compiled from those steps (plus the ring on the last click). `busk()` validates the routine up front (runtyp) and throws before touching the DOM if the shape is wrong or includes unknown fields (including v1 parallel schedules like `toggles` or `duration`).
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
-| `steps` | [`Step[]`](#step) | &mdash; | **Required.** Click-driven script. |
+| `steps` | [`Step[]`](#step) | &mdash; | **Required.** The only timeline. |
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
 | `start` | `[number, number]` | `[0.5, 0.5]` | Where the cursor rests, as a fraction of the root's size. |
 | `motion` | [`MotionConfig`](#motionconfig) | see below | Glide timing for all `{ click }` and `{ move }` steps. |
 | `clickTargets` | `string[]` | none | Selectors that look clickable and count for the miss hint. |
-| `tasks` | [`Task[]`](#task) | none | Callbacks at absolute times in the loop. |
 | `onLoop` | `() => void` | none | Called when the playhead wraps to 0. |
-| `toggles` | [`Toggle[]`](#toggle) | none | Classes held for a slice of the loop. |
-| `typing` | [`Typing[]`](#typing) | none | Text that types itself. |
-| `countdowns` | [`Countdown[]`](#countdown) | none | `m:ss` clocks. |
 | `visibility` | `number` | `1` | How much of the root must be on screen to run, as a fraction. |
 | `freezeAt` | `number` | `0` | Frame to hold under `prefers-reduced-motion`. |
 
@@ -55,9 +51,11 @@ Exports: `cubicBezierEasing`, `DEFAULT_EASING`, `DEFAULT_MOTION`.
 
 ## `compile(steps, resolveTarget, motion?, start?)`
 
-Lays a script out on a timeline for tests or syncing hand-timed toggles. `resolveTarget(to, from)` returns the destination in px relative to the root (or `null` if missing). Returns `{ moves, duration, tasks }` — same shape the runtime uses internally.
+Lays the same script out without the DOM — for tests and assertions. `resolveTarget(to, from)` returns the destination in px relative to the root (or `null` if missing). Returns `{ moves, duration, tasks }` where **`tasks`** are scheduled `{ run }` steps only.
 
 ## `Task`
+
+Output of [`compile()`](#compilesteps-resolvetarget-motion-start) — not passed on `Routine`.
 
 | Field | Type | What it does |
 |---|---|---|
@@ -68,40 +66,14 @@ Lays a script out on a timeline for tests or syncing hand-timed toggles. `resolv
 
 Compiled glide shape returned by [`compile()`](#compilesteps-resolvetarget-motion-start) — not passed on `Routine`.
 
-## `Toggle`
-
-| Field | Type | What it does |
-|---|---|---|
-| `target` | `string` | Selector of the element. |
-| `class` | `string` | Class held while the loop is inside `[from, until)`. |
-| `from` | `number` | |
-| `until` | `number` | |
-
-## `Typing`
-
-| Field | Type | What it does |
-|---|---|---|
-| `target` | `string` | Selector. Busker writes its `textContent`. |
-| `text` | `string` | |
-| `from` | `number` | Typing starts. |
-| `until` | `number` | The whole string is on screen. |
-| `clearAt` | `number` | Optional. Wipes it. |
-
-## `Countdown`
-
-| Field | Type | What it does |
-|---|---|---|
-| `target` | `string` | Selector. Busker writes its `textContent`. |
-| `startSeconds` | `number` | Value at the top of every loop. Counts down to zero and stops. |
-
 ## `Busker`
 
 | Member | What it does |
 |---|---|
-| `duration` | Loop length in ms: what you set, or what the `steps` add up to after scheduling. |
+| `duration` | Loop length in ms from compiled `steps`. |
 | `play()` | Start or resume. A no-op once a visitor has taken over. |
 | `pause()` | Hold where it is. |
 | `stepAside()` | Hand the mock to the visitor: stop for good, hide the cursor. |
 | `destroy()` | Stop everything and remove every class, listener, and observer busker added. |
 
-← [Timed extras](./timeline.md) &middot; [Styling](./styling.md)
+← [`compile()` helper](./compile.md) &middot; [Styling](./styling.md)

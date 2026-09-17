@@ -54,7 +54,7 @@ Scenes should not change on a timer. They change because something was clicked, 
 
 Put `is-active` on the opening scene and its nav item in your HTML so the first paint matches t=0. `busker.css` hides inactive scene siblings until `busk()` adds `.busker`, so every scene does not flash at once.
 
-For mocks that only use [toggles](./timeline.md#toggles) &mdash; no scenes &mdash; mirror the t=0 classes in markup too (for example the view that is on at the start of the loop). `busk()` applies the opening frame before it takes over.
+Mirror the opening frame in markup when the first beats are `{ run }` steps (for example a default scene class). Clicks and `{ run }` steps take it from there &mdash; there is no separate toggle schedule.
 
 ## The cursor
 

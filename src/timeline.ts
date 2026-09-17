@@ -1,5 +1,5 @@
 import {cubicBezierEasing, type CubicBezier} from './easing.ts';
-import type {Countdown, MotionConfig, Move, Point, Step, Task, Toggle, Typing} from './types.ts';
+import type {MotionConfig, Move, Point, Step, Task} from './types.ts';
 
 /** How long the cursor stays squashed after a press. */
 export const PRESS_MS = 200;
@@ -205,24 +205,3 @@ export function positionAt(
     return [from[0] + (to[0] - from[0]) * p, from[1] + (to[1] - from[1]) * p];
 }
 
-export function isOn(toggle: Toggle, t: number): boolean {
-    return t >= toggle.from && t < toggle.until;
-}
-
-/** How much of the string has been written at `t`. Starts slow, speeds up. */
-export function typedText(typing: Typing, t: number): string {
-    if (t < typing.from) return '';
-    if (typing.clearAt !== undefined && t >= typing.clearAt) return '';
-    if (t >= typing.until) return typing.text;
-
-    const p = (t - typing.from) / (typing.until - typing.from);
-
-    return typing.text.slice(0, Math.floor(p * p * typing.text.length));
-}
-
-/** The clock at `t`, as `m:ss`. Stops at zero rather than going negative. */
-export function countdownText(countdown: Countdown, t: number): string {
-    const left = Math.max(0, countdown.startSeconds - Math.floor(t / 1000));
-
-    return `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
-}

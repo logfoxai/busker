@@ -5,6 +5,24 @@ import {busk} from './busk.ts';
 
 GlobalRegistrator.register({url: 'https://busker.test', width: 800, height: 600});
 
+test('assertScriptRoutine: rejects parallel schedule fields', (assert) => {
+
+    let message = '';
+
+    try {
+        assertScriptRoutine({
+            steps: [{wait: 1}],
+            toggles: [{target: '#a', class: 'on', from: 0, until: 1}],
+        });
+    } catch (error) {
+        message = error instanceof Error ? error.message : String(error);
+    }
+
+    assert.equal(message.startsWith('busker:'), true);
+    assert.equal(message.includes('toggles'), true);
+
+});
+
 test('assertScriptRoutine: rejects unknown routine keys', (assert) => {
 
     let message = '';

@@ -3,15 +3,12 @@ import {
     PRESS_MS,
     RING_MS,
     compile,
-    countdownText,
     DEFAULT_MOTION,
     distancePx,
-    isOn,
     moveDurationMs,
     moveIndexAt,
     positionAt,
     stretchMoveGlide,
-    typedText,
 } from './timeline.ts';
 import {assertScriptRoutine} from './assert-routine.ts';
 import {pressableElement} from './pressable.ts';
@@ -96,7 +93,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     let scriptSchedule = scheduleScript();
     let moves = scriptSchedule.moves;
     let duration = scriptSchedule.duration;
-    let tasks: Task[] = [...scriptSchedule.tasks, ...(routine.tasks ?? [])].sort((a, b) => a.at - b.at);
+    let tasks: Task[] = [...scriptSchedule.tasks].sort((a, b) => a.at - b.at);
 
     let elapsed = 0;
     let last = 0;
@@ -125,9 +122,6 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     let shownRinging = false;
     let shownCursorX = Number.NaN;
     let shownCursorY = Number.NaN;
-    const shownToggle = new WeakMap<HTMLElement, string>();
-    const shownText = new WeakMap<HTMLElement, string>();
-
     /**
      * Really click the steps whose press has lifted, each once per loop. The
      * click lands at the end of the stroke, the way a real one does, so the
@@ -313,24 +307,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         }
     }
 
-    function write(el: HTMLElement, text: string): void {
-        if (shownText.get(el) === text) return;
-        shownText.set(el, text);
-        el.textContent = text;
-    }
-
     function render(t: number, scheduleTasks = false): void {
-        for (const toggle of toggles) {
-            const key = `${toggle.class}:${isOn(toggle, t)}`;
-
-            if (shownToggle.get(toggle.el) === key) continue;
-            shownToggle.set(toggle.el, key);
-            toggle.el.classList.toggle(toggle.class, isOn(toggle, t));
-        }
-
-        for (const typing of typings) write(typing.el, typedText(typing, t));
-        for (const countdown of countdowns) write(countdown.el, countdownText(countdown, t));
-
         if (scheduleTasks) runTasks(t);
 
         const index = moveIndexAt(moves, t);
@@ -347,7 +324,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         scriptSchedule = scheduleScript();
         moves = scriptSchedule.moves;
         duration = scriptSchedule.duration;
-        tasks = [...scriptSchedule.tasks, ...(routine.tasks ?? [])].sort((a, b) => a.at - b.at);
+        tasks = [...scriptSchedule.tasks].sort((a, b) => a.at - b.at);
     }
 
     function wrapLoop(): void {
@@ -513,18 +490,6 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         root.classList.remove('busker', 'is-aside');
         cursor?.classList.remove('is-visible', 'is-pressing', 'is-ringing');
     }
-
-    /** Selectors are resolved once; the elements they point at may not exist. */
-    const found = <T extends {target: string}>(items: T[] | undefined): (T & {el: HTMLElement})[] =>
-        (items ?? []).flatMap((item) => {
-            const el = queryShown(item.target);
-
-            return el ? [{...item, el}] : [];
-        });
-
-    const toggles = found(routine.toggles);
-    const typings = found(routine.typing);
-    const countdowns = found(routine.countdowns);
 
     if (clickTargets.length) {
         for (const selector of clickTargets) {

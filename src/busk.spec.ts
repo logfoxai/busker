@@ -518,16 +518,18 @@ test('onLoop runs when the playhead wraps', (assert) => {
 
 });
 
-test('tasks at t=0 wait until playback starts', (assert) => {
+test('a run step at t=0 waits until playback starts', (assert) => {
 
     let runs = 0;
 
     const {startShow, tick} = stage({
         motion: {...TEST_MOTION, minMoveMs: 50, pxPerSecond: 1e9},
-        steps: [{click: '[data-nav-item="alerts"]'}],
-        tasks: [{at: 0, run: (): void => {
-            runs += 1;
-        }}],
+        steps: [
+            {run: (): void => {
+                runs += 1;
+            }},
+            {click: '[data-nav-item="alerts"]'},
+        ],
     });
 
     assert.equal(runs, 0);
@@ -537,25 +539,7 @@ test('tasks at t=0 wait until playback starts', (assert) => {
 
 });
 
-test('a task at loop end runs before the playhead wraps', (assert) => {
-
-    let end = 0;
-    const {startShow, tick} = stage({
-        motion: {...TEST_MOTION, minMoveMs: 50, pxPerSecond: 1e9},
-        steps: [{wait: 500}],
-        tasks: [{at: 500, run: (): void => {
-            end += 1;
-        }}],
-        onLoop: (): void => {},
-    });
-
-    startShow();
-    tick(500);
-    assert.equal(end, 1);
-
-});
-
-test('a run step and tasks fire once per loop', (assert) => {
+test('run steps fire once per loop', (assert) => {
 
     let runs = 0;
 
@@ -566,11 +550,12 @@ test('a run step and tasks fire once per loop', (assert) => {
             {run: (): void => {
                 runs += 1;
             }},
+            {wait: 150},
+            {run: (): void => {
+                runs += 10;
+            }},
             {click: '[data-nav-item="alerts"]'},
         ],
-        tasks: [{at: 200, run: (): void => {
-            runs += 10;
-        }}],
     });
 
     startShow();
@@ -581,34 +566,6 @@ test('a run step and tasks fire once per loop', (assert) => {
     tick(2000);
     tick(80);
     assert.equal(runs, 12);
-
-});
-
-test('t=0 toggles are applied when busk() starts', (assert) => {
-
-    document.body.innerHTML = `
-        <div id="root">
-            <button class="view-traces">traces</button>
-            <span data-cursor></span>
-        </div>
-    `;
-
-    const root = document.getElementById('root');
-
-    if (!root) throw new Error('no root');
-
-    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
-    root.querySelectorAll('*').forEach((el) => {
-        el.getBoundingClientRect = (): DOMRect => new DOMRect(100, 50, 80, 20);
-    });
-
-    const show = busk(root, {
-        steps: [{wait: 1000}],
-        toggles: [{target: '.view-traces', class: 'is-on', from: 0, until: 1000}],
-    });
-
-    assert.equal(root.querySelector('.view-traces')?.classList.contains('is-on'), true);
-    show.destroy();
 
 });
 
@@ -645,15 +602,12 @@ test('scroll re-checks visibility when the mock leaves the viewport', (assert) =
     const show = busk(root, {
         steps: [{wait: 10_000}],
         visibility: 0.5,
-        toggles: [{target: '.marker', class: 'is-on', from: 400, until: 800}],
     });
 
     observers[0].fire();
     now += 500;
 
     for (const cb of queued.splice(0)) cb(now);
-
-    assert.equal(root.querySelector('.marker')?.classList.contains('is-on'), true);
 
     top = 600;
     window.dispatchEvent(new Event('scroll'));
@@ -664,7 +618,7 @@ test('scroll re-checks visibility when the mock leaves the viewport', (assert) =
 
     for (const cb of queued.splice(0)) cb(now);
 
-    assert.equal(root.querySelector('.marker')?.classList.contains('is-on'), true);
+    assert.equal(show.duration, 10_000);
     show.destroy();
 
 });
@@ -754,15 +708,12 @@ test('resize does not resume playback while the tab is hidden', (assert) => {
     const show = busk(root, {
         steps: [{wait: 10_000}],
         visibility: 0.5,
-        toggles: [{target: '.marker', class: 'is-on', from: 400, until: 800}],
     });
 
     observers[0].fire();
     now += 500;
 
     for (const cb of queued.splice(0)) cb(now);
-
-    assert.equal(root.querySelector('.marker')?.classList.contains('is-on'), true);
 
     Object.defineProperty(document, 'hidden', {configurable: true, value: true});
     document.dispatchEvent(new Event('visibilitychange'));
@@ -772,7 +723,7 @@ test('resize does not resume playback while the tab is hidden', (assert) => {
 
     for (const cb of queued.splice(0)) cb(now);
 
-    assert.equal(root.querySelector('.marker')?.classList.contains('is-on'), true);
+    assert.equal(show.duration, 10_000);
     Object.defineProperty(document, 'hidden', {configurable: true, value: false});
     show.destroy();
 

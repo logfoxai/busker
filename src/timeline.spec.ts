@@ -1,15 +1,12 @@
 import {test} from 'kizu';
 import {
     compile,
-    countdownText,
     DEFAULT_MOTION,
     easeInOutCubic,
-    isOn,
     moveDurationMs,
     moveIndexAt,
     positionAt,
     stretchMoveGlide,
-    typedText,
 } from './timeline.ts';
 import type {Point} from './types.ts';
 
@@ -216,44 +213,3 @@ test('positionAt: default easing sits between start and end at halfway through t
 
 });
 
-test('isOn: holds from the start, lets go at the end', (assert) => {
-
-    const toggle = {target: '#a', class: 'is-open', from: 100, until: 200};
-
-    assert.equal(isOn(toggle, 99), false);
-    assert.equal(isOn(toggle, 100), true);
-    assert.equal(isOn(toggle, 199), true);
-    assert.equal(isOn(toggle, 200), false);
-
-});
-
-test('typedText: nothing, then some of it, then all of it', (assert) => {
-
-    const typing = {target: '#a', text: 'hello', from: 0, until: 100};
-
-    assert.equal(typedText(typing, -1), '');
-    assert.equal(typedText(typing, 50), 'h');
-    assert.equal(typedText(typing, 100), 'hello');
-    assert.equal(typedText(typing, 5000), 'hello');
-
-});
-
-test('typedText: clearAt wipes it, e.g. the message was sent', (assert) => {
-
-    const typing = {target: '#a', text: 'hello', from: 0, until: 100, clearAt: 200};
-
-    assert.equal(typedText(typing, 199), 'hello');
-    assert.equal(typedText(typing, 200), '');
-
-});
-
-test('countdownText: m:ss, zero padded, and it stops at zero', (assert) => {
-
-    const countdown = {target: '#a', startSeconds: 125};
-
-    assert.equal(countdownText(countdown, 0), '2:05');
-    assert.equal(countdownText(countdown, 60_000), '1:05');
-    assert.equal(countdownText(countdown, 120_000), '0:05');
-    assert.equal(countdownText(countdown, 999_000), '0:00');
-
-});

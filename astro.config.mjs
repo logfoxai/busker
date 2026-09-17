@@ -120,7 +120,7 @@ export default defineConfig({
                     label: 'Routines',
                     items: [
                         {label: 'Click-driven routines', slug: 'routines'},
-                        {label: 'Hand-timed routines', slug: 'timeline'},
+                        {label: 'compile() helper', slug: 'compile'},
                         {label: 'When a visitor takes over', slug: 'taking-over'},
                     ],
                 },

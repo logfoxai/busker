@@ -61,7 +61,7 @@ Same guides as [busker.logfox.ai](https://busker.logfox.ai). Links are repo-rela
 ### Routines
 
 - [Click-driven routines](src/content/docs/routines.md) &mdash; steps, timing, and click targets
-- [Hand-timed routines](src/content/docs/timeline.md) &mdash; for what no click causes: streaming logs, typing, countdowns
+- [`compile()` helper](src/content/docs/compile.md) &mdash; lay out the same script in tests (no parallel schedules on `Routine`)
 - [When a visitor takes over](src/content/docs/taking-over.md)
 
 ### Reference

@@ -25,7 +25,7 @@ export interface MotionConfig {
     easing?: CubicBezier;
 }
 
-/** Code to run once when the playhead reaches `at` (ms from loop start). */
+/** Scheduled from `{ run }` steps inside `compile()` — not passed on `Routine`. */
 export interface Task {
     at: number;
     run: () => void;
@@ -43,37 +43,10 @@ export interface Move {
     press?: number;
 }
 
-/** A class held on an element for a slice of the loop. */
-export interface Toggle {
-    /** Selector of the element. */
-    target: string;
-    /** Class held while the loop is inside `[from, until)`. */
-    class: string;
-    from: number;
-    until: number;
-}
-
-/** Text that types itself out. */
-export interface Typing {
-    /** Selector of the element whose text content is written. */
-    target: string;
-    text: string;
-    /** Typing starts; the whole string is shown at `until`. */
-    from: number;
-    until: number;
-    /** Optional moment the text is wiped, e.g. the message was sent. */
-    clearAt?: number;
-}
-
-/** A `m:ss` clock ticking down over the loop. */
-export interface Countdown {
-    /** Selector of the element whose text content is written. */
-    target: string;
-    /** Value at the top of every loop. */
-    startSeconds: number;
-}
-
-/** A click-driven show. Loop length comes from `steps` (plus ring on the last click). */
+/**
+ * A click-driven show. One clock: `steps` set loop length; `{ run }` handles
+ * everything else (UI, ambient ticks, livetail rows). No parallel schedules.
+ */
 export interface Routine {
     /** Script the cursor follows — required. */
     steps: Step[];
@@ -86,13 +59,8 @@ export interface Routine {
      * Scene changes and other UI state are your handlers' job.
      */
     clickTargets?: string[];
-    /** Timed callbacks at absolute ms in the loop (extras aligned to compiled timing). */
-    tasks?: Task[];
     /** Called when the playhead wraps to 0. */
     onLoop?: () => void;
-    toggles?: Toggle[];
-    typing?: Typing[];
-    countdowns?: Countdown[];
     /**
      * How much of the root must be on screen for the show to run, as a fraction
      * of its size. Default 1 — the whole thing.

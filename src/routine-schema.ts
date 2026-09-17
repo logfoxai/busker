@@ -50,41 +50,12 @@ const motionConfig = p.object({
     easing: p.optional(cubicBezier),
 });
 
-const toggle = p.object({
-    target: nonEmptyString,
-    class: nonEmptyString,
-    from: p.number(),
-    until: p.number(),
-});
-
-const typing = p.object({
-    target: nonEmptyString,
-    text: p.string(),
-    from: p.number(),
-    until: p.number(),
-    clearAt: p.optional(p.number()),
-});
-
-const countdown = p.object({
-    target: nonEmptyString,
-    startSeconds: nonNegativeNumber,
-});
-
-const task = p.object({
-    at: p.number(),
-    run: runCallback,
-});
-
 const routine = p.object({
     steps: p.array(step, {len: {min: 1}}),
     start: p.optional(point),
     motion: p.optional(motionConfig),
     clickTargets: p.optional(p.array(nonEmptyString)),
-    tasks: p.optional(p.array(task)),
     onLoop: p.optional(runCallback),
-    toggles: p.optional(p.array(toggle)),
-    typing: p.optional(p.array(typing)),
-    countdowns: p.optional(p.array(countdown)),
     visibility: p.optional(p.number({range: {min: 0, max: 1}})),
     freezeAt: p.optional(nonNegativeNumber),
 });
