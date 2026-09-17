@@ -51,17 +51,64 @@ Busker only sets `translate` (position) and the `is-*` classes. Everything else 
 
 ## Demo hover
 
-The demo cursor does not move the real pointer, so CSS `:hover` will not fire while the show is running. Busker toggles `is-hover` on the **current step target** when the demo cursor reaches that element (through dwell and press), not on other controls the cursor passes over.
+### Why you cannot rely on `:hover` during the show
 
-Pair your hover styles for wired controls:
+CSS `:hover` follows the **operating-system pointer**, not whatever is drawn on screen. The demo pointer is `[data-cursor]` with `pointer-events: none` (see `busker.css`) so it never steals clicks or hovers from the mock underneath. While the scripted cursor glides over a button, the visitor's mouse may still be on the hero copy — **no `:hover` on that button**, even though the demo looks like it is hovering there.
+
+Dispatching synthetic `mouseenter` / `mousemove` from JavaScript does **not** reliably turn on `:hover` the way a real pointer move does, and it fights focus, menus, and accessibility. There is no supported way to "just use `:hover`" for the fake cursor without moving the visitor's actual mouse.
+
+### What busker does instead
+
+During the show, busker toggles `is-hover` on the **current step target** when the demo cursor overlaps that element (and through dwell and press for clicks). It does **not** set `is-hover` on every control the cursor passes over — only the wired target for the active step. After [takeover](./taking-over.md) (`.is-aside`), busker clears `is-hover`; only real `:hover` applies.
+
+### How to style it (one rule, not two themes)
+
+**Extend your existing `:hover` selectors** so demo and visitor look identical:
 
 ```css
-.busker:not(.is-aside) .my-button.is-interactive:is(:hover, .is-hover) {
+.my-button:is(:hover, .is-hover) {
     background: var(--accent-muted);
 }
 ```
 
-After a visitor takes over (`.is-aside`), only `:hover` applies and busker clears `is-hover`.
+Use the **same declaration block** you would use for `:hover` alone. Pair nested pieces too (child text, `::after`, compact variants):
+
+```css
+.my-row:is(:hover, .is-hover) .issue-title__text {
+    color: var(--accent-deep);
+}
+```
+
+**Do not** add a second block scoped to `.busker:not(.is-aside) … .is-hover` with different colors or opacities. That duplicates hover styling and is the usual reason demo hover looks "off" compared to poking the mock after takeover — two sources of truth drift apart.
+
+You do **not** need `.is-interactive` in the selector for hover paint; busker only adds `is-interactive` for the pointer cursor and miss hint. Hover pairing belongs on the control's normal class names.
+
+After a visitor takes over (`.is-aside`), `:hover` alone is enough; keep `:is(:hover, .is-hover)` anyway so one rule covers both phases.
+
+## Demo press
+
+While the cursor is down on a click step, busker adds `is-pressing` to `[data-cursor]` and `is-pressed` to **`button`**, **`[data-busker-press]`**, and **`[role="button"].is-interactive`** — the same window as a real `:active` (200ms). Mark chip-style controls with `data-busker-press`. Use `data-busker-no-press` on inline back lines and text links.
+
+Pair pressed styles the same way as hover:
+
+```css
+.mock-btn {
+    transition: background 0.16s ease, box-shadow 0.16s ease; /* not transform — snap press */
+}
+
+.mock-btn:is(:active, .is-pressed) {
+    transform: scale(0.96);
+    box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.12);
+}
+```
+
+Chip-style filters and nav items usually only need a darker background, not a scale. Omit `transform` from the base transition so press/release stay sharp. If the step selector hits a child inside a `<button>`, busker walks up to the pressable wrapper for `is-pressed`.
+
+Dropdown fields: put `data-busker-press` on the chip trigger and `data-busker-menu` on the panel. Menu row clicks get demo hover on the row only — not `is-pressed` on the trigger behind them.
+
+### Step target is a child of the visible control
+
+`click` / `clickTargets` selectors often point at a inner node (for example `[data-live-trace="two"]` on a row inside a `<button.mock-logs__trace-drill>`). Busker puts `is-hover` on **that** node, not the outer button. If your `:hover` rule styles a child from the parent (`button:hover .row`), add a demo branch, e.g. `button:has(.row.is-hover) .row`, or pair `:is(:hover, .is-hover)` on the same element that receives `is-hover`.
 
 ## Optional scene cross-fade
 

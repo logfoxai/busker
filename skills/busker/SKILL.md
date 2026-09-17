@@ -19,6 +19,8 @@ The [README](https://raw.githubusercontent.com/logfoxai/busker/main/README.md) i
 9. **Targets are selectors, resolved every frame.** Do not pass coordinates for things that exist in the DOM — the cursor should follow the button when the layout changes.
 10. **Call `destroy()` on unmount.** It removes every listener, observer, and class.
 11. **No tests for CSS.** Cursor look, ripple, and hint styling are judged in a browser, not asserted as strings.
+12. **Demo hover is not CSS `:hover`.** The fake cursor does not move the OS pointer (`[data-cursor]` is `pointer-events: none`), so `:hover` will not fire on controls the demo cursor passes over. Busker toggles `is-hover` on the **current step target** only. In mock CSS, extend each real `:hover` rule once: `:is(:hover, .is-hover)` on the same selector — including children and `::after`. **Never** add a parallel `.busker:not(.is-aside) … .is-hover` block with different colors; that footgun makes demo hover look wrong after takeover. If the step selector hits a **child** (row inside a button), style via `:has(.is-hover)` on the parent or put `:is(:hover, .is-hover)` on the node that gets the class. Full write-up: [styling.md § Demo hover](https://github.com/logfoxai/busker/blob/main/src/content/docs/styling.md#demo-hover) (repo: `src/content/docs/styling.md`).
+13. **Demo press:** pair `:is(:active, .is-pressed)` on buttons and anything with `data-busker-press`. Busker sets `is-pressed` for 200ms — not on `data-busker-no-press` inline chrome. See [styling.md § Demo press](https://github.com/logfoxai/busker/blob/main/src/content/docs/styling.md#demo-press).
 
 ## Changing busker itself
 

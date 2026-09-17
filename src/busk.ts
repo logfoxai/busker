@@ -14,6 +14,7 @@ import {
     typedText,
 } from './timeline.ts';
 import {assertScriptRoutine} from './assert-routine.ts';
+import {pressableElement} from './pressable.ts';
 import type {Busker, MotionConfig, Move, Point, Routine, Task} from './types.ts';
 
 const DEFAULT_START: Point = [0.5, 0.5];
@@ -132,6 +133,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     let glidePreparedThrough = -1;
 
     let shownHover: Element | null = null;
+    let shownPressed: Element | null = null;
     let shownPressing = false;
     let shownRinging = false;
     let shownCursorX = Number.NaN;
@@ -182,6 +184,24 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         shownHover?.classList.remove('is-hover');
         shownHover = hover;
         hover?.classList.add('is-hover');
+    }
+
+    function setShownPressed(pressedEl: Element | null): void {
+        if (pressedEl === shownPressed) return;
+        shownPressed?.classList.remove('is-pressed');
+        shownPressed = pressedEl;
+        pressedEl?.classList.add('is-pressed');
+    }
+
+    function scriptedPressTarget(move: Move | null, t: number): HTMLElement | null {
+        if (aside || !move || typeof move.to !== 'string' || move.press === undefined) return null;
+        if (t < move.press || t >= move.press + PRESS_MS) return null;
+
+        const el = queryShown(move.to);
+
+        if (!el || !isShown(el)) return null;
+
+        return pressableElement(el);
     }
 
     /** Whether the demo cursor (root-relative px) is over `el`'s box. */
@@ -285,6 +305,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         }
 
         setShownHover(scriptedHoverTarget(move, index, t));
+        setShownPressed(scriptedPressTarget(move, t));
 
         const pressing = move?.press !== undefined && t >= move.press && t < move.press + PRESS_MS;
 
@@ -334,6 +355,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         shownCursorX = Number.NaN;
         shownCursorY = Number.NaN;
         setShownHover(null);
+        setShownPressed(null);
 
         scriptSchedule = scheduleScript();
         moves = scriptSchedule.moves;
@@ -399,6 +421,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         pause();
         root.classList.add('is-aside');
         setShownHover(null);
+        setShownPressed(null);
         shownPressing = false;
         shownRinging = false;
     }
@@ -471,7 +494,9 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         window.removeEventListener('scroll', scheduleSyncViewportPlayback);
         window.removeEventListener('resize', scheduleSyncViewportPlayback);
         setShownHover(null);
+        setShownPressed(null);
         root.querySelectorAll('.is-hint').forEach((el) => el.classList.remove('is-hint'));
+        root.querySelectorAll('.is-pressed').forEach((el) => el.classList.remove('is-pressed'));
         root.querySelectorAll('.is-interactive').forEach((el) => el.classList.remove('is-interactive'));
         root.classList.remove('busker', 'is-aside');
         cursor?.classList.remove('is-visible', 'is-pressing', 'is-ringing');

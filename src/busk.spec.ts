@@ -301,6 +301,10 @@ test('the cursor holds its place when its own click takes the target away', (ass
 
     assert.equal(cursor?.classList.contains('is-pressing'), true);
 
+    const rowBtn = root.querySelector<HTMLElement>('[data-row="p0"]');
+
+    assert.equal(rowBtn?.classList.contains('is-pressed'), true);
+
     // The click has landed and taken the row out of layout with it. The ring
     // outlives the press on purpose, so on every frame that is left it has to
     // keep running where the row was — not wherever an unresolvable target
@@ -311,6 +315,7 @@ test('the cursor holds its place when its own click takes the target away', (ass
     assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
     assert.equal(cursor?.classList.contains('is-ringing'), true);
     assert.equal(cursor?.style.translate, onTheRow);
+    assert.equal(rowBtn?.classList.contains('is-pressed'), false);
 
 });
 

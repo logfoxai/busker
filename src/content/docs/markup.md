@@ -13,6 +13,14 @@ Busker reads your mock through five `data-` attributes and writes back a handful
 
 Anything else &mdash; rows, buttons, modals, inputs &mdash; is just your markup, targeted by whatever selector you like.
 
+Optional press hints (yours to add):
+
+| Attribute | On | What it means |
+|---|---|---|
+| `data-busker-press` | chip-style control | Gets demo `is-pressed` like a `<button>`. |
+| `data-busker-no-press` | inline back / text link | Opt out of demo press. |
+| `data-busker-menu` | dropdown panel | Row clicks inside do not press an outer `data-busker-press` trigger. |
+
 ## What busker writes
 
 | Class | On | When |
@@ -20,8 +28,9 @@ Anything else &mdash; rows, buttons, modals, inputs &mdash; is just your markup,
 | `busker` | the root | For as long as busker is running. Everything in `busker.css` hangs off it. |
 | `is-active` | a scene, a nav item | While that scene is the one on screen. |
 | `is-interactive` | every `clickTargets` entry | Always. It is what makes clickable things look clickable. |
-| `is-hover` | the current step target | After the cursor reaches that target (through dwell and press for clicks). Style it like `:hover`; see [Styling](./styling.md#demo-hover). |
+| `is-hover` | the current step target | Stand-in for `:hover` while the show runs (the fake cursor does not move the OS pointer). Toggled when the demo cursor reaches that target. **Pair with `:hover` in one rule** — `:is(:hover, .is-hover)` — never a separate busker-only stylesheet; see [Styling](./styling.md#demo-hover). |
 | `is-pressing` | the cursor | For 200ms as it presses. |
+| `is-pressed` | pressable step target | Same 200ms window on `button`, `[data-busker-press]`, or `[role="button"].is-interactive` — not `data-busker-no-press`. See [Styling](./styling.md#demo-press). |
 | `is-ringing` | the cursor | For 500ms &mdash; the ripple outlives the press so the click reads. |
 | `is-hint` | every `clickTargets` entry | For 1.5s after a visitor clicks something dead. |
 | `is-aside` | the root | Once a visitor has taken over. |
