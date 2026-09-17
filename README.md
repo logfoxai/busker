@@ -1,3 +1,6 @@
+[![CI](https://github.com/logfoxai/busker/actions/workflows/ci.yml/badge.svg)](https://github.com/logfoxai/busker/actions/workflows/ci.yml)
+[![AutoRel](https://img.shields.io/badge/%F0%9F%9A%80%20AutoRel-2D4DDE)](https://github.com/mhweiner/autorel)
+
 <div align="center">
   <picture>
     <source srcset="assets/busker-lockup-dark.svg" media="(prefers-color-scheme: dark)" />
@@ -20,9 +23,12 @@ import '@logfox/busker/busker.css';
 
 busk(document.querySelector('.app'), {
     steps: [
-        {click: '[data-nav-item="alerts"]', wait: 900},
-        {click: '[data-row="p0"]', wait: 1500},
-        {to: [0.55, 0.25], wait: 2600},
+        {wait: 900},
+        {click: '[data-nav-item="alerts"]'},
+        {wait: 1500},
+        {click: '[data-row="p0"]'},
+        {wait: 2600},
+        {move: [0.55, 0.25]},
     ],
     clickTargets: [
         '[data-nav-item="alerts"]',
@@ -55,7 +61,7 @@ Same guides as [busker.logfox.ai](https://busker.logfox.ai). Links are repo-rela
 ### Routines
 
 - [Click-driven routines](src/content/docs/routines.md) &mdash; steps, timing, and click targets
-- [Hand-timed routines](src/content/docs/timeline.md) &mdash; for what no click causes: streaming logs, typing, countdowns
+- [`compile()` helper](src/content/docs/compile.md) &mdash; lay out the same script in tests (no parallel schedules on `Routine`)
 - [When a visitor takes over](src/content/docs/taking-over.md)
 
 ### Reference
@@ -66,6 +72,10 @@ Same guides as [busker.logfox.ai](https://busker.logfox.ai). Links are repo-rela
 ### Project
 
 - [Development](src/content/docs/development.md)
+
+## Releases
+
+Merges to `main` release through [AutoRel](https://github.com/mhweiner/autorel). The squash-merge title's conventional commit type sets the semver bump (`feat!:` → major). Do not hand-edit `package.json` version — it stays `0.0.0-autorel` in git; npm gets the real version at publish time.
 
 ## License
 

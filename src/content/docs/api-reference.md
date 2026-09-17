@@ -1,7 +1,7 @@
 # API reference
 
 ```typescript
-import {busk} from '@logfox/busker';
+import {busk, compile} from '@logfox/busker';
 
 const show = busk(root, routine);
 ```
@@ -12,60 +12,50 @@ Puts on a show inside `root`, an `HTMLElement`. Returns a [`Busker`](#busker). S
 
 ## `Routine`
 
-A routine is one of two things, never a mix. A `ScriptRoutine` has `steps` and
-gets its loop length from them; a `TimedRoutine` has a `duration` you set
-yourself. Mixing the two is a type error, so a hand-set `duration` can never
-quietly cut a script short.
+Every routine has a non-empty **`steps`** array. Loop length is compiled from those steps (plus the ring on the last click). `busk()` validates the routine up front (runtyp) and throws before touching the DOM if the shape is wrong or includes unknown fields (including v1 parallel schedules like `toggles` or `duration`).
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
-| `steps` | [`Step[]`](#step) | &mdash; | A click-driven routine. Required in a `ScriptRoutine`. |
-| `duration` | `number` | &mdash; | Loop length in ms. Required in a `TimedRoutine`. |
-| `moves` | [`Move[]`](#move) | none | Hand-timed cursor glides. `TimedRoutine` only. |
-
-Everything else is shared:
+| `steps` | [`Step[]`](#step) | &mdash; | **Required.** The only timeline. |
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
 | `start` | `[number, number]` | `[0.5, 0.5]` | Where the cursor rests, as a fraction of the root's size. |
+| `motion` | [`MotionConfig`](#motionconfig) | see below | Glide timing for all `{ click }` and `{ move }` steps. |
 | `clickTargets` | `string[]` | none | Selectors that look clickable and count for the miss hint. |
-| `tasks` | [`Task[]`](#task) | none | Callbacks at absolute times in the loop. |
 | `onLoop` | `() => void` | none | Called when the playhead wraps to 0. |
-| `toggles` | [`Toggle[]`](#toggle) | none | Classes held for a slice of the loop. |
-| `typing` | [`Typing[]`](#typing) | none | Text that types itself. |
-| `countdowns` | [`Countdown[]`](#countdown) | none | `m:ss` clocks. |
 | `visibility` | `number` | `1` | How much of the root must be on screen to run, as a fraction. |
 | `freezeAt` | `number` | `0` | Frame to hold under `prefers-reduced-motion`. |
 
 ## `Step`
 
-One beat of a click-driven routine. Either a press:
+One line in a click-driven script — exactly one of:
 
-| Field | Type | Default |
+| Shape | What it does |
+|---|---|
+| `{ click: string }` | Glide, dwell, press, real click. |
+| `{ wait: number }` | Pause the playhead (ms). |
+| `{ move: string \| [number, number] }` | Glide without pressing. |
+| `{ run: () => void }` | Run code once; cursor unchanged. |
+
+## `MotionConfig`
+
+| Field | Default | What it does |
 |---|---|---|
-| `click` | `string` | &mdash; |
-| `wait` | `number` | `0` |
-| `moveFor` | `number` | `600` |
-| `dwell` | `number` | `250` |
+| `pxPerSecond` | `580` | Constant travel speed (px/s). Glide ms = distance ÷ speed (+ short-hop floor below ~150px). |
+| `minMoveMs` | `115` | Minimum glide time before short-hop extras. |
+| `dwellMs` | `300` | Hover on target before a `{ click }` presses. |
+| `easing` | `[0.4, 0, 0.2, 1]` | CSS cubic-bezier control points for glide progress. |
 
-…or run your code (no cursor move):
+Exports: `cubicBezierEasing`, `DEFAULT_EASING`, `DEFAULT_MOTION`.
 
-| Field | Type | Default |
-|---|---|---|
-| `run` | `() => void` | &mdash; |
-| `wait` | `number` | `0` |
+## `compile(steps, resolveTarget, motion?, start?)`
 
-…or a drift, which never clicks:
-
-| Field | Type | Default |
-|---|---|---|
-| `to` | `string \| [number, number]` | &mdash; |
-| `wait` | `number` | `0` |
-| `moveFor` | `number` | `600` |
-
-Beats run back to back: a step sets off `wait` after the last one finished.
+Lays the same script out without the DOM — for tests and assertions. `resolveTarget(to, from)` returns the destination in px relative to the root (or `null` if missing). Returns `{ moves, duration, tasks }` where **`tasks`** are scheduled `{ run }` steps only.
 
 ## `Task`
+
+Output of [`compile()`](#compilesteps-resolvetarget-motion-start) — not passed on `Routine`.
 
 | Field | Type | What it does |
 |---|---|---|
@@ -74,49 +64,16 @@ Beats run back to back: a step sets off `wait` after the last one finished.
 
 ## `Move`
 
-A hand-timed glide. See [Hand-timed routines](./timeline.md#moves).
-
-| Field | Type | What it does |
-|---|---|---|
-| `to` | `string \| [number, number]` | Where to glide. |
-| `from` | `number` | When it sets off. |
-| `until` | `number` | When it arrives. |
-| `press` | `number` | Optional. Animates a press. Does **not** click. |
-
-## `Toggle`
-
-| Field | Type | What it does |
-|---|---|---|
-| `target` | `string` | Selector of the element. |
-| `class` | `string` | Class held while the loop is inside `[from, until)`. |
-| `from` | `number` | |
-| `until` | `number` | |
-
-## `Typing`
-
-| Field | Type | What it does |
-|---|---|---|
-| `target` | `string` | Selector. Busker writes its `textContent`. |
-| `text` | `string` | |
-| `from` | `number` | Typing starts. |
-| `until` | `number` | The whole string is on screen. |
-| `clearAt` | `number` | Optional. Wipes it. |
-
-## `Countdown`
-
-| Field | Type | What it does |
-|---|---|---|
-| `target` | `string` | Selector. Busker writes its `textContent`. |
-| `startSeconds` | `number` | Value at the top of every loop. Counts down to zero and stops. |
+Compiled glide shape returned by [`compile()`](#compilesteps-resolvetarget-motion-start) — not passed on `Routine`.
 
 ## `Busker`
 
 | Member | What it does |
 |---|---|
-| `duration` | Loop length in ms: what you set, or what the `steps` add up to. |
+| `duration` | Loop length in ms from compiled `steps`. |
 | `play()` | Start or resume. A no-op once a visitor has taken over. |
 | `pause()` | Hold where it is. |
 | `stepAside()` | Hand the mock to the visitor: stop for good, hide the cursor. |
 | `destroy()` | Stop everything and remove every class, listener, and observer busker added. |
 
-← [Styling](./styling.md) &middot; Next: [Development](./development.md)
+← [`compile()` helper](./compile.md) &middot; [Styling](./styling.md)

@@ -87,6 +87,13 @@
     cursor: pointer;
 }
 
+/*
+ * During the show, :hover follows the visitor's mouse, not [data-cursor] (pointer-events: none).
+ * Busker toggles is-hover on the current step target — pair it with :hover in your mock:
+ *   .my-control:is(:hover, .is-hover) { … }
+ * Do not duplicate hover rules under .busker:not(.is-aside). See docs styling.md § Demo hover.
+ */
+
 /* The visitor clicked something dead — show them what is not. */
 .busker .is-hint {
     animation: busker-hint 1.5s ease-out;

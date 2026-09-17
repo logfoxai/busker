@@ -34,6 +34,6 @@ document.querySelector('#try-it')?.addEventListener('click', () => show.stepAsid
 
 ## Reduced motion
 
-Under `prefers-reduced-motion: reduce` there is no loop, no cursor, and no observer. Busker renders the [`freezeAt`](./timeline.md#freezing-for-reduced-motion) frame once and leaves it there. Click targets are still wired, so the mock stays clickable &mdash; it just never moves on its own.
+Under `prefers-reduced-motion: reduce` there is no loop, no cursor, and no observer. Busker renders the [`freezeAt`](./api-reference.md#routine) frame once and leaves it there. Use `{ run }` steps or your own init code to match that frame in the DOM. Click targets are still wired, so the mock stays clickable &mdash; it just never moves on its own.
 
-← [Hand-timed routines](./timeline.md) &middot; Next: [Styling](./styling.md)
+← [Click-driven routines](./routines.md) &middot; Next: [Styling](./styling.md)

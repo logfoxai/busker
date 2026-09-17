@@ -1,34 +1,23 @@
+import {cubicBezierEasingCached} from './easing.ts';
 import {
     PRESS_MS,
     RING_MS,
     compile,
-    countdownText,
-    isOn,
+    DEFAULT_MOTION,
+    distancePx,
+    moveDurationMs,
     moveIndexAt,
     positionAt,
-    typedText,
+    stretchMoveGlide,
 } from './timeline.ts';
-import type {Busker, Move, Point, Routine, Task} from './types.ts';
+import {assertScriptRoutine} from './assert-routine.ts';
+import {pressableElement} from './pressable.ts';
+import type {Busker, MotionConfig, Move, Point, Routine, Task} from './types.ts';
+import {meetsViewportVisibility} from './viewport.ts';
 
 const DEFAULT_START: Point = [0.5, 0.5];
-/** IntersectionObserver ratios are floating point; 1 is rarely exactly 1. */
-const VISIBILITY_SLACK = 0.001;
 /** How long a missed click keeps the clickable things lit up. */
 const HINT_MS = 1500;
-
-/** How much of `el` is inside the viewport, as a fraction of its own area. */
-function visibleFraction(el: Element): number {
-    const rect = el.getBoundingClientRect();
-
-    if (rect.width <= 0 || rect.height <= 0) return 0;
-
-    const w = Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0);
-    const h = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
-
-    if (w <= 0 || h <= 0) return 0;
-
-    return (w * h) / (rect.width * rect.height);
-}
 
 /**
  * Put on a show inside `root`.
@@ -37,38 +26,48 @@ function visibleFraction(el: Element): number {
  * yours — use real click handlers and optional `tasks` / `onLoop`.
  */
 export function busk(root: HTMLElement, routine: Routine): Busker {
+    assertScriptRoutine(routine);
+
     const cursor = root.querySelector<HTMLElement>('[data-cursor]');
 
-    const compiled = routine.steps ? compile(routine.steps) : null;
-    const moves = compiled?.moves ?? routine.moves ?? [];
-    const duration = compiled?.duration ?? routine.duration ?? 0;
+    const motion: MotionConfig = {...DEFAULT_MOTION, ...routine.motion};
+    const glideEase = cubicBezierEasingCached(motion.easing ?? DEFAULT_MOTION.easing);
     const start = routine.start ?? DEFAULT_START;
     const clickTargets = routine.clickTargets ?? [];
     const visibility = routine.visibility ?? 1;
-    const tasks: Task[] = [...(compiled?.tasks ?? []), ...(routine.tasks ?? [])].sort(
-        (a, b) => a.at - b.at,
-    );
-
-    /** Selectors are resolved once; the elements they point at may not exist. */
-    const found = <T extends {target: string}>(items: T[] | undefined): (T & {el: HTMLElement})[] =>
-        (items ?? []).flatMap((item) => {
-            const el = root.querySelector<HTMLElement>(item.target);
-
-            return el ? [{...item, el}] : [];
-        });
-
-    const toggles = found(routine.toggles);
-    const typings = found(routine.typing);
-    const countdowns = found(routine.countdowns);
+    const scriptSteps = routine.steps;
 
     /** Where each selector was last seen, in case it stops being anywhere. */
     const lastSeen = new Map<string, Point>();
+
+    /** Skip stacked duplicates (e.g. two view layers) that are hidden but still in layout. */
+    function isShown(el: Element): boolean {
+        if (!root.contains(el)) return false;
+
+        for (let node: Element | null = el; node && node !== root; node = node.parentElement) {
+            const style = getComputedStyle(node);
+
+            if (style.display === 'none' || style.visibility === 'hidden') return false;
+        }
+
+        const rect = el.getBoundingClientRect();
+
+        return rect.width > 0 && rect.height > 0;
+    }
+
+    function queryShown(selector: string): HTMLElement | null {
+        for (const el of root.querySelectorAll<HTMLElement>(selector)) {
+            if (isShown(el)) return el;
+        }
+
+        return root.querySelector<HTMLElement>(selector);
+    }
 
     /** Where a move target sits, in px relative to the root's top-left. */
     function resolve(target: string | Point): Point | null {
         if (Array.isArray(target)) return [target[0] * root.clientWidth, target[1] * root.clientHeight];
 
-        const rect = root.querySelector(target)?.getBoundingClientRect();
+        const rect = queryShown(target)?.getBoundingClientRect();
 
         if (!rect || (rect.width === 0 && rect.height === 0)) return lastSeen.get(target) ?? null;
 
@@ -83,6 +82,19 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         return at;
     }
 
+    const resolveTarget = (to: string | Point, _from: Point): Point | null => resolve(to);
+
+    function scheduleScript(): {moves: Move[]; duration: number; tasks: Task[]} {
+        const startPx = resolve(start) ?? [root.clientWidth / 2, root.clientHeight / 2];
+
+        return compile(scriptSteps ?? [], resolveTarget, motion, startPx);
+    }
+
+    let scriptSchedule = scheduleScript();
+    let moves = scriptSchedule.moves;
+    let duration = scriptSchedule.duration;
+    let tasks: Task[] = [...scriptSchedule.tasks].sort((a, b) => a.at - b.at);
+
     let elapsed = 0;
     let last = 0;
     let rafId = 0;
@@ -91,6 +103,8 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     let playing = false;
     let aside = false;
     let destroyed = false;
+    /** Remeasure glides once the root has real layout (showcases often mount off-screen). */
+    let syncedLayoutForPlayback = false;
     /** Steps already pressed this time round, so each one fires exactly once. */
     const pressed = new Set<number>();
     /** Tasks already run this loop. */
@@ -98,32 +112,36 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     /** Set while the show clicks for itself, so it does not mistake that for a visitor. */
     let clickingItself = false;
 
+    /** Px endpoints for each move, fixed when the glide starts (DOM may move after click). */
+    const glideEndpoints = new Map<number, {from: Point; to: Point}>();
+    let glidePreparedThrough = -1;
+
     let shownHover: Element | null = null;
+    let shownPressed: Element | null = null;
     let shownPressing = false;
     let shownRinging = false;
-    const shownToggle = new WeakMap<HTMLElement, string>();
-    const shownText = new WeakMap<HTMLElement, string>();
-
+    let shownCursorX = Number.NaN;
+    let shownCursorY = Number.NaN;
     /**
-     * Click the steps whose press has lifted, each once per loop. The
+     * Really click the steps whose press has lifted, each once per loop. The
      * click lands at the end of the stroke, the way a real one does, so the
      * cursor reads on the element before the click takes it away.
      */
     function press(t: number): void {
-        if (!compiled) return;
-
         moves.forEach((move, i) => {
             if (move.press === undefined || t < move.press + PRESS_MS || pressed.has(i)) return;
             pressed.add(i);
             if (typeof move.to !== 'string') return;
 
-            const el = root.querySelector<HTMLElement>(move.to);
+            const el = queryShown(move.to);
 
             if (!el) return;
 
             clickingItself = true;
             try {
                 el.click();
+            } catch {
+                // Mock handlers must not take down the show mid-loop.
             } finally {
                 clickingItself = false;
             }
@@ -134,31 +152,145 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         tasks.forEach((task, i) => {
             if (t < task.at || firedTasks.has(i)) return;
             firedTasks.add(i);
-            task.run();
+            try {
+                task.run();
+            } catch {
+                // Routine `run` steps must not take down the show mid-loop.
+            }
         });
+    }
+
+    function setShownHover(hover: Element | null): void {
+        if (hover === shownHover) return;
+        shownHover?.classList.remove('is-hover');
+        shownHover = hover;
+        hover?.classList.add('is-hover');
+    }
+
+    function setShownPressed(pressedEl: Element | null): void {
+        if (pressedEl === shownPressed) return;
+        shownPressed?.classList.remove('is-pressed');
+        shownPressed = pressedEl;
+        pressedEl?.classList.add('is-pressed');
+    }
+
+    function scriptedPressTarget(move: Move | null, t: number): HTMLElement | null {
+        if (aside || !move || typeof move.to !== 'string' || move.press === undefined) return null;
+        if (t < move.press || t >= move.press + PRESS_MS) return null;
+
+        const el = queryShown(move.to);
+
+        if (!el || !isShown(el)) return null;
+
+        return pressableElement(el);
+    }
+
+    /** Whether the demo cursor (root-relative px) is over `el`'s box. */
+    function demoCursorOverElement(el: HTMLElement, rootX: number, rootY: number): boolean {
+        const rootRect = root.getBoundingClientRect();
+        const clientX = rootRect.left + rootX;
+        const clientY = rootRect.top + rootY;
+        const rect = el.getBoundingClientRect();
+
+        return (
+            clientX >= rect.left &&
+            clientX <= rect.right &&
+            clientY >= rect.top &&
+            clientY <= rect.bottom
+        );
+    }
+
+    /**
+     * Demo hover on the current step target only — not other clickTargets along the path.
+     * Lights up when the cursor reaches that element, then holds through dwell and press.
+     */
+    function scriptedHoverTarget(move: Move | null, index: number, t: number): HTMLElement | null {
+        if (aside || !move || typeof move.to !== 'string' || t < move.from) return null;
+
+        if (move.press !== undefined) {
+            if (t >= move.press + PRESS_MS) return null;
+        } else {
+            const nextFrom = moves[index + 1]?.from ?? Number.POSITIVE_INFINITY;
+
+            if (t >= nextFrom) return null;
+        }
+
+        const el = queryShown(move.to);
+
+        if (!el || !isShown(el)) return null;
+
+        const parked = t >= move.until;
+        const over =
+            Number.isFinite(shownCursorX) &&
+            Number.isFinite(shownCursorY) &&
+            demoCursorOverElement(el, shownCursorX, shownCursorY);
+
+        return parked || over ? el : null;
+    }
+
+    function prepareGlide(index: number, t: number): void {
+        if (index < 0 || index <= glidePreparedThrough) return;
+
+        const move = moves[index];
+
+        if (!move || t < move.from) return;
+
+        const fromPt =
+            index === 0
+                ? resolve(start)
+                : (glideEndpoints.get(index - 1)?.to ?? resolve(moves[index - 1].to));
+        const toPt = resolve(move.to);
+
+        if (!fromPt || !toPt) return;
+
+        glideEndpoints.set(index, {from: fromPt, to: toPt});
+
+        const glideMs = moveDurationMs(distancePx(fromPt, toPt), motion);
+        const delta = stretchMoveGlide(moves, tasks, index, glideMs, t);
+
+        if (delta !== 0) duration += delta;
+
+        glidePreparedThrough = index;
     }
 
     function drawCursor(move: Move | null, index: number, t: number): void {
         if (!cursor) return;
 
-        const from = resolve(index > 0 ? moves[index - 1].to : start);
-        const to = resolve(move ? move.to : start);
+        let from: Point | null = null;
+        let to: Point | null = null;
 
-        if (from && to) {
-            const [x, y] = positionAt(from, to, move, t);
+        if (index >= 0) {
+            const locked = glideEndpoints.get(index);
 
-            cursor.style.translate = `calc(${x}px - 50%) calc(${y}px - 50%)`;
+            if (locked) {
+                from = locked.from;
+                to = locked.to;
+            }
         }
 
-        const hover = move && typeof move.to === 'string' && t >= move.until
-            ? root.querySelector(move.to)
-            : null;
-
-        if (hover !== shownHover) {
-            shownHover?.classList.remove('is-hover');
-            shownHover = hover;
-            hover?.classList.add('is-hover');
+        if (!from || !to) {
+            from =
+                (index > 0 ? glideEndpoints.get(index - 1)?.to : null) ??
+                resolve(index > 0 ? moves[index - 1].to : start);
+            to = resolve(move ? move.to : start);
         }
+
+        if (!from || !to) return;
+
+        {
+            const [x, y] = positionAt(from, to, move, t, glideEase);
+            const rx = Math.round(x * 10) / 10;
+            const ry = Math.round(y * 10) / 10;
+
+            if (rx !== shownCursorX || ry !== shownCursorY) {
+                shownCursorX = rx;
+                shownCursorY = ry;
+                cursor.style.translate = `calc(${rx}px - 50%) calc(${ry}px - 50%)`;
+            }
+        }
+
+        setShownHover(scriptedHoverTarget(move, index, t));
+        setShownPressed(scriptedPressTarget(move, t));
 
         const pressing = move?.press !== undefined && t >= move.press && t < move.press + PRESS_MS;
 
@@ -175,50 +307,74 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         }
     }
 
-    function write(el: HTMLElement, text: string): void {
-        if (shownText.get(el) === text) return;
-        shownText.set(el, text);
-        el.textContent = text;
-    }
-
     function render(t: number, scheduleTasks = false): void {
-        for (const toggle of toggles) {
-            const key = `${toggle.class}:${isOn(toggle, t)}`;
-
-            if (shownToggle.get(toggle.el) === key) continue;
-            shownToggle.set(toggle.el, key);
-            toggle.el.classList.toggle(toggle.class, isOn(toggle, t));
-        }
-
-        for (const typing of typings) write(typing.el, typedText(typing, t));
-        for (const countdown of countdowns) write(countdown.el, countdownText(countdown, t));
+        if (scheduleTasks) runTasks(t);
 
         const index = moveIndexAt(moves, t);
 
+        prepareGlide(index, t);
         drawCursor(index >= 0 ? moves[index] : null, index, t);
-        if (scheduleTasks) runTasks(t);
+    }
+
+    function remeasureScript(): void {
+        glidePreparedThrough = -1;
+        glideEndpoints.clear();
+        shownCursorX = Number.NaN;
+        shownCursorY = Number.NaN;
+        scriptSchedule = scheduleScript();
+        moves = scriptSchedule.moves;
+        duration = scriptSchedule.duration;
+        tasks = [...scriptSchedule.tasks].sort((a, b) => a.at - b.at);
+    }
+
+    function wrapLoop(): void {
+        routine.onLoop?.();
+
+        glidePreparedThrough = -1;
+        glideEndpoints.clear();
+        shownCursorX = Number.NaN;
+        shownCursorY = Number.NaN;
+        setShownHover(null);
+        setShownPressed(null);
+
+        remeasureScript();
+    }
+
+    function advancePlayhead(next: number): void {
+        if (duration > 0 && next >= duration) {
+            const finishedAt = duration;
+
+            elapsed = finishedAt;
+            press(elapsed);
+            render(elapsed, true);
+            pressed.clear();
+            firedTasks.clear();
+            wrapLoop();
+
+            const remainder = next - finishedAt;
+
+            // One loop boundary per frame. Small overrun keeps remainder; big jumps restart the loop.
+            elapsed = remainder >= duration ? 0 : remainder;
+        } else {
+            elapsed = next;
+        }
+
+        // Clicks before glides so the same frame can open a scene before remeasuring targets.
+        press(elapsed);
+        render(elapsed, true);
     }
 
     function frame(now: number): void {
         if (!playing) return;
 
-        const next = elapsed + (now - last);
-
-        if (next >= duration) {
-            elapsed = duration;
-            render(elapsed, true);
-            press(elapsed);
-            pressed.clear();
-            firedTasks.clear();
-            routine.onLoop?.();
-            elapsed = 0;
-        } else {
-            elapsed = next;
-            render(elapsed, true);
-            press(elapsed);
+        try {
+            advancePlayhead(elapsed + (now - last));
+            last = now;
+        } catch {
+            pause();
+            return;
         }
 
-        last = now;
         rafId = requestAnimationFrame(frame);
     }
 
@@ -226,6 +382,12 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
     function play(): void {
         if (playing || aside || destroyed || reducedMotion || duration <= 0) return;
+
+        if (!syncedLayoutForPlayback && root.clientWidth > 0 && root.clientHeight > 0) {
+            remeasureScript();
+            syncedLayoutForPlayback = true;
+        }
+
         playing = true;
         last = performance.now();
         rafId = requestAnimationFrame(frame);
@@ -241,22 +403,28 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         aside = true;
         pause();
         root.classList.add('is-aside');
-        shownHover?.classList.remove('is-hover');
-        shownHover = null;
+        setShownHover(null);
+        setShownPressed(null);
         shownPressing = false;
         shownRinging = false;
     }
 
     const onClick = (e: Event): void => {
         if (destroyed) return;
-
-        const hit = clickTargets.some((selector) => {
-            const el = (e.target as Element).closest(selector);
-
-            return el !== null && root.contains(el);
-        });
-
         if (clickingItself) return;
+
+        const target = e.target instanceof Element ? e.target : null;
+        const hit =
+            target !== null &&
+            clickTargets.some((selector) => {
+                try {
+                    const el = target.closest(selector);
+
+                    return el !== null && root.contains(el);
+                } catch {
+                    return false;
+                }
+            });
 
         stepAside();
 
@@ -272,8 +440,12 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     };
 
     const syncViewportPlayback = (): void => {
-        if (document.hidden) return;
-        if (visibleFraction(root) >= visibility - VISIBILITY_SLACK) play();
+        if (document.hidden) {
+            pause();
+            return;
+        }
+
+        if (meetsViewportVisibility(root, visibility)) play();
         else pause();
     };
 
@@ -283,6 +455,12 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         viewportSyncRafId = requestAnimationFrame(() => {
             viewportSyncQueued = false;
             viewportSyncRafId = 0;
+
+            if (root.clientWidth > 0 && root.clientHeight > 0) {
+                remeasureScript();
+                render(elapsed, playing);
+            }
+
             syncViewportPlayback();
         });
     };
@@ -304,9 +482,10 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         document.removeEventListener('visibilitychange', onVisibilityChange);
         window.removeEventListener('scroll', scheduleSyncViewportPlayback);
         window.removeEventListener('resize', scheduleSyncViewportPlayback);
-        shownHover?.classList.remove('is-hover');
-        shownHover = null;
+        setShownHover(null);
+        setShownPressed(null);
         root.querySelectorAll('.is-hint').forEach((el) => el.classList.remove('is-hint'));
+        root.querySelectorAll('.is-pressed').forEach((el) => el.classList.remove('is-pressed'));
         root.querySelectorAll('.is-interactive').forEach((el) => el.classList.remove('is-interactive'));
         root.classList.remove('busker', 'is-aside');
         cursor?.classList.remove('is-visible', 'is-pressing', 'is-ringing');
@@ -341,9 +520,19 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         document.addEventListener('visibilitychange', onVisibilityChange);
         window.addEventListener('scroll', scheduleSyncViewportPlayback, {passive: true});
         window.addEventListener('resize', scheduleSyncViewportPlayback, {passive: true});
+        window.addEventListener('load', scheduleSyncViewportPlayback, {once: true});
+        document.fonts?.ready.then(scheduleSyncViewportPlayback);
         syncViewportPlayback();
         cursor?.classList.add('is-visible');
     }
 
-    return {duration, play, pause, stepAside, destroy};
+    return {
+        get duration(): number {
+            return duration;
+        },
+        play,
+        pause,
+        stepAside,
+        destroy,
+    };
 }

@@ -1,6 +1,6 @@
 {
   "name": "@logfox/busker",
-  "version": "1.0.0",
+  "version": "0.0.0-autorel",
   "description": "Scripted cursor demos that click. Drive a fake product UI with a routine, not a stopwatch.",
   "keywords": [
     "demo",
@@ -75,5 +75,8 @@
     "tsx": "^4.23.13",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.69.0"
+  },
+  "dependencies": {
+    "runtyp": "2.5.2"
   }
 }

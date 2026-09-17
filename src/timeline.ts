@@ -1,61 +1,187 @@
-import type {Countdown, Move, Point, Step, Task, Toggle, Typing} from './types.ts';
+import {cubicBezierEasing, type CubicBezier} from './easing.ts';
+import type {MotionConfig, Move, Point, Step, Task} from './types.ts';
 
-/** How long a glide takes when a step does not say. */
-const DEFAULT_MOVE_MS = 600;
-/** How long the cursor hovers before pressing when a step does not say. */
-const DEFAULT_DWELL_MS = 250;
 /** How long the cursor stays squashed after a press. */
 export const PRESS_MS = 200;
 /** How long the ripple ring lingers. Outlives the press so the click reads. */
 export const RING_MS = 500;
 
+/** Smooth ease-in-out for pointer demos (default glide curve). */
+export const DEFAULT_EASING: CubicBezier = [0.36, 0.03, 0.22, 1];
+
+/** Defaults tuned for human-like pointer demos — long glides stay brisk, short hops never snap. */
+export const DEFAULT_MOTION: Required<MotionConfig> = {
+    pxPerSecond: 580,
+    minMoveMs: 115,
+    dwellMs: 300,
+    easing: DEFAULT_EASING,
+};
+
 export function easeInOutCubic(t: number): number {
     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
+export function distancePx(from: Point, to: Point): number {
+    return Math.hypot(to[0] - from[0], to[1] - from[1]);
+}
+
+/** Below this distance, glides get extra time so easing reads (long glides unchanged). */
+const SHORT_HOP_TAPER_PX = 150;
+const SHORT_HOP_READ_MS = 380;
+/** Floor for in-taper hops so speed math never wins over readability. */
+const SHORT_HOP_MIN_GLIDE_MS = 320;
+
+function shortHopReadabilityMs(distancePx: number): number {
+    if (distancePx >= SHORT_HOP_TAPER_PX) return 0;
+
+    const t = 1 - distancePx / SHORT_HOP_TAPER_PX;
+
+    return Math.round(SHORT_HOP_READ_MS * t * t);
+}
+
+/** Glide duration from distance at constant `pxPerSecond` (no max cap). */
+export function moveDurationMs(distancePx: number, motion: MotionConfig = {}): number {
+    const m = {...DEFAULT_MOTION, ...motion};
+    const fromSpeed =
+        distancePx <= 0 ? 0 : Math.round((distancePx / m.pxPerSecond) * 1000);
+    const base = Math.max(m.minMoveMs, fromSpeed);
+    let ms = base + shortHopReadabilityMs(distancePx);
+
+    if (distancePx > 0 && distancePx < SHORT_HOP_TAPER_PX) {
+        ms = Math.max(ms, SHORT_HOP_MIN_GLIDE_MS);
+    }
+
+    return ms;
+}
+
+/** Resolve a step target to px in the root; return null if it is not on screen yet. */
+export type ResolveTarget = (to: string | Point, from: Point) => Point | null;
+
 /**
- * Lay a routine out on a timeline, back to back. A step's press and the page
- * change it causes are one event, so there is nothing to keep in sync by hand.
+ * Lay a script out on a timeline. Waits and runs use fixed times; glides use
+ * `resolveTarget` and `motion` so travel stays in one place, not on every step.
  */
-export function compile(steps: Step[]): {moves: Move[]; duration: number; tasks: Task[]} {
+export function compileScriptTimeline(
+    steps: Step[],
+    resolveTarget: ResolveTarget,
+    motion: MotionConfig = {},
+    start: Point = [0, 0],
+): {moves: Move[]; duration: number; tasks: Task[]; stepStartsMs: number[]} {
+    const m = {...DEFAULT_MOTION, ...motion};
     let t = 0;
     const moves: Move[] = [];
     const tasks: Task[] = [];
+    const stepStartsMs: number[] = [];
+    let cursorAt = start;
 
     for (const step of steps) {
-        if (step.run) {
-            const at = t + (step.wait ?? 0);
+        stepStartsMs.push(t);
+        const from = t;
 
-            tasks.push({at, run: step.run});
-            t = at;
+        if ('click' in step && step.click !== undefined) {
+            const dest = resolveTarget(step.click, cursorAt) ?? cursorAt;
+            const dist = distancePx(cursorAt, dest);
+            const moveMs = moveDurationMs(dist, m);
+            const until = from + moveMs;
+            const press = until + m.dwellMs;
+
+            cursorAt = dest;
+            t = press + PRESS_MS;
+            moves.push({to: step.click, from, until, press});
             continue;
         }
 
-        const from = t + (step.wait ?? 0);
-        const until = from + (step.moveFor ?? DEFAULT_MOVE_MS);
+        if ('move' in step && step.move !== undefined) {
+            const dest = resolveTarget(step.move, cursorAt) ?? cursorAt;
+            const dist = distancePx(cursorAt, dest);
+            const moveMs = moveDurationMs(dist, m);
+            const until = from + moveMs;
 
-        if (step.click === undefined) {
+            cursorAt = dest;
             t = until;
-            moves.push({to: step.to, from, until});
+            moves.push({to: step.move, from, until});
             continue;
         }
 
-        const press = until + (step.dwell ?? DEFAULT_DWELL_MS);
+        if ('run' in step) {
+            tasks.push({at: t, run: step.run});
+            continue;
+        }
 
-        // A beat runs to the click, which lands as the press lifts — not to the
-        // press itself. Otherwise the next beat starts mid-stroke.
-        t = press + PRESS_MS;
-        moves.push({to: step.click, from, until, press});
+        if ('wait' in step) {
+            t += step.wait;
+        }
     }
 
     const last = moves[moves.length - 1];
-
-    // A press needs its ring to finish before the loop restarts. Between beats
-    // the next one's wait covers that; the last beat has no next one, and ending
-    // on the click would reset the loop before the click could fire.
     const duration = last?.press === undefined ? t : Math.max(t, last.press + RING_MS);
 
+    return {moves, duration, tasks, stepStartsMs};
+}
+
+export function compile(
+    steps: Step[],
+    resolveTarget: ResolveTarget,
+    motion: MotionConfig = {},
+    start: Point = [0, 0],
+): {moves: Move[]; duration: number; tasks: Task[]} {
+    const {moves, duration, tasks} = compileScriptTimeline(steps, resolveTarget, motion, start);
+
     return {moves, duration, tasks};
+}
+
+/** When each script step begins (ms from loop start), for passive effects aligned to the same schedule as `busk()`. */
+export function compileStepStarts(
+    steps: Step[],
+    resolveTarget: ResolveTarget,
+    motion: MotionConfig = {},
+    start: Point = [0, 0],
+): number[] {
+    return compileScriptTimeline(steps, resolveTarget, motion, start).stepStartsMs;
+}
+
+/**
+ * Lengthen one glide and push every later beat by the same amount. Used when
+ * compile() could not measure a hidden target and guessed ~zero distance.
+ */
+export function stretchMoveGlide(
+    moves: Move[],
+    tasks: Task[],
+    index: number,
+    glideMs: number,
+    playheadMs?: number,
+): number {
+    const move = moves[index];
+
+    if (!move) return 0;
+
+    const delta = glideMs - (move.until - move.from);
+
+    if (delta === 0) return 0;
+
+    const t = playheadMs ?? move.from;
+
+    // Shortening mid-glide would teleport the cursor; only safe at the start of the hop.
+    if (delta < 0 && t > move.from + glideMs) return 0;
+
+    move.until += delta;
+    if (move.press !== undefined) move.press += delta;
+
+    for (let j = index + 1; j < moves.length; j++) {
+        const later = moves[j];
+
+        if (!later) continue;
+
+        later.from += delta;
+        later.until += delta;
+        if (later.press !== undefined) later.press += delta;
+    }
+
+    for (const task of tasks) {
+        if (task.at >= move.from) task.at += delta;
+    }
+
+    return delta;
 }
 
 /** Index of the move the cursor is on at `t`, or -1 before the first one starts. */
@@ -64,32 +190,18 @@ export function moveIndexAt(moves: Move[], t: number): number {
 }
 
 /** Where the cursor sits at `t`: mid-glide between `from` and `to`, or parked on `to`. */
-export function positionAt(from: Point, to: Point, move: Move | null, t: number): Point {
+export function positionAt(
+    from: Point,
+    to: Point,
+    move: Move | null,
+    t: number,
+    ease: (u: number) => number = cubicBezierEasing(DEFAULT_EASING),
+): Point {
     if (!move || t >= move.until) return to;
 
-    const p = easeInOutCubic((t - move.from) / (move.until - move.from));
+    const linear = (t - move.from) / (move.until - move.from);
+    const p = ease(linear);
 
     return [from[0] + (to[0] - from[0]) * p, from[1] + (to[1] - from[1]) * p];
 }
 
-export function isOn(toggle: Toggle, t: number): boolean {
-    return t >= toggle.from && t < toggle.until;
-}
-
-/** How much of the string has been written at `t`. Starts slow, speeds up. */
-export function typedText(typing: Typing, t: number): string {
-    if (t < typing.from) return '';
-    if (typing.clearAt !== undefined && t >= typing.clearAt) return '';
-    if (t >= typing.until) return typing.text;
-
-    const p = (t - typing.from) / (typing.until - typing.from);
-
-    return typing.text.slice(0, Math.floor(p * p * typing.text.length));
-}
-
-/** The clock at `t`, as `m:ss`. Stops at zero rather than going negative. */
-export function countdownText(countdown: Countdown, t: number): string {
-    const left = Math.max(0, countdown.startSeconds - Math.floor(t / 1000));
-
-    return `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
-}
