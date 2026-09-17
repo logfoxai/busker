@@ -61,19 +61,21 @@ export type ResolveTarget = (to: string | Point, from: Point) => Point | null;
  * Lay a script out on a timeline. Waits and runs use fixed times; glides use
  * `resolveTarget` and `motion` so travel stays in one place, not on every step.
  */
-export function compile(
+export function compileScriptTimeline(
     steps: Step[],
     resolveTarget: ResolveTarget,
     motion: MotionConfig = {},
     start: Point = [0, 0],
-): {moves: Move[]; duration: number; tasks: Task[]} {
+): {moves: Move[]; duration: number; tasks: Task[]; stepStartsMs: number[]} {
     const m = {...DEFAULT_MOTION, ...motion};
     let t = 0;
     const moves: Move[] = [];
     const tasks: Task[] = [];
+    const stepStartsMs: number[] = [];
     let cursorAt = start;
 
     for (const step of steps) {
+        stepStartsMs.push(t);
         const from = t;
 
         if ('click' in step && step.click !== undefined) {
@@ -114,7 +116,28 @@ export function compile(
     const last = moves[moves.length - 1];
     const duration = last?.press === undefined ? t : Math.max(t, last.press + RING_MS);
 
+    return {moves, duration, tasks, stepStartsMs};
+}
+
+export function compile(
+    steps: Step[],
+    resolveTarget: ResolveTarget,
+    motion: MotionConfig = {},
+    start: Point = [0, 0],
+): {moves: Move[]; duration: number; tasks: Task[]} {
+    const {moves, duration, tasks} = compileScriptTimeline(steps, resolveTarget, motion, start);
+
     return {moves, duration, tasks};
+}
+
+/** When each script step begins (ms from loop start), for passive effects aligned to the same schedule as `busk()`. */
+export function compileStepStarts(
+    steps: Step[],
+    resolveTarget: ResolveTarget,
+    motion: MotionConfig = {},
+    start: Point = [0, 0],
+): number[] {
+    return compileScriptTimeline(steps, resolveTarget, motion, start).stepStartsMs;
 }
 
 /**

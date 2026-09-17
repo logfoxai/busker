@@ -5,39 +5,36 @@ import {busk} from './busk.ts';
 
 GlobalRegistrator.register({url: 'https://busker.test', width: 800, height: 600});
 
-test('assertScriptRoutine: rejects hand-timed duration', (assert) => {
+test('assertScriptRoutine: rejects unknown routine keys', (assert) => {
 
     let message = '';
 
     try {
-        assertScriptRoutine({duration: 1000, steps: [{wait: 1}]} as never);
+        assertScriptRoutine({duration: 1000, steps: [{wait: 1}]});
     } catch (error) {
         message = error instanceof Error ? error.message : String(error);
     }
 
+    assert.equal(message.startsWith('busker:'), true);
     assert.equal(message.includes('duration'), true);
-    assert.equal(message.includes('removed in v2'), true);
 
 });
 
-test('assertScriptRoutine: rejects hand-timed moves', (assert) => {
+test('assertScriptRoutine: rejects invalid steps', (assert) => {
 
     let message = '';
 
     try {
-        assertScriptRoutine({
-            moves: [{to: '#a', from: 0, until: 100}],
-            steps: [{wait: 1}],
-        } as never);
+        assertScriptRoutine({steps: [{wait: 100, click: '#a'}]});
     } catch (error) {
         message = error instanceof Error ? error.message : String(error);
     }
 
-    assert.equal(message.includes('moves'), true);
+    assert.equal(message.startsWith('busker:'), true);
 
 });
 
-test('busk: throws before touching the DOM when the routine is hand-timed', (assert) => {
+test('busk: throws before touching the DOM when the routine is invalid', (assert) => {
 
     document.body.innerHTML = '<div id="root"><span data-cursor></span></div>';
     const root = document.getElementById('root');
@@ -47,11 +44,13 @@ test('busk: throws before touching the DOM when the routine is hand-timed', (ass
     let message = '';
 
     try {
-        busk(root, {duration: 500} as never);
+        // @ts-expect-error intentional invalid routine
+        busk(root, {duration: 500});
     } catch (error) {
         message = error instanceof Error ? error.message : String(error);
     }
 
-    assert.equal(message.includes('removed in v2'), true);
+    assert.equal(message.startsWith('busker:'), true);
+    assert.equal(root.classList.contains('busker'), false);
 
 });

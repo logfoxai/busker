@@ -1,8 +1,17 @@
 export {busk} from './busk.ts';
+export {
+    meetsViewportVisibility,
+    viewportVisibleFraction,
+    VISIBILITY_SLACK,
+} from './viewport.ts';
+export {assertScriptRoutine, assertSteps} from './assert-routine.ts';
+export {validateRoutine, validateSteps} from './routine-schema.ts';
 export {cubicBezierEasing, cubicBezierEasingCached} from './easing.ts';
 export type {CubicBezier} from './easing.ts';
 export {
     compile,
+    compileStepStarts,
+    compileScriptTimeline,
     countdownText,
     DEFAULT_EASING,
     DEFAULT_MOTION,

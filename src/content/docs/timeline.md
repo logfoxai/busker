@@ -23,7 +23,7 @@ busk(root, {
 });
 ```
 
-Hand-timed **`duration`** / **`moves`** routines were removed in v2. Passing them throws at runtime.
+Invalid routines (unknown fields, bad step shapes) throw at `busk()` before playback starts.
 
 ## toggles
 

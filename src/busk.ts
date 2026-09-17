@@ -16,26 +16,11 @@ import {
 import {assertScriptRoutine} from './assert-routine.ts';
 import {pressableElement} from './pressable.ts';
 import type {Busker, MotionConfig, Move, Point, Routine, Task} from './types.ts';
+import {meetsViewportVisibility} from './viewport.ts';
 
 const DEFAULT_START: Point = [0.5, 0.5];
-/** IntersectionObserver ratios are floating point; 1 is rarely exactly 1. */
-const VISIBILITY_SLACK = 0.001;
 /** How long a missed click keeps the clickable things lit up. */
 const HINT_MS = 1500;
-
-/** How much of `el` is inside the viewport, as a fraction of its own area. */
-function visibleFraction(el: Element): number {
-    const rect = el.getBoundingClientRect();
-
-    if (rect.width <= 0 || rect.height <= 0) return 0;
-
-    const w = Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0);
-    const h = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
-
-    if (w <= 0 || h <= 0) return 0;
-
-    return (w * h) / (rect.width * rect.height);
-}
 
 /**
  * Put on a show inside `root`.
@@ -44,7 +29,7 @@ function visibleFraction(el: Element): number {
  * yours — use real click handlers and optional `tasks` / `onLoop`.
  */
 export function busk(root: HTMLElement, routine: Routine): Busker {
-    assertScriptRoutine(routine as Routine & Record<string, unknown>);
+    assertScriptRoutine(routine);
 
     const cursor = root.querySelector<HTMLElement>('[data-cursor]');
 
@@ -121,6 +106,8 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     let playing = false;
     let aside = false;
     let destroyed = false;
+    /** Remeasure glides once the root has real layout (showcases often mount off-screen). */
+    let syncedLayoutForPlayback = false;
     /** Steps already pressed this time round, so each one fires exactly once. */
     const pressed = new Set<number>();
     /** Tasks already run this loop. */
@@ -288,11 +275,15 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         }
 
         if (!from || !to) {
-            from = resolve(index > 0 ? moves[index - 1].to : start);
+            from =
+                (index > 0 ? glideEndpoints.get(index - 1)?.to : null) ??
+                resolve(index > 0 ? moves[index - 1].to : start);
             to = resolve(move ? move.to : start);
         }
 
-        if (from && to) {
+        if (!from || !to) return;
+
+        {
             const [x, y] = positionAt(from, to, move, t, glideEase);
             const rx = Math.round(x * 10) / 10;
             const ry = Math.round(y * 10) / 10;
@@ -340,11 +331,23 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         for (const typing of typings) write(typing.el, typedText(typing, t));
         for (const countdown of countdowns) write(countdown.el, countdownText(countdown, t));
 
+        if (scheduleTasks) runTasks(t);
+
         const index = moveIndexAt(moves, t);
 
         prepareGlide(index, t);
         drawCursor(index >= 0 ? moves[index] : null, index, t);
-        if (scheduleTasks) runTasks(t);
+    }
+
+    function remeasureScript(): void {
+        glidePreparedThrough = -1;
+        glideEndpoints.clear();
+        shownCursorX = Number.NaN;
+        shownCursorY = Number.NaN;
+        scriptSchedule = scheduleScript();
+        moves = scriptSchedule.moves;
+        duration = scriptSchedule.duration;
+        tasks = [...scriptSchedule.tasks, ...(routine.tasks ?? [])].sort((a, b) => a.at - b.at);
     }
 
     function wrapLoop(): void {
@@ -357,10 +360,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         setShownHover(null);
         setShownPressed(null);
 
-        scriptSchedule = scheduleScript();
-        moves = scriptSchedule.moves;
-        duration = scriptSchedule.duration;
-        tasks = [...scriptSchedule.tasks, ...(routine.tasks ?? [])].sort((a, b) => a.at - b.at);
+        remeasureScript();
     }
 
     function advancePlayhead(next: number): void {
@@ -405,6 +405,12 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
     function play(): void {
         if (playing || aside || destroyed || reducedMotion || duration <= 0) return;
+
+        if (!syncedLayoutForPlayback && root.clientWidth > 0 && root.clientHeight > 0) {
+            remeasureScript();
+            syncedLayoutForPlayback = true;
+        }
+
         playing = true;
         last = performance.now();
         rafId = requestAnimationFrame(frame);
@@ -462,7 +468,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
             return;
         }
 
-        if (visibleFraction(root) >= visibility - VISIBILITY_SLACK) play();
+        if (meetsViewportVisibility(root, visibility)) play();
         else pause();
     };
 

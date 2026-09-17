@@ -12,7 +12,7 @@ Puts on a show inside `root`, an `HTMLElement`. Returns a [`Busker`](#busker). S
 
 ## `Routine`
 
-Every routine has a non-empty **`steps`** array. Loop length is compiled from those steps (plus the ring on the last click). Hand-timed **`duration`** / **`moves`** were removed in v2 — `busk()` throws if you pass them.
+Every routine has a non-empty **`steps`** array. Loop length is compiled from those steps (plus the ring on the last click). `busk()` validates the routine up front (runtyp) and throws before touching the DOM if the shape is wrong or includes unknown fields.
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
