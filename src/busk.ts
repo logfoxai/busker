@@ -139,6 +139,10 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     let rafId = 0;
     let viewportSyncRafId = 0;
     let viewportSyncQueued = false;
+    let resizeQuietRafOuter = 0;
+    let resizeQuietRafInner = 0;
+    let resizeGeneration = 0;
+    let resizing = false;
     let playing = false;
     let aside = false;
     let destroyed = false;
@@ -507,7 +511,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     };
 
     const syncViewportPlayback = (): void => {
-        if (document.hidden) {
+        if (document.hidden || resizing) {
             pause();
             hint?.retract();
             return;
@@ -536,6 +540,24 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         });
     };
 
+    const onResize = (): void => {
+        resizing = true;
+        pause();
+        resizeGeneration += 1;
+        const generation = resizeGeneration;
+        cancelAnimationFrame(resizeQuietRafOuter);
+        cancelAnimationFrame(resizeQuietRafInner);
+        resizeQuietRafOuter = requestAnimationFrame(() => {
+            resizeQuietRafOuter = 0;
+            resizeQuietRafInner = requestAnimationFrame(() => {
+                resizeQuietRafInner = 0;
+                if (generation !== resizeGeneration) return;
+                resizing = false;
+                scheduleSyncViewportPlayback();
+            });
+        });
+    };
+
     const onVisibilityChange = (): void => {
         if (document.hidden) pause();
         else syncViewportPlayback();
@@ -548,13 +570,19 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         cancelAnimationFrame(viewportSyncRafId);
         viewportSyncRafId = 0;
         viewportSyncQueued = false;
+        cancelAnimationFrame(resizeQuietRafOuter);
+        cancelAnimationFrame(resizeQuietRafInner);
+        resizeQuietRafOuter = 0;
+        resizeQuietRafInner = 0;
+        resizeGeneration += 1;
+        resizing = false;
         observer?.disconnect();
         hint?.destroy();
         root.removeEventListener('click', stopScriptedClickBubble);
         root.removeEventListener('click', onClick);
         document.removeEventListener('visibilitychange', onVisibilityChange);
         window.removeEventListener('scroll', scheduleSyncViewportPlayback);
-        window.removeEventListener('resize', scheduleSyncViewportPlayback);
+        window.removeEventListener('resize', onResize);
         setShownHover(null);
         setShownPressed(null);
         root.querySelectorAll('.is-hint').forEach((el) => el.classList.remove('is-hint'));
@@ -595,7 +623,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         observer?.observe(root);
         document.addEventListener('visibilitychange', onVisibilityChange);
         window.addEventListener('scroll', scheduleSyncViewportPlayback, {passive: true});
-        window.addEventListener('resize', scheduleSyncViewportPlayback, {passive: true});
+        window.addEventListener('resize', onResize, {passive: true});
         window.addEventListener('load', scheduleSyncViewportPlayback, {once: true});
         document.fonts?.ready.then(scheduleSyncViewportPlayback);
         syncViewportPlayback();
