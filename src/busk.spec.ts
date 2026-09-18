@@ -677,6 +677,129 @@ test('scroll coalesces viewport sync to one animation frame', (assert) => {
 
 });
 
+test('resize pauses playback until the viewport settles', (assert) => {
+
+    document.body.innerHTML = `
+        <div id="root">
+            <button class="marker">x</button>
+            <span data-cursor></span>
+        </div>
+    `;
+
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 400, 400);
+    root.querySelectorAll('*').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 400, 400);
+    });
+
+    observers.length = 0;
+
+    let now = 0;
+    const queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    let loops = 0;
+
+    const show = busk(root, {
+        steps: [{wait: 50}],
+        visibility: 0.5,
+        onLoop: () => {
+            loops += 1;
+        },
+    });
+
+    observers[0].fire();
+
+    for (const cb of queued.splice(0)) cb(now);
+
+    now += 10;
+
+    for (const cb of queued.splice(0)) cb(now);
+
+    window.dispatchEvent(new Event('resize'));
+
+    now += 5000;
+
+    for (const cb of queued.splice(0)) cb(now);
+
+    assert.equal(loops, 0);
+
+    for (let i = 0; i < 4; i += 1) {
+        for (const cb of queued.splice(0)) cb(now);
+    }
+
+    now += 100;
+
+    for (const cb of queued.splice(0)) cb(now);
+
+    assert.equal(loops >= 1, true);
+    show.destroy();
+
+});
+
+test('resize coalesces remeasure until the quiet period', (assert) => {
+
+    document.body.innerHTML = `
+        <div id="root">
+            <button class="marker">x</button>
+            <span data-cursor></span>
+        </div>
+    `;
+
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    let rectReads = 0;
+
+    root.getBoundingClientRect = (): DOMRect => {
+        rectReads += 1;
+
+        return new DOMRect(0, 0, 400, 400);
+    };
+    root.querySelectorAll('*').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 400, 400);
+    });
+
+    observers.length = 0;
+
+    const now = 0;
+    const queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    const show = busk(root, {
+        steps: [{wait: 1}],
+        visibility: 0.5,
+    });
+
+    for (const cb of queued.splice(0)) cb(now);
+
+    rectReads = 0;
+
+    for (let i = 0; i < 8; i += 1) window.dispatchEvent(new Event('resize'));
+
+    assert.equal(rectReads, 0);
+
+    for (let i = 0; i < 4; i += 1) {
+        for (const cb of queued.splice(0)) cb(now);
+    }
+
+    assert.equal(rectReads, 1);
+    show.destroy();
+
+});
+
 test('resize does not resume playback while the tab is hidden', (assert) => {
 
     document.body.innerHTML = `
