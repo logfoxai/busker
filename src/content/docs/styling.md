@@ -112,6 +112,25 @@ Dropdown fields: put `data-busker-press` on the chip trigger and `data-busker-me
 
 `click` / `clickTargets` selectors often point at a inner node (for example `[data-live-trace="two"]` on a row inside a `<button.mock-logs__trace-drill>`). Busker puts `is-hover` on **that** node, not the outer button. If your `:hover` rule styles a child from the parent (`button:hover .row`), add a demo branch, e.g. `button:has(.row.is-hover) .row`, or pair `:is(:hover, .is-hover)` on the same element that receives `is-hover`.
 
+## Explore hint
+
+When the routine sets [`exploreHint`](./taking-over.md#the-explore-hint), busker appends the pill itself:
+
+```html
+<span data-explore-hint><span data-explore-hint-pop>Click to explore</span></span>
+```
+
+The outer span takes the `translate` (it tails the visitor's pointer) and the inner one takes the `scale` (the pop in and out), so restyle the pill through `[data-explore-hint-pop]` and leave the outer span alone:
+
+```css
+.busker [data-explore-hint-pop] {
+    background: var(--accent);
+    color: #fff;
+}
+```
+
+`--busker-hint-bg` and `--busker-hint-ink` cover the common case. The pill sits one step below the cursor (`calc(var(--busker-cursor-z-index) - 1)`) and never intercepts clicks. Under `prefers-reduced-motion` the pop and fade are off and the follow snaps instead of gliding.
+
 ## Optional scene cross-fade
 
 Busker does not activate scenes. If your mock uses `[data-scene]` and toggles `.is-active` in your own JavaScript, `busker.css` can cross-fade them.

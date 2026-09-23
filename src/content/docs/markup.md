@@ -34,8 +34,11 @@ Optional press hints (yours to add):
 | `is-ringing` | the cursor | For 500ms &mdash; the ripple outlives the press so the click reads. |
 | `is-hint` | every `clickTargets` entry | For 1.5s after a visitor clicks something dead. |
 | `is-aside` | the root | Once a visitor has taken over. |
+| `is-visible` | the cursor, the explore hint | While each is showing. |
 
 Busker removes all of them on `destroy()`.
+
+One element is busker's own, not yours: when the routine sets [`exploreHint`](./taking-over.md#the-explore-hint), busker appends `[data-explore-hint]` (with an inner `[data-explore-hint-pop]`) to the root and drives it. There is no markup to add &mdash; and none to style unless you want to (see [Styling](./styling.md#explore-hint)).
 
 ## The root element
 
