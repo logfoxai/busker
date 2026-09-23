@@ -14,8 +14,9 @@
     --busker-cursor-edge: #fff;
     --busker-cursor-shadow: rgb(0 0 0 / 0.3);
     --busker-cursor-z-index: 2147483647;
-    --busker-hint-bg: rgb(0 0 0 / 0.72);
-    --busker-hint-ink: #fff;
+    --busker-hint-bg: rgb(255 255 255 / 0.55);
+    --busker-hint-ink: rgb(0 0 0 / 0.88);
+    --busker-hint-offset-x: 1.75rem;
     --busker-scene-ms: 0.4s;
 
     /* The cursor is positioned against the root. */
@@ -120,11 +121,9 @@
 }
 
 /*
- * "Click to explore" — a pill that tails the visitor's pointer the first time
- * they hover, then pops out for good. Busker creates the element when the
- * routine sets `exploreHint`; there is no markup to add. The outer span takes
- * the translate (position), the inner one the scale (pop), so the pop never
- * distorts the follow offset.
+ * "Click to explore" — frosted pill that tails the visitor's pointer on hover.
+ * Busker creates the element when the routine sets `exploreHint`. The outer
+ * span takes translate (position), the inner one scale (pop).
  */
 .busker [data-explore-hint] {
     left: 0;
@@ -137,12 +136,15 @@
 }
 
 .busker [data-explore-hint].is-visible {
-    opacity: 1;
+    opacity: 0.85;
 }
 
 .busker [data-explore-hint-pop] {
+    backdrop-filter: blur(8px) saturate(1.1);
+    -webkit-backdrop-filter: blur(8px) saturate(1.1);
     background: var(--busker-hint-bg);
     border-radius: 999px;
+    box-sizing: border-box;
     color: var(--busker-hint-ink);
     display: inline-flex;
     font-size: 0.75rem;

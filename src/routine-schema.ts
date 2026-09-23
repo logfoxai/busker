@@ -53,6 +53,8 @@ const motionConfig = p.object({
 const exploreHintConfig = p.object({
     text: p.optional(nonEmptyString),
     dismissAfterMs: p.optional(nonNegativeNumber),
+    durationMs: p.optional(nonNegativeNumber),
+    offsetX: p.optional(nonEmptyString),
 });
 
 const exploreHint = p.union(

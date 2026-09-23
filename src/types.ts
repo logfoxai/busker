@@ -47,8 +47,12 @@ export interface Move {
 export interface ExploreHintConfig {
     /** Pill label. Default "Click to explore". */
     text?: string;
-    /** Ms after the hint shows that it pops out until the next visit. Default 3000. */
+    /** Ms the hint stays up per hover visit before it pops out. Default 3000. */
     dismissAfterMs?: number;
+    /** Alias for {@link dismissAfterMs}. */
+    durationMs?: number;
+    /** Gap to the right of the pointer (CSS length). Default `1.75rem`. */
+    offsetX?: string;
 }
 
 /**

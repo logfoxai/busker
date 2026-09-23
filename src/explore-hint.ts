@@ -4,6 +4,8 @@ import type {ExploreHintConfig} from './types.ts';
 export const EXPLORE_HINT_TEXT = 'Click to explore';
 /** How long the hint stays up per visit before it pops out (ms). */
 export const EXPLORE_HINT_DISMISS_MS = 3000;
+/** Default gap to the right of the pointer. */
+export const EXPLORE_HINT_OFFSET_X = '1.75rem';
 /** Pointer-follow smoothing per frame. */
 const LERP = 0.35;
 
@@ -31,7 +33,9 @@ export function exploreHint(
 ): ExploreHint {
     const options: ExploreHintConfig =
         typeof config === 'boolean' ? {} : typeof config === 'string' ? {text: config} : config;
-    const dismissAfterMs = options.dismissAfterMs ?? EXPLORE_HINT_DISMISS_MS;
+    const dismissAfterMs =
+        options.dismissAfterMs ?? options.durationMs ?? EXPLORE_HINT_DISMISS_MS;
+    const offsetX = options.offsetX ?? EXPLORE_HINT_OFFSET_X;
 
     const hint = document.createElement('span');
     hint.dataset.exploreHint = '';
@@ -53,7 +57,7 @@ export function exploreHint(
     let dismissTimer = 0;
 
     const render = (): void => {
-        hint.style.translate = `calc(${currentX}px + 1.25rem) calc(${currentY}px - 50%)`;
+        hint.style.translate = `calc(${currentX}px + ${offsetX}) calc(${currentY}px - 50%)`;
     };
 
     const animate = (): void => {
@@ -123,9 +127,16 @@ export function exploreHint(
         hide();
     };
 
+    const onRootClick = (): void => {
+        clearTimeout(dismissTimer);
+        dismissTimer = 0;
+        hide();
+    };
+
     root.addEventListener('pointerenter', onPointerEnter);
     root.addEventListener('pointermove', onPointerMove);
     root.addEventListener('pointerleave', onPointerLeave);
+    root.addEventListener('click', onRootClick);
 
     return {
         dismiss,
@@ -135,6 +146,7 @@ export function exploreHint(
             root.removeEventListener('pointerenter', onPointerEnter);
             root.removeEventListener('pointermove', onPointerMove);
             root.removeEventListener('pointerleave', onPointerLeave);
+            root.removeEventListener('click', onRootClick);
             hint.remove();
         },
     };

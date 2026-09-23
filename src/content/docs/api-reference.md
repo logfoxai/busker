@@ -55,9 +55,11 @@ Exports: `cubicBezierEasing`, `DEFAULT_EASING`, `DEFAULT_MOTION`.
 | Field | Default | What it does |
 |---|---|---|
 | `text` | `"Click to explore"` | Pill label. |
-| `dismissAfterMs` | `3000` | Ms after the hint shows that it pops out until the next visit. |
+| `dismissAfterMs` | `3000` | Ms the hint stays up per hover visit before it pops out. |
+| `durationMs` | &mdash; | Alias for `dismissAfterMs`. |
+| `offsetX` | `1.75rem` | Gap to the right of the pointer (any CSS length). |
 
-Exports: `EXPLORE_HINT_TEXT`, `EXPLORE_HINT_DISMISS_MS`.
+Exports: `EXPLORE_HINT_TEXT`, `EXPLORE_HINT_DISMISS_MS`, `EXPLORE_HINT_OFFSET_X`.
 
 ## `compile(steps, resolveTarget, motion?, start?)`
 

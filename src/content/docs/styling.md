@@ -129,7 +129,7 @@ The outer span takes the `translate` (it tails the visitor's pointer) and the in
 }
 ```
 
-`--busker-hint-bg` and `--busker-hint-ink` cover the common case. The pill sits one step below the cursor (`calc(var(--busker-cursor-z-index) - 1)`) and never intercepts clicks. Under `prefers-reduced-motion` the pop and fade are off and the follow snaps instead of gliding.
+`--busker-hint-bg` and `--busker-hint-ink` cover the common case. The pill is frosted (`backdrop-filter: blur(8px)`) with no border. Horizontal gap from the pointer defaults to `1.75rem` — override with `offsetX` on `ExploreHintConfig` or `--busker-hint-offset-x` on the root for CSS-only tweaks (the JS default matches the variable). Per-visit duration defaults to 3000ms via `dismissAfterMs` or `durationMs`. The pill sits one step below the cursor (`calc(var(--busker-cursor-z-index) - 1)`) and never intercepts clicks; any click on the mock hides it until the next hover (takeover calls `dismiss()` for good). Under `prefers-reduced-motion` the pop and fade are off and the follow snaps instead of gliding.
 
 ## Optional scene cross-fade
 

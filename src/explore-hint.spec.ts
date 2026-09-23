@@ -60,7 +60,15 @@ test('pops in at the pointer on first hover', (assert) => {
     pointer(root, 'pointerenter', 100, 200);
 
     assert.equal(el.classList.contains('is-visible'), true);
-    assert.equal(el.style.translate, 'calc(100px + 1.25rem) calc(200px - 50%)');
+    assert.equal(el.style.translate, 'calc(100px + 1.75rem) calc(200px - 50%)');
+});
+
+test('custom offsetX shifts the pill to the right of the pointer', (assert) => {
+    const {root, el} = stage({offsetX: '2rem'});
+
+    pointer(root, 'pointerenter', 100, 200);
+
+    assert.equal(el.style.translate, 'calc(100px + 2rem) calc(200px - 50%)');
 });
 
 test('hides on pointerleave', (assert) => {
@@ -80,7 +88,7 @@ test('follows the pointer with lag', (assert) => {
     frame();
 
     // One lerp frame: 100 + (200 - 100) * 0.35 = 135
-    assert.equal(el.style.translate, 'calc(135px + 1.25rem) calc(100px - 50%)');
+    assert.equal(el.style.translate, 'calc(135px + 1.75rem) calc(100px - 50%)');
 });
 
 test('under reduced motion it snaps to the pointer with no animation frame', (assert) => {
@@ -90,7 +98,7 @@ test('under reduced motion it snaps to the pointer with no animation frame', (as
     pointer(root, 'pointermove', 200, 150);
 
     assert.equal(queued.length, 0);
-    assert.equal(el.style.translate, 'calc(200px + 1.25rem) calc(150px - 50%)');
+    assert.equal(el.style.translate, 'calc(200px + 1.75rem) calc(150px - 50%)');
 });
 
 test('ignores touch pointers', (assert) => {
@@ -99,6 +107,19 @@ test('ignores touch pointers', (assert) => {
     pointer(root, 'pointerenter', 100, 100, 'touch');
 
     assert.equal(el.classList.contains('is-visible'), false);
+});
+
+test('hides on click and can show again on the next hover', (assert) => {
+    const {root, el} = stage();
+
+    pointer(root, 'pointerenter', 100, 100);
+    root.dispatchEvent(new Event('click', {bubbles: true}));
+
+    assert.equal(el.classList.contains('is-visible'), false);
+
+    pointer(root, 'pointerenter', 100, 100);
+
+    assert.equal(el.classList.contains('is-visible'), true);
 });
 
 test('pops back in every time the pointer leaves and re-enters', (assert) => {

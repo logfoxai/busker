@@ -1,5 +1,9 @@
 export {busk} from './busk.ts';
-export {EXPLORE_HINT_DISMISS_MS, EXPLORE_HINT_TEXT} from './explore-hint.ts';
+export {
+    EXPLORE_HINT_DISMISS_MS,
+    EXPLORE_HINT_OFFSET_X,
+    EXPLORE_HINT_TEXT,
+} from './explore-hint.ts';
 export {
     meetsViewportVisibility,
     viewportVisibleFraction,
