@@ -55,7 +55,7 @@ Exports: `cubicBezierEasing`, `DEFAULT_EASING`, `DEFAULT_MOTION`.
 | Field | Default | What it does |
 |---|---|---|
 | `text` | `"Click to explore"` | Pill label. |
-| `dismissAfterMs` | `3000` | Ms after the hint first shows that it pops out for good. |
+| `dismissAfterMs` | `3000` | Ms after the hint shows that it pops out until the next visit. |
 
 Exports: `EXPLORE_HINT_TEXT`, `EXPLORE_HINT_DISMISS_MS`.
 

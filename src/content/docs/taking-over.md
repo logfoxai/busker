@@ -27,7 +27,7 @@ busk(root, {
 });
 ```
 
-It pops in on the first hover and pops out for good a few seconds later (default 3000ms) or the moment they click — whichever comes first. Busker creates the element; there is no markup to add. Touch pointers never see it, and under `prefers-reduced-motion` it snaps to the pointer instead of gliding.
+It pops in on every hover and pops out a few seconds into each visit (default 3000ms), ready to pop back in the next time. Once they click, it is gone for good. Busker creates the element; there is no markup to add. Touch pointers never see it, and under `prefers-reduced-motion` it snaps to the pointer instead of gliding.
 
 ## Handing over on purpose
 

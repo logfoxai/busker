@@ -47,7 +47,7 @@ export interface Move {
 export interface ExploreHintConfig {
     /** Pill label. Default "Click to explore". */
     text?: string;
-    /** Ms after the hint first shows that it pops out for good. Default 3000. */
+    /** Ms after the hint shows that it pops out until the next visit. Default 3000. */
     dismissAfterMs?: number;
 }
 
@@ -77,10 +77,11 @@ export interface Routine {
     /** Frame to hold under `prefers-reduced-motion`. Default 0. */
     freezeAt?: number;
     /**
-     * A pill that follows the visitor's pointer the first time they hover,
-     * inviting them to click. `true` for the default label, a string for your
-     * own, or an `ExploreHintConfig` for full control. One-shot: it pops out a
-     * few seconds after it first shows, or as soon as they click.
+     * A pill that follows the visitor's pointer whenever they hover, inviting
+     * them to click. `true` for the default label, a string for your own, or
+     * an `ExploreHintConfig` for full control. Pops out a few seconds into
+     * each visit and pops back in on the next one; once they click, it is
+     * gone for good.
      */
     exploreHint?: boolean | string | ExploreHintConfig;
 }

@@ -101,7 +101,17 @@ test('ignores touch pointers', (assert) => {
     assert.equal(el.classList.contains('is-visible'), false);
 });
 
-test('pops out for good a beat after it first shows', async (assert) => {
+test('pops back in every time the pointer leaves and re-enters', (assert) => {
+    const {root, el} = stage();
+
+    pointer(root, 'pointerenter', 100, 100);
+    pointer(root, 'pointerleave', 0, 0);
+    pointer(root, 'pointerenter', 100, 100);
+
+    assert.equal(el.classList.contains('is-visible'), true);
+});
+
+test('pops out a beat into the visit, and pops back in on the next one', async (assert) => {
     const {root, el} = stage({dismissAfterMs: 30});
 
     pointer(root, 'pointerenter', 100, 100);
@@ -109,12 +119,13 @@ test('pops out for good a beat after it first shows', async (assert) => {
 
     assert.equal(el.classList.contains('is-visible'), false);
 
+    pointer(root, 'pointerleave', 0, 0);
     pointer(root, 'pointerenter', 100, 100);
 
-    assert.equal(el.classList.contains('is-visible'), false);
+    assert.equal(el.classList.contains('is-visible'), true);
 });
 
-test('dismiss() pops it out for good', (assert) => {
+test('dismiss() pops it out for good, even across visits', (assert) => {
     const {root, el, hint} = stage();
 
     pointer(root, 'pointerenter', 100, 100);
@@ -122,6 +133,7 @@ test('dismiss() pops it out for good', (assert) => {
 
     assert.equal(el.classList.contains('is-visible'), false);
 
+    pointer(root, 'pointerleave', 0, 0);
     pointer(root, 'pointerenter', 100, 100);
 
     assert.equal(el.classList.contains('is-visible'), false);

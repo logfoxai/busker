@@ -2,7 +2,7 @@ import type {ExploreHintConfig} from './types.ts';
 
 /** Default label inside the explore-hint pill. */
 export const EXPLORE_HINT_TEXT = 'Click to explore';
-/** How long after the hint first shows that it pops out for good (ms). */
+/** How long the hint stays up per visit before it pops out (ms). */
 export const EXPLORE_HINT_DISMISS_MS = 3000;
 /** Pointer-follow smoothing per frame. */
 const LERP = 0.35;
@@ -16,9 +16,10 @@ export interface ExploreHint {
 
 /**
  * A "click to explore" pill that tails the visitor's pointer over the mock.
- * Pops in on first hover, follows with a little lag, and pops out for good a
- * few seconds later — or as soon as they click. Busker creates and owns the
- * element; there is no markup to add.
+ * Pops in on every hover, follows with a little lag, and pops out a few
+ * seconds later — back again on the next visit. Once the visitor clicks, it
+ * is gone for good. Busker creates and owns the element; there is no markup
+ * to add.
  *
  * The outer span takes the `translate` (position) and the inner one takes the
  * `scale` (pop), so the pop never distorts the follow offset.
@@ -48,7 +49,7 @@ export function exploreHint(
     let currentX = 0;
     let currentY = 0;
     let hovering = false;
-    let dismissed = false;
+    let goneForGood = false;
     let dismissTimer = 0;
 
     const render = (): void => {
@@ -71,14 +72,19 @@ export function exploreHint(
         if (!rafId && !reducedMotion) rafId = requestAnimationFrame(animate);
     };
 
-    const dismiss = (): void => {
-        dismissed = true;
+    const hide = (): void => {
         hovering = false;
         hint.classList.remove('is-visible');
     };
 
+    const dismiss = (): void => {
+        goneForGood = true;
+        clearTimeout(dismissTimer);
+        hide();
+    };
+
     const onPointerEnter = (event: PointerEvent): void => {
-        if (dismissed || event.pointerType === 'touch') return;
+        if (goneForGood || event.pointerType === 'touch') return;
 
         const rect = root.getBoundingClientRect();
 
@@ -89,7 +95,8 @@ export function exploreHint(
         hovering = true;
         render();
         hint.classList.add('is-visible');
-        if (!dismissTimer) dismissTimer = window.setTimeout(dismiss, dismissAfterMs);
+        clearTimeout(dismissTimer);
+        dismissTimer = window.setTimeout(hide, dismissAfterMs);
         start();
     };
 
@@ -111,9 +118,9 @@ export function exploreHint(
     };
 
     const onPointerLeave = (): void => {
-        hovering = false;
-        hint.classList.remove('is-visible');
-        // The dismiss timer keeps running — the hint is one-shot from first show.
+        clearTimeout(dismissTimer);
+        dismissTimer = 0;
+        hide();
     };
 
     root.addEventListener('pointerenter', onPointerEnter);
