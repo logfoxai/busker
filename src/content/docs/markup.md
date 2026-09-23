@@ -38,7 +38,7 @@ Optional press hints (yours to add):
 
 Busker removes all of them on `destroy()`.
 
-One element is busker's own, not yours: when the routine sets [`exploreHint`](./taking-over.md#the-explore-hint), busker appends `[data-explore-hint]` (with an inner `[data-explore-hint-pop]`) to the root and drives it. There is no markup to add &mdash; and none to style unless you want to (see [Styling](./styling.md#explore-hint)).
+One element is busker's own, not yours: when the routine sets [`exploreHint`](./taking-over.md#the-explore-hint), busker appends `[data-explore-hint]` to `document.body` (fixed to the visitor's pointer) and drives it. There is no markup to add &mdash; theme via CSS variables on `.busker` (see [Styling](./styling.md#explore-hint)).
 
 ## The root element
 

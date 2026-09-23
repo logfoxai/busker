@@ -114,22 +114,22 @@ Dropdown fields: put `data-busker-press` on the chip trigger and `data-busker-me
 
 ## Explore hint
 
-When the routine sets [`exploreHint`](./taking-over.md#the-explore-hint), busker appends the pill itself:
+When the routine sets [`exploreHint`](./taking-over.md#the-explore-hint), busker appends the pill to `document.body` — `position: fixed`, viewport coordinates — so mock `overflow: hidden` never clips it:
 
 ```html
-<span data-explore-hint><span data-explore-hint-pop>Click to explore</span></span>
+<span data-explore-hint><span data-explore-hint-pop><span data-explore-hint-face>Click to explore</span></span></span>
 ```
 
-The outer span takes the `translate` (it tails the visitor's pointer) and the inner one takes the `scale` (the pop in and out), so restyle the pill through `[data-explore-hint-pop]` and leave the outer span alone:
+The outer span follows the pointer with `left` / `top` only (no transforms on that node). `[data-explore-hint-pop]` scales in and out; `[data-explore-hint-face]` carries the frosted backdrop. Set `--busker-hint-bg` and `--busker-hint-ink` on `.busker` or target `[data-explore-hint-face]` in your CSS. Restyle the pill through `[data-explore-hint-face]`:
 
 ```css
-.busker [data-explore-hint-pop] {
+[data-explore-hint-face] {
     background: var(--accent);
     color: #fff;
 }
 ```
 
-`--busker-hint-bg` and `--busker-hint-ink` cover the common case. The pill is frosted (`backdrop-filter: blur(8px)`) with no border. Horizontal gap from the pointer defaults to `1.75rem` — override with `offsetX` on `ExploreHintConfig` or `--busker-hint-offset-x` on the root for CSS-only tweaks (the JS default matches the variable). Per-visit duration defaults to 3000ms via `dismissAfterMs` or `durationMs`. The pill sits one step below the cursor (`calc(var(--busker-cursor-z-index) - 1)`) and never intercepts clicks; any click on the mock hides it until the next hover (takeover calls `dismiss()` for good). Under `prefers-reduced-motion` the pop and fade are off and the follow snaps instead of gliding.
+`--busker-hint-bg` and `--busker-hint-ink` cover the common case. The pill is frosted (`backdrop-filter: blur(8px)`) with no border. Horizontal gap from the pointer defaults to `1.75rem` — override with `offsetX` on `ExploreHintConfig` or `--busker-hint-offset-x` on the root for CSS-only tweaks (the JS default matches the variable). Per-visit duration defaults to 2000ms via `dismissAfterMs` or `durationMs` (starts when the hint pops in; moving the mouse does not extend it). The pill sits one step below the cursor (`calc(var(--busker-cursor-z-index) - 1)`) and never intercepts clicks; any click on the mock hides it until the next hover (takeover calls `dismiss()` for good). Under `prefers-reduced-motion` the pop and fade are off and the follow snaps instead of gliding.
 
 ## Optional scene cross-fade
 

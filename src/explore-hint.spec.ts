@@ -4,24 +4,24 @@ import {EXPLORE_HINT_TEXT, exploreHint, type ExploreHint} from './explore-hint.t
 
 GlobalRegistrator.register({url: 'https://busker.test', width: 1024, height: 768});
 
-let queued: FrameRequestCallback[] = [];
-
-globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
-globalThis.cancelAnimationFrame = (): void => {};
-
-/** Run one animation frame. */
-function frame(): void {
-    const due = queued;
-
-    queued = [];
-    for (const cb of due) cb(0);
-}
-
 function pointer(root: HTMLElement, type: string, x: number, y: number, pointerType = 'mouse'): void {
     const event = new Event(type) as PointerEvent;
 
     Object.assign(event, {clientX: x, clientY: y, pointerType});
     root.dispatchEvent(event);
+}
+
+/** Hint shows on pointermove, not pointerenter. */
+function hover(root: HTMLElement, x: number, y: number, pointerType = 'mouse'): void {
+    pointer(root, 'pointerenter', x, y, pointerType);
+    pointer(root, 'pointermove', x, y, pointerType);
+}
+
+function docPointer(type: string, x: number, y: number, pointerType = 'mouse'): void {
+    const event = new Event(type) as PointerEvent;
+
+    Object.assign(event, {clientX: x, clientY: y, pointerType});
+    document.dispatchEvent(event);
 }
 
 function stage(
@@ -33,78 +33,89 @@ function stage(
     const root = document.getElementById('root')!;
 
     root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
-    queued = [];
 
     const hint = exploreHint(root, config, reducedMotion);
-    const el = root.querySelector<HTMLElement>('[data-explore-hint]')!;
+    const el = document.body.querySelector<HTMLElement>('[data-explore-hint]')!;
 
     return {root, hint, el};
 }
 
-test('creates the pill inside the root with the default label', (assert) => {
+test('creates the pill on document.body with the default label', (assert) => {
     const {el} = stage();
 
     assert.equal(el.getAttribute('aria-hidden'), 'true');
-    assert.equal(el.querySelector('[data-explore-hint-pop]')?.textContent, EXPLORE_HINT_TEXT);
+    assert.equal(el.querySelector('[data-explore-hint-face]')?.textContent, EXPLORE_HINT_TEXT);
 });
 
 test('a string config is the label', (assert) => {
     const {el} = stage('Try it yourself');
 
-    assert.equal(el.querySelector('[data-explore-hint-pop]')?.textContent, 'Try it yourself');
+    assert.equal(el.querySelector('[data-explore-hint-face]')?.textContent, 'Try it yourself');
 });
 
 test('pops in at the pointer on first hover', (assert) => {
     const {root, el} = stage();
 
-    pointer(root, 'pointerenter', 100, 200);
+    hover(root, 100, 200);
 
     assert.equal(el.classList.contains('is-visible'), true);
-    assert.equal(el.style.translate, 'calc(100px + 1.75rem) calc(200px - 50%)');
+    assert.equal(el.style.left, 'calc(100px + 1.75rem)');
+    assert.equal(el.style.top, `${200 - (el.querySelector('[data-explore-hint-face]')!.offsetHeight / 2)}px`);
 });
 
 test('custom offsetX shifts the pill to the right of the pointer', (assert) => {
     const {root, el} = stage({offsetX: '2rem'});
 
-    pointer(root, 'pointerenter', 100, 200);
+    hover(root, 100, 200);
 
-    assert.equal(el.style.translate, 'calc(100px + 2rem) calc(200px - 50%)');
+    assert.equal(el.style.left, 'calc(100px + 2rem)');
 });
 
-test('hides on pointerleave', (assert) => {
-    const {root, el} = stage();
+test('starts hiding as soon as the pointer leaves the mock', (assert) => {
+    const {root, el} = stage({dismissAfterMs: 5000});
 
-    pointer(root, 'pointerenter', 100, 200);
-    pointer(root, 'pointerleave', 0, 0);
+    hover(root, 100, 200);
+    pointer(root, 'pointerleave', 900, 50);
 
     assert.equal(el.classList.contains('is-visible'), false);
+    assert.equal(el.classList.contains('is-hiding'), true);
 });
 
-test('follows the pointer with lag', (assert) => {
+test('still tails the pointer outside the mock while popping out', (assert) => {
     const {root, el} = stage();
 
-    pointer(root, 'pointerenter', 100, 100);
-    pointer(root, 'pointermove', 200, 100);
-    frame();
+    hover(root, 100, 100);
+    pointer(root, 'pointerleave', 900, 50);
+    docPointer('pointermove', 900, 50);
 
-    // One lerp frame: 100 + (200 - 100) * 0.35 = 135
-    assert.equal(el.style.translate, 'calc(135px + 1.75rem) calc(100px - 50%)');
+    assert.equal(el.classList.contains('is-hiding'), true);
+    assert.equal(el.style.left, 'calc(900px + 1.75rem)');
 });
 
-test('under reduced motion it snaps to the pointer with no animation frame', (assert) => {
-    const {root, el} = stage(true, true);
+test('snaps to the pointer on every move', (assert) => {
+    const {root, el} = stage();
 
-    pointer(root, 'pointerenter', 100, 100);
+    hover(root, 100, 100);
     pointer(root, 'pointermove', 200, 150);
 
-    assert.equal(queued.length, 0);
-    assert.equal(el.style.translate, 'calc(200px + 1.75rem) calc(150px - 50%)');
+    assert.equal(el.style.left, 'calc(200px + 1.75rem)');
+    assert.equal(el.style.top, `${150 - (el.querySelector('[data-explore-hint-face]')!.offsetHeight / 2)}px`);
+});
+
+test('re-entering snaps to the new pointer instead of lerping from the last spot', (assert) => {
+    const {root, el} = stage();
+
+    hover(root, 100, 100);
+    pointer(root, 'pointerleave', 900, 50);
+    hover(root, 500, 400);
+
+    assert.equal(el.style.left, 'calc(500px + 1.75rem)');
 });
 
 test('ignores touch pointers', (assert) => {
     const {root, el} = stage();
 
-    pointer(root, 'pointerenter', 100, 100, 'touch');
+    hover(root, 100, 100, 'touch');
 
     assert.equal(el.classList.contains('is-visible'), false);
 });
@@ -112,12 +123,13 @@ test('ignores touch pointers', (assert) => {
 test('hides on click and can show again on the next hover', (assert) => {
     const {root, el} = stage();
 
-    pointer(root, 'pointerenter', 100, 100);
+    hover(root, 100, 100);
     root.dispatchEvent(new Event('click', {bubbles: true}));
 
     assert.equal(el.classList.contains('is-visible'), false);
 
-    pointer(root, 'pointerenter', 100, 100);
+    pointer(root, 'pointerleave', 900, 50);
+    hover(root, 100, 100);
 
     assert.equal(el.classList.contains('is-visible'), true);
 });
@@ -125,9 +137,9 @@ test('hides on click and can show again on the next hover', (assert) => {
 test('pops back in every time the pointer leaves and re-enters', (assert) => {
     const {root, el} = stage();
 
-    pointer(root, 'pointerenter', 100, 100);
-    pointer(root, 'pointerleave', 0, 0);
-    pointer(root, 'pointerenter', 100, 100);
+    hover(root, 100, 100);
+    pointer(root, 'pointerleave', 900, 50);
+    hover(root, 100, 100);
 
     assert.equal(el.classList.contains('is-visible'), true);
 });
@@ -135,35 +147,78 @@ test('pops back in every time the pointer leaves and re-enters', (assert) => {
 test('pops out a beat into the visit, and pops back in on the next one', async (assert) => {
     const {root, el} = stage({dismissAfterMs: 30});
 
-    pointer(root, 'pointerenter', 100, 100);
+    hover(root, 100, 100);
     await new Promise((resolve) => setTimeout(resolve, 60));
 
     assert.equal(el.classList.contains('is-visible'), false);
 
-    pointer(root, 'pointerleave', 0, 0);
-    pointer(root, 'pointerenter', 100, 100);
+    pointer(root, 'pointerleave', 900, 50);
+    hover(root, 100, 100);
 
     assert.equal(el.classList.contains('is-visible'), true);
+});
+
+test('does not pop back in on pointer move after click while still on the mock', (assert) => {
+    const {root, el} = stage();
+
+    hover(root, 100, 100);
+    root.dispatchEvent(new Event('click', {bubbles: true}));
+    pointer(root, 'pointermove', 120, 110);
+
+    assert.equal(el.classList.contains('is-visible'), false);
+});
+
+test('auto-dismiss fires on schedule even if the pointer keeps moving', async (assert) => {
+    const {root, el} = stage({dismissAfterMs: 50});
+
+    hover(root, 100, 100);
+    for (let i = 0; i < 20; i++) {
+        pointer(root, 'pointermove', 100 + i, 100 + i);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
+    assert.equal(el.classList.contains('is-visible'), false);
+});
+
+test('does not pop back in on pointer move after auto-dismiss while still on the mock', async (assert) => {
+    const {root, el} = stage({dismissAfterMs: 30});
+
+    hover(root, 100, 100);
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    assert.equal(el.classList.contains('is-visible'), false);
+
+    pointer(root, 'pointermove', 120, 110);
+
+    assert.equal(el.classList.contains('is-visible'), false);
 });
 
 test('dismiss() pops it out for good, even across visits', (assert) => {
     const {root, el, hint} = stage();
 
-    pointer(root, 'pointerenter', 100, 100);
+    hover(root, 100, 100);
     hint.dismiss();
 
     assert.equal(el.classList.contains('is-visible'), false);
 
-    pointer(root, 'pointerleave', 0, 0);
-    pointer(root, 'pointerenter', 100, 100);
+    pointer(root, 'pointerleave', 900, 50);
+    hover(root, 100, 100);
 
     assert.equal(el.classList.contains('is-visible'), false);
 });
 
-test('destroy() removes the element from the root', (assert) => {
-    const {root, hint} = stage();
+test('does not show or position until the pointer is over the mock', (assert) => {
+    const {el} = stage();
+
+    assert.equal(el.classList.contains('is-visible'), false);
+    assert.equal(el.style.left, '');
+    assert.equal(el.style.top, '');
+});
+
+test('destroy() removes the element from the document', (assert) => {
+    const {hint} = stage();
 
     hint.destroy();
 
-    assert.equal(root.querySelector('[data-explore-hint]'), null);
+    assert.equal(document.body.querySelector('[data-explore-hint]'), null);
 });

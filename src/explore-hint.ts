@@ -1,31 +1,16 @@
 import type {ExploreHintConfig} from './types.ts';
 
-/** Default label inside the explore-hint pill. */
 export const EXPLORE_HINT_TEXT = 'Click to explore';
-/** How long the hint stays up per visit before it pops out (ms). */
-export const EXPLORE_HINT_DISMISS_MS = 3000;
-/** Default gap to the right of the pointer. */
+export const EXPLORE_HINT_DISMISS_MS = 2000;
 export const EXPLORE_HINT_OFFSET_X = '1.75rem';
-/** Pointer-follow smoothing per frame. */
-const LERP = 0.35;
 
 export interface ExploreHint {
-    /** Pop the hint out for good — the visitor got the message. */
     dismiss(): void;
-    /** Remove listeners and the element itself. */
     destroy(): void;
 }
 
-/**
- * A "click to explore" pill that tails the visitor's pointer over the mock.
- * Pops in on every hover, follows with a little lag, and pops out a few
- * seconds later — back again on the next visit. Once the visitor clicks, it
- * is gone for good. Busker creates and owns the element; there is no markup
- * to add.
- *
- * The outer span takes the `translate` (position) and the inner one takes the
- * `scale` (pop), so the pop never distorts the follow offset.
- */
+const POP_OUT_MS = 260;
+
 export function exploreHint(
     root: HTMLElement,
     config: boolean | string | ExploreHintConfig,
@@ -39,114 +24,149 @@ export function exploreHint(
 
     const hint = document.createElement('span');
     hint.dataset.exploreHint = '';
+    if (root.closest('[data-hero-mock]')) hint.dataset.exploreHintScope = 'hero-mock';
     hint.setAttribute('aria-hidden', 'true');
-
     const pop = document.createElement('span');
     pop.dataset.exploreHintPop = '';
-    pop.textContent = options.text ?? EXPLORE_HINT_TEXT;
+    const face = document.createElement('span');
+    face.dataset.exploreHintFace = '';
+    face.textContent = options.text ?? EXPLORE_HINT_TEXT;
+    pop.append(face);
     hint.append(pop);
-    root.append(hint);
+    document.body.append(hint);
 
-    let rafId = 0;
-    let targetX = 0;
-    let targetY = 0;
-    let currentX = 0;
-    let currentY = 0;
-    let hovering = false;
-    let goneForGood = false;
+    let gone = false;
+    let spent = false;
     let dismissTimer = 0;
+    let popOutTimer = 0;
+    let tailDocument = false;
 
-    const render = (): void => {
-        hint.style.translate = `calc(${currentX}px + ${offsetX}) calc(${currentY}px - 50%)`;
-    };
-
-    const animate = (): void => {
-        currentX += (targetX - currentX) * LERP;
-        currentY += (targetY - currentY) * LERP;
-        render();
-
-        if (hovering || Math.abs(targetX - currentX) > 0.5 || Math.abs(targetY - currentY) > 0.5) {
-            rafId = requestAnimationFrame(animate);
-        } else {
-            rafId = 0;
+    const theme = (): void => {
+        const s = getComputedStyle(root);
+        for (const prop of ['--busker-hint-bg', '--busker-hint-ink'] as const) {
+            const v = s.getPropertyValue(prop).trim();
+            if (v) face.style.setProperty(prop, v);
         }
+        hint.style.zIndex = s.getPropertyValue('--busker-cursor-z-index').trim() || '2147483647';
+    };
+    theme();
+
+    const place = (event: PointerEvent): void => {
+        hint.style.left = `calc(${event.clientX}px + ${offsetX})`;
+        hint.style.top = `${event.clientY - face.offsetHeight / 2}px`;
     };
 
-    const start = (): void => {
-        if (!rafId && !reducedMotion) rafId = requestAnimationFrame(animate);
+    const stopTail = (): void => {
+        if (!tailDocument) return;
+        tailDocument = false;
+        document.removeEventListener('pointermove', onTailMove);
     };
 
-    const hide = (): void => {
-        hovering = false;
+    const settle = (): void => {
+        clearTimeout(popOutTimer);
+        stopTail();
+        hint.classList.remove('is-visible', 'is-hiding');
+    };
+
+    const popOut = (): void => {
+        if (!hint.classList.contains('is-visible')) return;
         hint.classList.remove('is-visible');
-    };
-
-    const dismiss = (): void => {
-        goneForGood = true;
-        clearTimeout(dismissTimer);
-        hide();
-    };
-
-    const onPointerEnter = (event: PointerEvent): void => {
-        if (goneForGood || event.pointerType === 'touch') return;
-
-        const rect = root.getBoundingClientRect();
-
-        targetX = event.clientX - rect.left;
-        targetY = event.clientY - rect.top;
-        currentX = targetX;
-        currentY = targetY;
-        hovering = true;
-        render();
-        hint.classList.add('is-visible');
-        clearTimeout(dismissTimer);
-        dismissTimer = window.setTimeout(hide, dismissAfterMs);
-        start();
-    };
-
-    const onPointerMove = (event: PointerEvent): void => {
-        if (!hovering) return;
-
-        const rect = root.getBoundingClientRect();
-
-        targetX = event.clientX - rect.left;
-        targetY = event.clientY - rect.top;
-
         if (reducedMotion) {
-            currentX = targetX;
-            currentY = targetY;
-            render();
-        } else {
-            start();
+            settle();
+            return;
         }
+        void pop.offsetWidth;
+        hint.classList.add('is-hiding');
+        if (!tailDocument) {
+            tailDocument = true;
+            document.addEventListener('pointermove', onTailMove, {passive: true});
+        }
+        popOutTimer = window.setTimeout(settle, POP_OUT_MS);
     };
 
-    const onPointerLeave = (): void => {
-        clearTimeout(dismissTimer);
-        dismissTimer = 0;
-        hide();
+    const armDismiss = (): void => {
+        if (dismissTimer) return;
+        dismissTimer = window.setTimeout(() => {
+            dismissTimer = 0;
+            popOut();
+        }, dismissAfterMs);
     };
 
-    const onRootClick = (): void => {
-        clearTimeout(dismissTimer);
-        dismissTimer = 0;
-        hide();
+    const popIn = (event: PointerEvent): void => {
+        if (hint.classList.contains('is-visible')) return;
+        if (hint.classList.contains('is-hiding')) settle();
+        theme();
+        place(event);
+        void pop.offsetWidth;
+        hint.classList.add('is-visible');
+        armDismiss();
     };
 
-    root.addEventListener('pointerenter', onPointerEnter);
-    root.addEventListener('pointermove', onPointerMove);
-    root.addEventListener('pointerleave', onPointerLeave);
-    root.addEventListener('click', onRootClick);
+    const onTailMove = (event: PointerEvent): void => {
+        if (gone || event.pointerType === 'touch' || !hint.classList.contains('is-hiding')) return;
+        place(event);
+    };
+
+    const onRootMove = (event: PointerEvent): void => {
+        if (gone || event.pointerType === 'touch') return;
+
+        if (hint.classList.contains('is-visible')) {
+            place(event);
+            return;
+        }
+
+        if (spent || dismissTimer) return;
+
+        spent = true;
+        popIn(event);
+    };
+
+    const onLeave = (): void => {
+        const finish = (): void => {
+            if (root.matches(':hover')) return;
+            spent = false;
+            if (dismissTimer) {
+                clearTimeout(dismissTimer);
+                dismissTimer = 0;
+            }
+            popOut();
+        };
+
+        if (root.matches(':hover')) requestAnimationFrame(finish);
+        else finish();
+    };
+
+    const onClick = (): void => {
+        if (dismissTimer) {
+            clearTimeout(dismissTimer);
+            dismissTimer = 0;
+        }
+        popOut();
+    };
+
+    const moveOpts: AddEventListenerOptions = {passive: true};
+    root.addEventListener('pointermove', onRootMove, moveOpts);
+    root.addEventListener('pointerleave', onLeave);
+    root.addEventListener('click', onClick);
 
     return {
-        dismiss,
+        dismiss(): void {
+            gone = true;
+            if (dismissTimer) {
+                clearTimeout(dismissTimer);
+                dismissTimer = 0;
+            }
+            popOut();
+        },
         destroy(): void {
-            clearTimeout(dismissTimer);
-            cancelAnimationFrame(rafId);
-            root.removeEventListener('pointerenter', onPointerEnter);
-            root.removeEventListener('pointermove', onPointerMove);
-            root.removeEventListener('pointerleave', onPointerLeave);
-            root.removeEventListener('click', onRootClick);
+            if (dismissTimer) {
+                clearTimeout(dismissTimer);
+                dismissTimer = 0;
+            }
+            settle();
+            root.removeEventListener('pointermove', onRootMove, moveOpts);
+            root.removeEventListener('pointerleave', onLeave);
+            root.removeEventListener('click', onClick);
             hint.remove();
         },
     };

@@ -869,14 +869,14 @@ test('exploreHint pops in on hover and out for good when the visitor takes over'
 
     const {root, clickAsVisitor} = stage({...routine, exploreHint: true});
 
-    const hint = root.querySelector('[data-explore-hint]');
+    const hint = document.body.querySelector('[data-explore-hint]');
 
     assert.equal(hint?.classList.contains('is-visible'), false);
 
-    const enter = new Event('pointerenter') as PointerEvent;
+    const move = new Event('pointermove') as PointerEvent;
 
-    Object.assign(enter, {clientX: 100, clientY: 100, pointerType: 'mouse'});
-    root.dispatchEvent(enter);
+    Object.assign(move, {clientX: 100, clientY: 100, pointerType: 'mouse'});
+    root.dispatchEvent(move);
 
     assert.equal(hint?.classList.contains('is-visible'), true);
 
@@ -888,18 +888,18 @@ test('exploreHint pops in on hover and out for good when the visitor takes over'
 
 test('destroy removes the explore hint element', (assert) => {
 
-    const {root, show} = stage({...routine, exploreHint: true});
+    const {show} = stage({...routine, exploreHint: true});
 
     show.destroy();
 
-    assert.equal(root.querySelector('[data-explore-hint]'), null);
+    assert.equal(document.body.querySelector('[data-explore-hint]'), null);
 
 });
 
 test('no explore hint without the option', (assert) => {
 
-    const {root} = stage(routine);
+    stage(routine);
 
-    assert.equal(root.querySelector('[data-explore-hint]'), null);
+    assert.equal(document.body.querySelector('[data-explore-hint]'), null);
 
 });

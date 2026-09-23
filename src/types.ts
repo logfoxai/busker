@@ -47,7 +47,7 @@ export interface Move {
 export interface ExploreHintConfig {
     /** Pill label. Default "Click to explore". */
     text?: string;
-    /** Ms the hint stays up per hover visit before it pops out. Default 3000. */
+    /** Ms the hint stays up while the pointer is over the mock. Default 2000. */
     dismissAfterMs?: number;
     /** Alias for {@link dismissAfterMs}. */
     durationMs?: number;

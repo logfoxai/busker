@@ -55,7 +55,7 @@ Exports: `cubicBezierEasing`, `DEFAULT_EASING`, `DEFAULT_MOTION`.
 | Field | Default | What it does |
 |---|---|---|
 | `text` | `"Click to explore"` | Pill label. |
-| `dismissAfterMs` | `3000` | Ms the hint stays up per hover visit before it pops out. |
+| `dismissAfterMs` | `2000` | Ms after pop-in before auto pop-out (fixed for the visit; pointer motion does not extend it). |
 | `durationMs` | &mdash; | Alias for `dismissAfterMs`. |
 | `offsetX` | `1.75rem` | Gap to the right of the pointer (any CSS length). |
 

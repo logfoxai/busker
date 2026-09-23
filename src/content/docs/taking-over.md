@@ -27,7 +27,7 @@ busk(root, {
 });
 ```
 
-It pops in on every hover and pops out a few seconds into each visit (default 3000ms), ready to pop back in the next time. Once they click, it is gone for good. Busker creates the element; there is no markup to add. Touch pointers never see it, and under `prefers-reduced-motion` it snaps to the pointer instead of gliding. To restyle the pill, see [Styling](./styling.md#explore-hint).
+It pops in once when the pointer enters the mock and tails the pointer on the page. While they stay on the mock it auto pops out **2s** after the pill pops in (`dismissAfterMs`, default 2000). That clock starts when the hint becomes visible, not when the pop-in animation finishes (~220ms in `busker.css`), and the pop-out adds ~180ms after the timer — so “gone” can feel closer to ~2.2s wall clock. Moving the mouse does not extend the timer. Moving the mouse does not show it again — only leaving the mock and hovering again starts a fresh visit. Leaving the mock hides it right away; the pill keeps tailing the pointer until the pop-out animation finishes. A click hides it for that visit. Takeover dismisses it for good. Busker creates the element; there is no markup to add. Touch pointers never see it. To restyle the pill, see [Styling](./styling.md#explore-hint).
 
 ## Handing over on purpose
 
