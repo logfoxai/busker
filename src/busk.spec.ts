@@ -895,3 +895,11 @@ test('destroy removes the explore hint element', (assert) => {
     assert.equal(root.querySelector('[data-explore-hint]'), null);
 
 });
+
+test('no explore hint without the option', (assert) => {
+
+    const {root} = stage(routine);
+
+    assert.equal(root.querySelector('[data-explore-hint]'), null);
+
+});
