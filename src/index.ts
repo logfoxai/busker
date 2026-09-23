@@ -1,4 +1,5 @@
 export {busk} from './busk.ts';
+export {EXPLORE_HINT_DISMISS_MS, EXPLORE_HINT_TEXT} from './explore-hint.ts';
 export {
     meetsViewportVisibility,
     viewportVisibleFraction,
@@ -25,6 +26,7 @@ export {
 export type {ResolveTarget} from './timeline.ts';
 export type {
     Busker,
+    ExploreHintConfig,
     MotionConfig,
     Move,
     Point,

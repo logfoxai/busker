@@ -1,6 +1,6 @@
 # Styling
 
-`busker.css` is optional. It styles the cursor, the ripple, the pointer affordance, the miss hint, and an optional `[data-scene]` cross-fade recipe &mdash; about 100 lines, all scoped to `.busker`.
+`busker.css` is optional. It styles the cursor, the ripple, the pointer affordance, the miss hint, the explore hint, and an optional `[data-scene]` cross-fade recipe &mdash; about 100 lines, all scoped to `.busker`.
 
 ```typescript
 import '@logfox/busker/busker.css';
@@ -20,6 +20,8 @@ Set these on the root, or anywhere above it:
 | `--busker-cursor-edge` | `#fff` | The ring around the dot that keeps it visible on dark UI. |
 | `--busker-cursor-shadow` | `rgb(0 0 0 / 0.3)` | The dot's drop shadow. |
 | `--busker-cursor-z-index` | `2147483647` | Keeps the pointer above in-mock overlays and modals. |
+| `--busker-hint-bg` | `rgb(0 0 0 / 0.72)` | The explore-hint pill. |
+| `--busker-hint-ink` | `#fff` | The explore-hint label. |
 | `--busker-scene-ms` | `0.4s` | How long one scene takes to cross-fade into the next. |
 
 ```css

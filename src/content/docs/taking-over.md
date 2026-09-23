@@ -16,6 +16,19 @@ Busker's presses go through `el.click()` &mdash; real clicks, real handlers. It 
 
 `event.isTrusted` will not tell you the difference either, by the way: it is `false` for anything scripted, including test-runner and devtools clicks. Busker tracks its own presses directly instead.
 
+## The explore hint
+
+A looping show can read as a video. Set `exploreHint` on the routine and busker shows a pill that tails the visitor's pointer the first time they hover, inviting them in:
+
+```typescript
+busk(root, {
+    exploreHint: true, // or 'Try it yourself', or { text: '…', dismissAfterMs: 4000 }
+    steps: [/* … */],
+});
+```
+
+It pops in on the first hover and pops out for good a few seconds later (default 3000ms) or the moment they click — whichever comes first. Busker creates the element; there is no markup to add. Touch pointers never see it, and under `prefers-reduced-motion` it snaps to the pointer instead of gliding.
+
 ## Handing over on purpose
 
 `stepAside()` does the same thing from your code &mdash; for a "try it yourself" button, or when a visitor focuses something inside the mock:

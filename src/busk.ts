@@ -11,6 +11,7 @@ import {
     stretchMoveGlide,
 } from './timeline.ts';
 import {assertScriptRoutine} from './assert-routine.ts';
+import {exploreHint} from './explore-hint.ts';
 import {pressableElement} from './pressable.ts';
 import type {Busker, MotionConfig, Move, Point, Routine, Task} from './types.ts';
 import {meetsViewportVisibility} from './viewport.ts';
@@ -380,6 +381,8 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    const hint = routine.exploreHint ? exploreHint(root, routine.exploreHint, reducedMotion) : null;
+
     function play(): void {
         if (playing || aside || destroyed || reducedMotion || duration <= 0) return;
 
@@ -402,6 +405,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         if (aside) return;
         aside = true;
         pause();
+        hint?.dismiss();
         root.classList.add('is-aside');
         setShownHover(null);
         setShownPressed(null);
@@ -478,6 +482,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         viewportSyncRafId = 0;
         viewportSyncQueued = false;
         observer?.disconnect();
+        hint?.destroy();
         root.removeEventListener('click', onClick);
         document.removeEventListener('visibilitychange', onVisibilityChange);
         window.removeEventListener('scroll', scheduleSyncViewportPlayback);

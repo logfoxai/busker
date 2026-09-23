@@ -26,6 +26,7 @@ Every routine has a non-empty **`steps`** array. Loop length is compiled from th
 | `onLoop` | `() => void` | none | Called when the playhead wraps to 0. |
 | `visibility` | `number` | `1` | How much of the root must be on screen to run, as a fraction. |
 | `freezeAt` | `number` | `0` | Frame to hold under `prefers-reduced-motion`. |
+| `exploreHint` | `boolean \| string \| ExploreHintConfig` | none | A "Click to explore" pill that tails the visitor's pointer. `true` for the default label, a string for your own. |
 
 ## `Step`
 
@@ -48,6 +49,15 @@ One line in a click-driven script — exactly one of:
 | `easing` | `[0.4, 0, 0.2, 1]` | CSS cubic-bezier control points for glide progress. |
 
 Exports: `cubicBezierEasing`, `DEFAULT_EASING`, `DEFAULT_MOTION`.
+
+## `ExploreHintConfig`
+
+| Field | Default | What it does |
+|---|---|---|
+| `text` | `"Click to explore"` | Pill label. |
+| `dismissAfterMs` | `3000` | Ms after the hint first shows that it pops out for good. |
+
+Exports: `EXPLORE_HINT_TEXT`, `EXPLORE_HINT_DISMISS_MS`.
 
 ## `compile(steps, resolveTarget, motion?, start?)`
 

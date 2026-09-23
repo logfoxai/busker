@@ -864,3 +864,34 @@ test('destroy puts the mock back the way it was found', (assert) => {
     assert.equal(root.classList.contains('is-aside'), false);
 
 });
+
+test('exploreHint pops in on hover and out for good when the visitor takes over', (assert) => {
+
+    const {root, clickAsVisitor} = stage({...routine, exploreHint: true});
+
+    const hint = root.querySelector('[data-explore-hint]');
+
+    assert.equal(hint?.classList.contains('is-visible'), false);
+
+    const enter = new Event('pointerenter') as PointerEvent;
+
+    Object.assign(enter, {clientX: 100, clientY: 100, pointerType: 'mouse'});
+    root.dispatchEvent(enter);
+
+    assert.equal(hint?.classList.contains('is-visible'), true);
+
+    clickAsVisitor('[data-nav-item="alerts"]');
+
+    assert.equal(hint?.classList.contains('is-visible'), false);
+
+});
+
+test('destroy removes the explore hint element', (assert) => {
+
+    const {root, show} = stage({...routine, exploreHint: true});
+
+    show.destroy();
+
+    assert.equal(root.querySelector('[data-explore-hint]'), null);
+
+});

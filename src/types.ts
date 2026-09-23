@@ -43,6 +43,14 @@ export interface Move {
     press?: number;
 }
 
+/** The "click to explore" pill that tails the visitor's pointer. */
+export interface ExploreHintConfig {
+    /** Pill label. Default "Click to explore". */
+    text?: string;
+    /** Ms after the hint first shows that it pops out for good. Default 3000. */
+    dismissAfterMs?: number;
+}
+
 /**
  * A click-driven show. One clock: `steps` set loop length; `{ run }` handles
  * everything else (UI, ambient ticks, livetail rows). No parallel schedules.
@@ -68,6 +76,13 @@ export interface Routine {
     visibility?: number;
     /** Frame to hold under `prefers-reduced-motion`. Default 0. */
     freezeAt?: number;
+    /**
+     * A pill that follows the visitor's pointer the first time they hover,
+     * inviting them to click. `true` for the default label, a string for your
+     * own, or an `ExploreHintConfig` for full control. One-shot: it pops out a
+     * few seconds after it first shows, or as soon as they click.
+     */
+    exploreHint?: boolean | string | ExploreHintConfig;
 }
 
 /** @deprecated Use {@link Routine}. Kept as an alias for docs migration. */
