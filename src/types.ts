@@ -47,7 +47,7 @@ export interface Move {
 export interface ExploreHintConfig {
     /** Pill label. Default "Click to explore". */
     text?: string;
-    /** Ms the hint stays up while the pointer is over the mock. Default 2000. */
+    /** Ms the hint stays up while the pointer is over the mock. Default 1800. */
     dismissAfterMs?: number;
     /** Alias for {@link dismissAfterMs}. */
     durationMs?: number;
@@ -100,6 +100,8 @@ export interface Busker {
     play(): void;
     /** Hold the show where it is. */
     pause(): void;
+    /** Hide the explore hint without ending the show (e.g. mock scrolled off-screen). */
+    retractExploreHint(): void;
     /**
      * Hand the mock over: stop the show for good and hide the cursor so the
      * visitor can click around. Happens by itself when they click.

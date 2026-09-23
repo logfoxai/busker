@@ -886,6 +886,69 @@ test('exploreHint pops in on hover and out for good when the visitor takes over'
 
 });
 
+test('exploreHint stays up when the show clicks for itself', (assert) => {
+
+    const {root, startShow, tick} = stage({...routine, exploreHint: true});
+
+    const hint = document.body.querySelector('[data-explore-hint]');
+
+    const move = new Event('pointermove') as PointerEvent;
+
+    Object.assign(move, {clientX: 100, clientY: 100, pointerType: 'mouse'});
+    root.dispatchEvent(move);
+
+    assert.equal(hint?.classList.contains('is-visible'), true);
+
+    startShow();
+    tick(350);
+
+    assert.equal(root.classList.contains('is-aside'), false);
+    assert.equal(hint?.classList.contains('is-visible'), true);
+
+});
+
+test('exploreHint stays up through multiple show navigation clicks', (assert) => {
+
+    const {root, startShow, tick} = stage({...routine, exploreHint: true});
+
+    const hint = document.body.querySelector('[data-explore-hint]');
+
+    const move = new Event('pointermove') as PointerEvent;
+
+    Object.assign(move, {clientX: 100, clientY: 100, pointerType: 'mouse'});
+    root.dispatchEvent(move);
+
+    startShow();
+    tick(500);
+
+    assert.equal(root.classList.contains('is-aside'), false);
+    assert.equal(hint?.classList.contains('is-visible'), true);
+
+});
+
+test('exploreHint ignores spurious pointerleave after a show navigation click', (assert) => {
+
+    const {root, startShow, tick} = stage({...routine, exploreHint: true});
+
+    const hint = document.body.querySelector('[data-explore-hint]');
+
+    const move = new Event('pointermove') as PointerEvent;
+
+    Object.assign(move, {clientX: 100, clientY: 100, pointerType: 'mouse'});
+    root.dispatchEvent(move);
+
+    startShow();
+    tick(350);
+
+    const leave = new Event('pointerleave') as PointerEvent;
+
+    Object.assign(leave, {clientX: 0, clientY: 0, pointerType: 'mouse'});
+    root.dispatchEvent(leave);
+
+    assert.equal(hint?.classList.contains('is-visible'), true);
+
+});
+
 test('destroy removes the explore hint element', (assert) => {
 
     const {show} = stage({...routine, exploreHint: true});

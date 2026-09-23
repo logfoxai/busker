@@ -112,6 +112,9 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const firedTasks = new Set<number>();
     /** Set while the show clicks for itself, so it does not mistake that for a visitor. */
     let clickingItself = false;
+    /** After a scripted press, ignore spurious pointerleave from scene/modal layout churn. */
+    let hintScriptedLeaveGraceUntil = 0;
+    const HINT_SCRIPTED_LEAVE_GRACE_MS = 320;
 
     /** Px endpoints for each move, fixed when the glide starts (DOM may move after click). */
     const glideEndpoints = new Map<number, {from: Point; to: Point}>();
@@ -145,6 +148,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
                 // Mock handlers must not take down the show mid-loop.
             } finally {
                 clickingItself = false;
+                hintScriptedLeaveGraceUntil = performance.now() + HINT_SCRIPTED_LEAVE_GRACE_MS;
             }
         });
     }
@@ -381,7 +385,13 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const hint = routine.exploreHint ? exploreHint(root, routine.exploreHint, reducedMotion) : null;
+    const hint = routine.exploreHint
+        ? exploreHint(root, routine.exploreHint, reducedMotion, {
+              click: () => clickingItself,
+              leave: () =>
+                  clickingItself || performance.now() < hintScriptedLeaveGraceUntil,
+          })
+        : null;
 
     function play(): void {
         if (playing || aside || destroyed || reducedMotion || duration <= 0) return;
@@ -446,11 +456,15 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const syncViewportPlayback = (): void => {
         if (document.hidden) {
             pause();
+            hint?.retract();
             return;
         }
 
         if (meetsViewportVisibility(root, visibility)) play();
-        else pause();
+        else {
+            pause();
+            hint?.retract();
+        }
     };
 
     const scheduleSyncViewportPlayback = (): void => {
@@ -537,6 +551,9 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         },
         play,
         pause,
+        retractExploreHint(): void {
+            hint?.retract();
+        },
         stepAside,
         destroy,
     };
