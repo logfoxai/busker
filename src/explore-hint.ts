@@ -402,7 +402,7 @@ export function exploreHint(
             clearDismissTimer();
             if (hint.classList.contains('is-visible')) popOut(true);
             else if (hint.classList.contains('is-hiding')) settle(true);
-            else suppressUntilLeave = true;
+            else if (root.matches(':hover')) suppressUntilLeave = true;
         },
         dismiss(): void {
             gone = true;
