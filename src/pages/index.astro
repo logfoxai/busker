@@ -12,8 +12,10 @@ import cremaMockHtml from '../demo/crema/mock.html?raw';
 import cremaMockCss from '../demo/crema/mock.css?raw';
 import cremaMockTs from '../demo/crema/mock.ts?raw';
 import CursorClick from 'phosphor-astro/CursorClick.astro';
+import {BUSKER_GITHUB} from '../components/splashAgentPrompt';
 
 const PAGE_TITLE_ID = '_top';
+const BUSKER_SKILL_ON_GITHUB = `${BUSKER_GITHUB}/blob/main/skills/busker/SKILL.md`;
 
 const cremaCodeTabs = [
     {id: 'demo', label: 'demo.ts', lang: 'typescript', code: cremaDemoTs},
@@ -81,6 +83,34 @@ const cremaCodeTabs = [
                     cursor pressed a button &mdash; same as when you press it.
                 </p>
                 <SplashCodeTabs files={cremaCodeTabs} defaultId="demo" />
+            </section>
+
+            <section class="splash__prose">
+                <h2>What is a busk?</h2>
+                <p>
+                    A <strong>busker</strong> is someone who performs in public &mdash; music, magic, a
+                    routine for people passing by. <strong>Busking</strong> is that kind of show. Busker
+                    (the library) runs a scripted cursor through your UI the same way: a short performance
+                    on your page, then the audience can take over.
+                </p>
+                <p>
+                    We call each scripted mock a <strong>busk</strong>: one routine wired with
+                    <code>busk()</code> on real markup, like the demo above.
+                </p>
+            </section>
+
+            <section class="splash__prose">
+                <h2>Coding agents</h2>
+                <p>
+                    Busker is a good fit for Cursor, Claude Code, and similar tools: small API, markdown
+                    docs in GitHub, and a
+                    <a href={BUSKER_SKILL_ON_GITHUB}>skill file</a> that teaches agents how to wire
+                    busks and routines. The hero button <strong>For coding agents</strong> copies a starter
+                    prompt that tells the agent to follow that skill and read docs via
+                    <code>raw.githubusercontent.com</code> (not this HTML site). See
+                    <a href="/coding-agents/">Working with coding agents</a> for install steps and the full
+                    prompt template.
+                </p>
             </section>
         </div>
     </div>

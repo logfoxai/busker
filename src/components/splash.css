@@ -299,19 +299,42 @@ html:not([data-has-sidebar]):has(.splash-page) {
     max-width: 54rem;
 }
 
-.splash-page .splash-home .splash__code {
+.splash-page .splash-home .splash__code,
+.splash-page .splash-home .splash__prose {
     margin-top: 3.5rem;
 }
 
-.splash-page .splash-home .splash__code h2 {
+.splash-page .splash-home .splash__code h2,
+.splash-page .splash-home .splash__prose h2 {
     margin: 0 0 1rem;
     font-family: var(--cs-font-heading);
     color: var(--cs-ink);
 }
 
-.splash-page .splash-home .splash__code > p {
+.splash-page .splash-home .splash__code > p,
+.splash-page .splash-home .splash__prose > p {
     margin: 0 0 1.5rem;
     color: var(--cs-muted);
+    line-height: 1.65;
+}
+
+.splash-page .splash-home .splash__prose > p:last-child {
+    margin-bottom: 0;
+}
+
+.splash-page .splash-home .splash__prose a {
+    color: var(--docs-primary-bg);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+
+.splash-page .splash-home .splash__prose a:hover {
+    color: color-mix(in srgb, var(--docs-primary-bg) 82%, var(--cs-ink));
+}
+
+.splash-page .splash-home .splash__prose code {
+    font-family: var(--cs-font-mono, ui-monospace, monospace);
+    font-size: 0.92em;
 }
 
 @keyframes splash-fade-up {
