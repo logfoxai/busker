@@ -39,7 +39,10 @@ export interface Move {
     from: number;
     /** When the cursor arrives. */
     until: number;
-    /** Moment to animate a press and fire a `{ click }` step. */
+    /**
+     * Moment to animate a press and fire a `{ click }` step. After `press`, the
+     * cursor freezes at that point and stops tracking `to`.
+     */
     press?: number;
 }
 

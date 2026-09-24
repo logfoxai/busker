@@ -40,6 +40,12 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
     /** Where each selector was last seen, in case it stops being anywhere. */
     const lastSeen = new Map<string, Point>();
+    /**
+     * Where each move's target sat when its press began. After a press the
+     * cursor unbinds — following a live target through a reflow rides the
+     * layout instead of reading as a finished click.
+     */
+    const frozenAtPress = new Map<number, Point>();
 
     /** Skip stacked duplicates (e.g. two view layers) that are hidden but still in layout. */
     function isShown(el: Element): boolean {
@@ -79,6 +85,24 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         ];
 
         lastSeen.set(target, at);
+
+        return at;
+    }
+
+    /** Aim point for a move: live until press, then the frozen press point. */
+    function aimPoint(moveIndex: number, t: number): Point | null {
+        if (moveIndex < 0) return resolve(start);
+
+        const move = moves[moveIndex];
+        const frozen = frozenAtPress.get(moveIndex);
+
+        if (frozen) return frozen;
+
+        const at = resolve(move.to);
+
+        if (at && move.press !== undefined && t >= move.press) {
+            frozenAtPress.set(moveIndex, at);
+        }
 
         return at;
     }
@@ -276,8 +300,13 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         if (!from || !to) {
             from =
                 (index > 0 ? glideEndpoints.get(index - 1)?.to : null) ??
-                resolve(index > 0 ? moves[index - 1].to : start);
-            to = resolve(move ? move.to : start);
+                aimPoint(index > 0 ? index - 1 : -1, t);
+            to = move ? aimPoint(index, t) : resolve(start);
+        } else if (move && move.press !== undefined && t >= move.press) {
+            const frozen = frozenAtPress.get(index) ?? to;
+
+            frozenAtPress.set(index, frozen);
+            to = frozen;
         }
 
         if (!from || !to) return;
@@ -324,6 +353,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     function remeasureScript(): void {
         glidePreparedThrough = -1;
         glideEndpoints.clear();
+        frozenAtPress.clear();
         shownCursorX = Number.NaN;
         shownCursorY = Number.NaN;
         scriptSchedule = scheduleScript();
@@ -337,6 +367,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
         glidePreparedThrough = -1;
         glideEndpoints.clear();
+        frozenAtPress.clear();
         shownCursorX = Number.NaN;
         shownCursorY = Number.NaN;
         setShownHover(null);
