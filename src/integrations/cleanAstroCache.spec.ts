@@ -44,11 +44,9 @@ test('astro:dev wipes compiler caches after the port check; astro:build does not
 
     const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
     const devPrefix = 'node scripts/assert-astro-dev-free.mjs && node scripts/clean-astro-cache.mjs &&';
-    const buildPrefix = 'node scripts/assert-astro-dev-free.mjs &&';
 
     assert.equal(pkg.scripts['astro:dev'].startsWith(devPrefix), true);
-    assert.equal(pkg.scripts['astro:build'].startsWith(buildPrefix), true);
-    assert.equal(pkg.scripts['astro:build'].includes('clean-astro-cache.mjs'), false);
+    assert.equal(pkg.scripts['astro:build'], 'node scripts/astro-build.mjs');
 
 });
 

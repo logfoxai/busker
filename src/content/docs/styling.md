@@ -1,6 +1,6 @@
 # Styling
 
-`busker.css` is optional. It styles the cursor, the ripple, the pointer affordance, the miss hint, and an optional `[data-scene]` cross-fade recipe &mdash; about 100 lines, all scoped to `.busker`.
+`busker.css` is optional. It styles the cursor, the ripple, the pointer affordance, the miss hint, and the explore hint &mdash; about 80 lines, all scoped to `.busker`. It does **not** style your mock.
 
 ```typescript
 import '@logfox/busker/busker.css';
@@ -8,19 +8,20 @@ import '@logfox/busker/busker.css';
 
 Or copy it into your own stylesheet and edit it. There is nothing clever in there.
 
-## Custom properties
+## Customizing the pointer
 
-Set these on the root, or anywhere above it:
+You do not add pointer markup to your mock. When `busk()` starts, busker creates a `[data-cursor]` element on the root unless you already put one there. The default is a soft dot (not an arrow) so it reads as part of the demo, not the visitor's OS cursor.
+
+**Tune the default** with CSS variables on the mock root (or any ancestor):
 
 | Property | Default | What it is |
 |---|---|---|
-| `--busker-accent` | `#7c3aed` | The press colour and the ripple. Set this to your brand colour. |
-| `--busker-cursor-size` | `0.95rem` | Diameter of the dot. |
-| `--busker-cursor-fill` | `rgb(0 0 0 / 0.42)` | The dot at rest. |
-| `--busker-cursor-edge` | `#fff` | The ring around the dot that keeps it visible on dark UI. |
-| `--busker-cursor-shadow` | `rgb(0 0 0 / 0.3)` | The dot's drop shadow. |
-| `--busker-cursor-z-index` | `2147483647` | Keeps the pointer above in-mock overlays and modals. |
-| `--busker-scene-ms` | `0.4s` | How long one scene takes to cross-fade into the next. |
+| `--busker-accent` | `#7c3aed` | Press colour and click ripple. Match your brand. |
+| `--busker-cursor-size` | `0.95rem` | Dot diameter. |
+| `--busker-cursor-fill` | `rgb(0 0 0 / 0.42)` | Dot fill at rest. |
+| `--busker-cursor-edge` | `#fff` | Ring so the dot stays visible on dark UI. |
+| `--busker-cursor-shadow` | `rgb(0 0 0 / 0.3)` | Dot drop shadow. |
+| `--busker-cursor-z-index` | `2147483647` | Stack above in-mock overlays. |
 
 ```css
 .my-mock {
@@ -29,13 +30,17 @@ Set these on the root, or anywhere above it:
 }
 ```
 
-## Drawing your own pointer
-
-The default cursor is a soft dot rather than an arrow, because an arrow on a screenshot of an app reads as *your* mouse and people try to move it. If you want an arrow anyway, put one in the cursor element and drop the dot styling:
+**Use your own shape** (arrow, branded SVG, etc.): add one element with `data-cursor` inside the mock root before you call `busk()`. Busker moves that element instead of creating a dot. `destroy()` removes a busker-created cursor only; it leaves yours in the DOM.
 
 ```html
-<span data-cursor><svg viewBox="0 0 11 18" width="16"><path d="M0 0 L0 16 L4 12.5 L6.5 18 L9 17 L6.5 11.5 L11 11 Z"/></svg></span>
+<span data-cursor aria-hidden="true">
+    <svg viewBox="0 0 11 18" width="16" aria-hidden="true">
+        <path d="M0 0 L0 16 L4 12.5 L6.5 18 L9 17 L6.5 11.5 L11 11 Z"/>
+    </svg>
+</span>
 ```
+
+Turn off the default dot styling so your art shows through:
 
 ```css
 .busker [data-cursor] {
@@ -47,7 +52,7 @@ The default cursor is a soft dot rather than an arrow, because an arrow on a scr
 }
 ```
 
-Busker only sets `translate` (position) and the `is-*` classes. Everything else is yours.
+Busker only sets `translate` (position) and the `is-*` press/ripple classes on `[data-cursor]`. Size, colour, and artwork are yours.
 
 ## Demo hover
 
@@ -110,21 +115,30 @@ Dropdown fields: put `data-busker-press` on the chip trigger and `data-busker-me
 
 `click` / `clickTargets` selectors often point at a inner node (for example `[data-live-trace="two"]` on a row inside a `<button.mock-logs__trace-drill>`). Busker puts `is-hover` on **that** node, not the outer button. If your `:hover` rule styles a child from the parent (`button:hover .row`), add a demo branch, e.g. `button:has(.row.is-hover) .row`, or pair `:is(:hover, .is-hover)` on the same element that receives `is-hover`.
 
-## Optional scene cross-fade
+## Explore hint
 
-Busker does not activate scenes. If your mock uses `[data-scene]` and toggles `.is-active` in your own JavaScript, `busker.css` can cross-fade them.
+When the routine sets [`exploreHint`](./taking-over.md#the-explore-hint), busker appends the pill to `document.body` — `position: fixed`, viewport coordinates — so mock `overflow: hidden` never clips it:
 
-Before `busk()` runs, inactive scene siblings are hidden with `display: none` while the active one stays in flow, so SSR and the first paint do not show every page at once. Once `.busker` is on the root, scenes stack and cross-fade instead.
+```html
+<span data-explore-hint><span data-explore-hint-pop><span data-explore-hint-face>Click to explore</span></span></span>
+```
 
-Because stacked scenes are out of flow, **the element holding them needs a height of its own** &mdash; from a parent, a grid track, or its own rule.
+The outer span follows the pointer with `left` / `top` only (no transforms on that node). `[data-explore-hint-pop]` scales in and out; `[data-explore-hint-face]` is a painted frosted pill (gradient, border, shadow — no `backdrop-filter`, so follow + pop stay smooth).
 
-Set `--busker-scene-ms` to retime the fade, or turn it into a cut:
+Because the pill is appended to `document.body`, **`busker.css` defines explore-hint colours on `:root`**, not on `.busker`. They track **`prefers-color-scheme`** and **`html[data-theme='light'|'dark']`** (Starlight and similar doc themes) automatically. Override on **`.busker`** only when a mock needs its own pill (for example a always-light product frame on a dark landing page). Restyle the pill through `[data-explore-hint-face]`:
 
 ```css
-.my-mock {
-    --busker-scene-ms: 0s;
+[data-explore-hint-face] {
+    background: var(--accent);
+    color: #fff;
 }
 ```
+
+`--busker-hint-bg` and `--busker-hint-ink` cover the common case. Horizontal gap from the pointer defaults to `1.75rem` — override with `offsetX` on `ExploreHintConfig` or `--busker-hint-offset-x` on the root for CSS-only tweaks (the JS default matches the variable). Per-visit duration defaults to 1800ms via `dismissAfterMs` or `durationMs` (starts when the hint pops in; moving the mouse does not extend it). The pill sits one step below the cursor (`calc(var(--busker-cursor-z-index) - 1)`) and never intercepts clicks; any click on the mock hides it until the next hover (takeover calls `dismiss()` for good). Under `prefers-reduced-motion` the pop and fade are off and the follow snaps instead of gliding.
+
+## Your mock
+
+Product layout, nav, modals, and transitions live in **your** stylesheets. Busker never reads your nav or page markup and never hides siblings for you. When a step or a visitor clicks, your handlers update the DOM; busker only moves the cursor and toggles the affordance classes in [Markup](./markup.md#what-busker-writes).
 
 ## Two lengths are in both places
 

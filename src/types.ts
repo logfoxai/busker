@@ -39,8 +39,23 @@ export interface Move {
     from: number;
     /** When the cursor arrives. */
     until: number;
-    /** Moment to animate a press and fire a `{ click }` step. */
+    /**
+     * Moment to animate a press and fire a `{ click }` step. After `press`, the
+     * cursor freezes at that point and stops tracking `to`.
+     */
     press?: number;
+}
+
+/** The "click to explore" pill that tails the visitor's pointer. */
+export interface ExploreHintConfig {
+    /** Pill label. Default "Click to explore". */
+    text?: string;
+    /** Ms the hint stays up while the pointer is over the mock. Default 1800. */
+    dismissAfterMs?: number;
+    /** Alias for {@link dismissAfterMs}. */
+    durationMs?: number;
+    /** Gap to the right of the pointer (CSS length). Default `1.75rem`. */
+    offsetX?: string;
 }
 
 /**
@@ -68,6 +83,14 @@ export interface Routine {
     visibility?: number;
     /** Frame to hold under `prefers-reduced-motion`. Default 0. */
     freezeAt?: number;
+    /**
+     * A pill that follows the visitor's pointer whenever they hover, inviting
+     * them to click. On by default (`true` / default label). Pass `false` to
+     * disable, a string for your own label, or `ExploreHintConfig` for full
+     * control. Pops out a few seconds into each visit and pops back in on the
+     * next one; once they click, it is gone for good.
+     */
+    exploreHint?: boolean | string | ExploreHintConfig;
 }
 
 /** @deprecated Use {@link Routine}. Kept as an alias for docs migration. */
@@ -80,6 +103,8 @@ export interface Busker {
     play(): void;
     /** Hold the show where it is. */
     pause(): void;
+    /** Hide the explore hint without ending the show (e.g. mock scrolled off-screen). */
+    retractExploreHint(): void;
     /**
      * Hand the mock over: stop the show for good and hide the cursor so the
      * visitor can click around. Happens by itself when they click.

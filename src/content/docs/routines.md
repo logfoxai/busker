@@ -3,11 +3,11 @@
 A routine is a **script**: a list of steps that run top to bottom, loop after loop. Each step does exactly one thing — click, wait, move the cursor, or run your code. **One clock.** UI changes, ambient ticks, and livetail rows use **`{ click }`** (your handlers) or **`{ run }`** — not a second schedule on the routine.
 
 ```typescript
-wireScenes(root);
+// Your click handlers and resetApp() — busker does not wire these.
 
 busk(root, {
     start: [0.55, 0.25],
-    onLoop: () => wireScenes(root, 'home'),
+    onLoop: () => resetApp(root),
     steps: [
         {wait: 900},
         {click: '[data-nav-item="alerts"]'},
@@ -60,14 +60,14 @@ Each loop re-compiles the script from fresh layout. Hidden step targets are **re
 clickTargets: ['[data-nav-item="alerts"]', '[data-filter]'],
 ```
 
-Busker does **not** change your UI. Wire `click` handlers (or rely on scripted `{ click }` steps) for scenes, filters, and modals.
+Busker does **not** change your UI. Wire `click` handlers (or rely on scripted `{ click }` steps) for navigation, filters, and modals.
 
 ## `onLoop`
 
-Reset state when the playhead wraps — scenes, filters, clearing typed search, etc.:
+Reset state when the playhead wraps — default view, filters, clearing typed search, etc.:
 
 ```typescript
-onLoop: () => wireScenes(root, 'home'),
+onLoop: () => resetApp(root),
 ```
 
 `onLoop` runs when the playhead wraps to 0, after the last step (including ring-out on a final click).

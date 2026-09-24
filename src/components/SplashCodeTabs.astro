@@ -1,0 +1,146 @@
+---
+import {Code} from '@astrojs/starlight/components';
+import {codeTabLabelFromTitle, splashCodeTabIconFromKind} from './codeBlockTitles';
+import SplashCodeTabIcon from './SplashCodeTabIcon.astro';
+
+export type SplashCodeTab = {
+    id: string;
+    label: string;
+    lang: string;
+    code: string;
+};
+
+interface Props {
+    files: SplashCodeTab[];
+    defaultId?: string;
+}
+
+const {files, defaultId = files[0]?.id} = Astro.props;
+const tabGroupId = 'splash-demo-code';
+---
+
+<div class="splash-code-tabs not-content" data-splash-code-tabs>
+    <div class="splash-code-tabs__bar">
+        <span class="cs-code-dots" aria-hidden="true"></span>
+        <div class="splash-code-tabs__tablist" role="tablist" aria-label="Demo source files">
+            {
+                files.map((file) => {
+                    const selected = file.id === defaultId;
+                    const tabLabel = codeTabLabelFromTitle(file.label);
+                    const tabIcon = splashCodeTabIconFromKind(tabLabel.kind);
+
+                    return (
+                        <button
+                            type="button"
+                            role="tab"
+                            id={`${tabGroupId}-tab-${file.id}`}
+                            class:list={['splash-code-tabs__tab', selected && 'is-active']}
+                            aria-selected={selected ? 'true' : 'false'}
+                            aria-controls={`${tabGroupId}-panel-${file.id}`}
+                            tabindex={selected ? 0 : -1}
+                            data-tab={file.id}
+                        >
+                            {
+                                tabIcon && tabLabel.kind ? (
+                                    <SplashCodeTabIcon icon={tabIcon} kind={tabLabel.kind} />
+                                ) : null
+                            }
+                            <span class="cs-code-name">
+                                <span class="cs-code-file">{tabLabel.file}</span>
+                            </span>
+                        </button>
+                    );
+                })
+            }
+        </div>
+        <div class="splash-code-tabs__copy-host"></div>
+    </div>
+    <div class="splash-code-tabs__panels">
+        {
+            files.map((file) => {
+                const selected = file.id === defaultId;
+
+                return (
+                    <div
+                        role="tabpanel"
+                        id={`${tabGroupId}-panel-${file.id}`}
+                        class:list={['splash-code-tabs__panel', selected && 'is-active']}
+                        aria-labelledby={`${tabGroupId}-tab-${file.id}`}
+                        data-panel={file.id}
+                        hidden={selected ? undefined : true}
+                    >
+                        <Code code={file.code} lang={file.lang} title={file.label} />
+                    </div>
+                );
+            })
+        }
+    </div>
+</div>
+
+<script>
+    import {enhanceCodeBlockTitles, mountSplashCodeTabCopy} from './codeBlockTitles';
+
+    function activateTab(root: HTMLElement, tabId: string): void {
+        root.querySelectorAll<HTMLButtonElement>('[role="tab"]').forEach((tab) => {
+            const selected = tab.dataset.tab === tabId;
+
+            tab.classList.toggle('is-active', selected);
+            tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+            tab.tabIndex = selected ? 0 : -1;
+        });
+
+        root.querySelectorAll<HTMLElement>('[role="tabpanel"]').forEach((panel) => {
+            const selected = panel.dataset.panel === tabId;
+
+            panel.classList.toggle('is-active', selected);
+            panel.hidden = !selected;
+        });
+
+        mountSplashCodeTabCopy(root);
+    }
+
+    function initSplashCodeTabs(root: HTMLElement): void {
+        enhanceCodeBlockTitles(root);
+        mountSplashCodeTabCopy(root);
+
+        root.querySelectorAll<HTMLButtonElement>('[role="tab"]').forEach((tab) => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.dataset.tab;
+
+                if (tabId) {
+                    activateTab(root, tabId);
+                }
+            });
+
+            tab.addEventListener('keydown', (event) => {
+                const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+                const index = tabs.indexOf(tab);
+
+                if (index < 0) {
+                    return;
+                }
+
+                let next = index;
+
+                if (event.key === 'ArrowRight') {
+                    next = (index + 1) % tabs.length;
+                } else if (event.key === 'ArrowLeft') {
+                    next = (index - 1 + tabs.length) % tabs.length;
+                } else {
+                    return;
+                }
+
+                event.preventDefault();
+                const nextTab = tabs[next];
+                const tabId = nextTab?.dataset.tab;
+
+                if (tabId) {
+                    activateTab(root, tabId);
+                    nextTab?.focus();
+                }
+            });
+        });
+    }
+
+    document.querySelectorAll<HTMLElement>('[data-splash-code-tabs]').forEach(initSplashCodeTabs);
+</script>

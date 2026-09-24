@@ -1,3 +1,5 @@
+import {CODE_FILE_ICON_PATH, type CodeFileIconId} from './codeFileIconPaths';
+
 export const COPY_FEEDBACK_MS = 1500;
 
 export function copyButtonContent(
@@ -52,6 +54,7 @@ const EXT_KIND: ReadonlyArray<readonly [RegExp, string]> = [
     [/\.(?:js|mjs|cjs)$/i, 'JS'],
     [/\.json$/i, 'JSON'],
     [/\.(?:md|mdx)$/i, 'MD'],
+    [/\.html?$/i, 'HTML'],
     [/\.(?:css|scss)$/i, 'CSS'],
     [/\.py$/i, 'PY'],
     [/\.go$/i, 'GO'],
@@ -101,6 +104,7 @@ export function kindFromTitle(title: string): string | null {
         mdx: 'MD',
         css: 'CSS',
         scss: 'CSS',
+        html: 'HTML',
         python: 'PY',
         py: 'PY',
         go: 'GO',
@@ -182,13 +186,18 @@ export function copyButtonMarkup(attrs: {
     );
 }
 
-function createKindMark(kind: string): HTMLElement {
-    const badge = document.createElement('span');
-    badge.className = 'cs-code-kind';
-    badge.dataset.kind = kind;
-    badge.textContent = kind;
-    badge.setAttribute('aria-hidden', 'true');
-    return badge;
+function createFileIconMark(kind: string): SVGSVGElement {
+    const iconId = splashCodeTabIconFromKind(kind) ?? 'code';
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.classList.add('cs-code-file-icon');
+    svg.dataset.kind = kind;
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('viewBox', '0 0 256 256');
+    svg.setAttribute('fill', 'currentColor');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', CODE_FILE_ICON_PATH[iconId]);
+    svg.append(path);
+    return svg;
 }
 
 function ensureDots(header: HTMLElement): void {
@@ -237,12 +246,46 @@ function ensureCopyInHeader(frame: HTMLElement, header: HTMLElement): void {
     });
 }
 
+/** Phosphor `File*` icon id for code tab chrome (splash tabs + docs code blocks). */
+export type SplashCodeTabIconId = CodeFileIconId;
+
+const SPLASH_TAB_ICON: Readonly<Record<string, SplashCodeTabIconId>> = {
+    HTML: 'html',
+    CSS: 'css',
+    TS: 'ts',
+    TSX: 'tsx',
+    JS: 'js',
+    JSX: 'jsx',
+    JSON: 'json',
+    MD: 'md',
+    PY: 'py',
+    GO: 'go',
+    RS: 'rs',
+    YML: 'yml',
+};
+
+export function splashCodeTabIconFromKind(kind: string | null): SplashCodeTabIconId | null {
+    if (!kind) {
+        return null;
+    }
+    return SPLASH_TAB_ICON[kind] ?? 'code';
+}
+
+/** Filename (+ optional kind chip) for splash code tabs — mirrors `buildTitleNodes`. */
+export function codeTabLabelFromTitle(title: string): {kind: string | null; file: string} {
+    const kind = kindFromTitle(title);
+    const slash = title.lastIndexOf('/');
+    const file = slash === -1 ? title : title.slice(slash + 1);
+
+    return {kind, file};
+}
+
 function buildTitleNodes(text: string): Node[] {
     const kind = kindFromTitle(text);
     const nodes: Node[] = [];
 
     if (kind) {
-        nodes.push(createKindMark(kind));
+        nodes.push(createFileIconMark(kind));
     }
 
     const name = document.createElement('span');
@@ -300,7 +343,12 @@ function enhanceTitle(frame: HTMLElement): void {
         return;
     }
 
-    if (title.dataset.csEnhanced === '1' && title.querySelector('.cs-code-name')) {
+    if (
+        title.dataset.csEnhanced === '1'
+        && title.querySelector('.cs-code-name')
+        && title.querySelector('.cs-code-file-icon')
+        && !title.querySelector('.cs-code-kind')
+    ) {
         return;
     }
 
@@ -322,5 +370,74 @@ export function enhanceCodeBlockTitles(root: ParentNode = document): void {
         if (frame instanceof HTMLElement) {
             enhanceTitle(frame);
         }
+    }
+}
+
+function splashPanelHeader(root: HTMLElement, panelId: string): HTMLElement | null {
+    const panel = root.querySelector(`[data-panel="${panelId}"]`);
+    if (!(panel instanceof HTMLElement)) {
+        return null;
+    }
+
+    const frame = panel.querySelector(
+        '.expressive-code .frame.has-title, .expressive-code .frame.is-terminal',
+    );
+    if (!(frame instanceof HTMLElement)) {
+        return null;
+    }
+
+    const header = frame.querySelector(':scope > .header');
+    return header instanceof HTMLElement ? header : null;
+}
+
+/** Park the active tab’s EC copy control in the splash tab bar (top-right). */
+export function mountSplashCodeTabCopy(root: HTMLElement): void {
+    const copyHost = root.querySelector('.splash-code-tabs__copy-host');
+    if (!(copyHost instanceof HTMLElement)) {
+        return;
+    }
+
+    const hosted = copyHost.querySelector(':scope > .copy');
+    if (hosted instanceof HTMLElement) {
+        const panelId = hosted.dataset.splashCopyPanel;
+        if (panelId) {
+            const header = splashPanelHeader(root, panelId);
+            if (header && !header.querySelector(':scope > .copy')) {
+                header.append(hosted);
+            }
+        }
+    }
+
+    copyHost.replaceChildren();
+
+    const activePanel = root.querySelector<HTMLElement>('.splash-code-tabs__panel.is-active');
+    if (!activePanel) {
+        return;
+    }
+
+    const frame = activePanel.querySelector(
+        '.expressive-code .frame.has-title, .expressive-code .frame.is-terminal',
+    );
+    if (!(frame instanceof HTMLElement)) {
+        return;
+    }
+
+    const header = frame.querySelector(':scope > .header');
+    if (!(header instanceof HTMLElement)) {
+        return;
+    }
+
+    let copy = header.querySelector(':scope > .copy');
+    if (!(copy instanceof HTMLElement)) {
+        const frameCopy = frame.querySelector(':scope > .copy');
+        if (frameCopy instanceof HTMLElement) {
+            header.append(frameCopy);
+            copy = frameCopy;
+        }
+    }
+
+    if (copy instanceof HTMLElement) {
+        copy.dataset.splashCopyPanel = activePanel.dataset.panel ?? '';
+        copyHost.append(copy);
     }
 }

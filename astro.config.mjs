@@ -87,11 +87,15 @@ export default defineConfig({
             customCss: [
                 './src/styles/fonts.css',
                 './src/styles/docs-shared.css',
+                './src/styles/docs-theme-slider.css',
                 './src/styles/starlight-custom.css',
+                './src/styles/docs-brand-buttons.css',
+                './src/styles/docs-social-icons.css',
             ],
             components: {
                 Head: './src/overrides/Head.astro',
                 Header: './src/overrides/Header.astro',
+                SocialIcons: './src/overrides/SocialIcons.astro',
                 Hero: './src/overrides/Hero.astro',
                 Search: './src/overrides/Search.astro',
                 ThemeSelect: './src/overrides/ThemeSelect.astro',
@@ -107,12 +111,18 @@ export default defineConfig({
                     label: 'GitHub',
                     href: 'https://github.com/logfoxai/busker',
                 },
+                {
+                    icon: 'discord',
+                    label: 'Discord',
+                    href: 'https://discord.gg/2wyYnBDhWQ',
+                },
             ],
             sidebar: [
                 {
                     label: 'Introduction',
                     items: [
                         {label: 'Getting started', slug: 'getting-started'},
+                        {label: 'Skill & prompts', slug: 'coding-agents'},
                         {label: 'Markup', slug: 'markup'},
                     ],
                 },

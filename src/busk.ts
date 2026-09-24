@@ -11,6 +11,7 @@ import {
     stretchMoveGlide,
 } from './timeline.ts';
 import {assertScriptRoutine} from './assert-routine.ts';
+import {exploreHint} from './explore-hint.ts';
 import {pressableElement} from './pressable.ts';
 import type {Busker, MotionConfig, Move, Point, Routine, Task} from './types.ts';
 import {meetsViewportVisibility} from './viewport.ts';
@@ -19,16 +20,30 @@ const DEFAULT_START: Point = [0.5, 0.5];
 /** How long a missed click keeps the clickable things lit up. */
 const HINT_MS = 1500;
 
+function mountDemoCursor(root: HTMLElement): {el: HTMLElement; owned: boolean} {
+    const existing = root.querySelector<HTMLElement>('[data-cursor]');
+
+    if (existing) return {el: existing, owned: false};
+
+    const el = document.createElement('span');
+
+    el.setAttribute('data-cursor', '');
+    el.setAttribute('aria-hidden', 'true');
+    root.appendChild(el);
+
+    return {el, owned: true};
+}
+
 /**
  * Put on a show inside `root`.
  *
- * Markup: `[data-cursor]` for the pointer. UI state (scenes, modals, etc.) is
- * yours — use real click handlers and optional `tasks` / `onLoop`.
+ * UI state (scenes, modals, etc.) is yours — use real click handlers and optional
+ * `tasks` / `onLoop`. Busker creates `[data-cursor]` when your markup omits it.
  */
 export function busk(root: HTMLElement, routine: Routine): Busker {
     assertScriptRoutine(routine);
 
-    const cursor = root.querySelector<HTMLElement>('[data-cursor]');
+    const {el: cursor, owned: cursorOwned} = mountDemoCursor(root);
 
     const motion: MotionConfig = {...DEFAULT_MOTION, ...routine.motion};
     const glideEase = cubicBezierEasingCached(motion.easing ?? DEFAULT_MOTION.easing);
@@ -39,6 +54,12 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
     /** Where each selector was last seen, in case it stops being anywhere. */
     const lastSeen = new Map<string, Point>();
+    /**
+     * Where each move's target sat when its press began. After a press the
+     * cursor unbinds — following a live target through a reflow rides the
+     * layout instead of reading as a finished click.
+     */
+    const frozenAtPress = new Map<number, Point>();
 
     /** Skip stacked duplicates (e.g. two view layers) that are hidden but still in layout. */
     function isShown(el: Element): boolean {
@@ -82,6 +103,24 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         return at;
     }
 
+    /** Aim point for a move: live until press, then the frozen press point. */
+    function aimPoint(moveIndex: number, t: number): Point | null {
+        if (moveIndex < 0) return resolve(start);
+
+        const move = moves[moveIndex];
+        const frozen = frozenAtPress.get(moveIndex);
+
+        if (frozen) return frozen;
+
+        const at = resolve(move.to);
+
+        if (at && move.press !== undefined && t >= move.press) {
+            frozenAtPress.set(moveIndex, at);
+        }
+
+        return at;
+    }
+
     const resolveTarget = (to: string | Point, _from: Point): Point | null => resolve(to);
 
     function scheduleScript(): {moves: Move[]; duration: number; tasks: Task[]} {
@@ -111,6 +150,9 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const firedTasks = new Set<number>();
     /** Set while the show clicks for itself, so it does not mistake that for a visitor. */
     let clickingItself = false;
+    /** After a scripted press, ignore spurious pointerleave from scene/modal layout churn. */
+    let hintScriptedLeaveGraceUntil = 0;
+    const HINT_SCRIPTED_LEAVE_GRACE_MS = 320;
 
     /** Px endpoints for each move, fixed when the glide starts (DOM may move after click). */
     const glideEndpoints = new Map<number, {from: Point; to: Point}>();
@@ -144,6 +186,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
                 // Mock handlers must not take down the show mid-loop.
             } finally {
                 clickingItself = false;
+                hintScriptedLeaveGraceUntil = performance.now() + HINT_SCRIPTED_LEAVE_GRACE_MS;
             }
         });
     }
@@ -254,8 +297,6 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     }
 
     function drawCursor(move: Move | null, index: number, t: number): void {
-        if (!cursor) return;
-
         let from: Point | null = null;
         let to: Point | null = null;
 
@@ -271,8 +312,13 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         if (!from || !to) {
             from =
                 (index > 0 ? glideEndpoints.get(index - 1)?.to : null) ??
-                resolve(index > 0 ? moves[index - 1].to : start);
-            to = resolve(move ? move.to : start);
+                aimPoint(index > 0 ? index - 1 : -1, t);
+            to = move ? aimPoint(index, t) : resolve(start);
+        } else if (move && move.press !== undefined && t >= move.press) {
+            const frozen = frozenAtPress.get(index) ?? to;
+
+            frozenAtPress.set(index, frozen);
+            to = frozen;
         }
 
         if (!from || !to) return;
@@ -319,6 +365,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     function remeasureScript(): void {
         glidePreparedThrough = -1;
         glideEndpoints.clear();
+        frozenAtPress.clear();
         shownCursorX = Number.NaN;
         shownCursorY = Number.NaN;
         scriptSchedule = scheduleScript();
@@ -332,6 +379,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
         glidePreparedThrough = -1;
         glideEndpoints.clear();
+        frozenAtPress.clear();
         shownCursorX = Number.NaN;
         shownCursorY = Number.NaN;
         setShownHover(null);
@@ -380,6 +428,21 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    const exploreHintOption = routine.exploreHint;
+    const hint =
+        exploreHintOption === false
+            ? null
+            : exploreHint(
+                  root,
+                  exploreHintOption === undefined ? true : exploreHintOption,
+                  reducedMotion,
+                  {
+                      click: () => clickingItself,
+                      leave: () =>
+                          clickingItself || performance.now() < hintScriptedLeaveGraceUntil,
+                  },
+              );
+
     function play(): void {
         if (playing || aside || destroyed || reducedMotion || duration <= 0) return;
 
@@ -402,12 +465,18 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         if (aside) return;
         aside = true;
         pause();
+        hint?.dismiss();
         root.classList.add('is-aside');
         setShownHover(null);
         setShownPressed(null);
         shownPressing = false;
         shownRinging = false;
     }
+
+    /** Keep scripted `.click()` inside the mock from reaching window listeners (e.g. docs search). */
+    const stopScriptedClickBubble = (e: Event): void => {
+        if (clickingItself) e.stopPropagation();
+    };
 
     const onClick = (e: Event): void => {
         if (destroyed) return;
@@ -442,11 +511,15 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const syncViewportPlayback = (): void => {
         if (document.hidden) {
             pause();
+            hint?.retract();
             return;
         }
 
         if (meetsViewportVisibility(root, visibility)) play();
-        else pause();
+        else {
+            pause();
+            hint?.retract();
+        }
     };
 
     const scheduleSyncViewportPlayback = (): void => {
@@ -478,6 +551,8 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         viewportSyncRafId = 0;
         viewportSyncQueued = false;
         observer?.disconnect();
+        hint?.destroy();
+        root.removeEventListener('click', stopScriptedClickBubble);
         root.removeEventListener('click', onClick);
         document.removeEventListener('visibilitychange', onVisibilityChange);
         window.removeEventListener('scroll', scheduleSyncViewportPlayback);
@@ -488,8 +563,11 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         root.querySelectorAll('.is-pressed').forEach((el) => el.classList.remove('is-pressed'));
         root.querySelectorAll('.is-interactive').forEach((el) => el.classList.remove('is-interactive'));
         root.classList.remove('busker', 'is-aside');
-        cursor?.classList.remove('is-visible', 'is-pressing', 'is-ringing');
+        cursor.classList.remove('is-visible', 'is-pressing', 'is-ringing');
+        if (cursorOwned) cursor.remove();
     }
+
+    root.addEventListener('click', stopScriptedClickBubble);
 
     if (clickTargets.length) {
         for (const selector of clickTargets) {
@@ -523,7 +601,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         window.addEventListener('load', scheduleSyncViewportPlayback, {once: true});
         document.fonts?.ready.then(scheduleSyncViewportPlayback);
         syncViewportPlayback();
-        cursor?.classList.add('is-visible');
+        cursor.classList.add('is-visible');
     }
 
     return {
@@ -532,6 +610,9 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         },
         play,
         pause,
+        retractExploreHint(): void {
+            hint?.retract();
+        },
         stepAside,
         destroy,
     };

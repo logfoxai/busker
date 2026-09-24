@@ -1,0 +1,283 @@
+/* Crema splash mock — pair with mock.html and mock.ts */
+
+.mock {
+    --busker-accent: #b5651d;
+    --cream: #f7f1e8;
+    --cream-2: #efe6d6;
+    --ink: #3a2a1a;
+    --ink-soft: #7a6650;
+    --line: #e2d6c2;
+    --card: #fff;
+    --accent: #b5651d;
+    --accent-fg: #fff;
+    --pill: #e7d8c0;
+    --panel-veil: rgba(58, 42, 26, 0.34);
+    --ease: 0.16s ease;
+    --radius-tile: 0.6rem;
+
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 20rem;
+    overflow: hidden;
+    user-select: none;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.55);
+
+    & button {
+        border: 0;
+        font: inherit;
+        cursor: pointer;
+    }
+
+    & small,
+    & section[data-scene='roasters'] li span {
+        color: var(--ink-soft);
+        font-size: 0.78rem;
+    }
+
+    & > nav {
+        display: flex;
+        gap: 0.25rem;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.7rem 1.1rem;
+        background: var(--cream);
+        border-bottom: 1px solid var(--line);
+
+        & > button:first-child {
+            margin-right: auto;
+            padding: 0;
+            background: none;
+            color: var(--ink);
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            transition: color var(--ease);
+
+            &:is(:hover, .is-hover, :focus-visible) {
+                color: var(--accent);
+            }
+        }
+
+        & > button:not(:first-child) {
+            padding: 0.3rem 0.75rem;
+            border-radius: 999px;
+            background: none;
+            color: var(--ink-soft);
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition:
+                background var(--ease),
+                color var(--ease);
+
+            &:not(.is-active):is(:hover, .is-hover, :focus-visible) {
+                background: var(--cream-2);
+                color: var(--ink);
+            }
+
+            &.is-active {
+                background: var(--pill);
+                color: var(--ink);
+            }
+        }
+    }
+
+    & > main {
+        overflow: hidden;
+        position: relative;
+    }
+
+    & section[data-scene]:not(.is-active) {
+        display: none;
+    }
+
+    & section[data-scene] {
+        padding: 1.4rem 1.4rem 1.6rem;
+    }
+
+    & section h2 {
+        margin: 0 0 0.9rem;
+        color: var(--ink);
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    & section ul {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.7rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    & section[data-scene='roasters'] li,
+    & section[data-scene='checkout'] > p {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-tile);
+        background: var(--card);
+    }
+
+    & section li > button {
+        display: grid;
+        gap: 0.1rem;
+        width: 100%;
+        padding: 0.8rem 0.8rem 0.9rem;
+        border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+        border-radius: var(--radius-tile);
+        background: var(--cream-2);
+        color: var(--ink);
+        text-align: left;
+        transition:
+            background var(--ease),
+            border-color var(--ease),
+            box-shadow var(--ease);
+
+        & strong {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        & em {
+            font-size: 1.25rem;
+            font-style: normal;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+
+            & small {
+                font-weight: 600;
+            }
+        }
+
+        &:is(:hover, .is-hover, :focus-visible) {
+            background: var(--card);
+            border-color: var(--accent);
+            box-shadow: 0 6px 16px -8px rgb(0 0 0 / 0.2);
+        }
+    }
+
+    & section[data-scene='roasters'] li {
+        display: grid;
+        gap: 0.1rem;
+        padding: 0.7rem 0.8rem;
+
+        & strong {
+            color: var(--ink);
+            font-size: 0.9rem;
+        }
+    }
+
+    & section[data-scene='checkout'] > p {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.6rem;
+        margin: 0;
+        padding: 0.8rem 1rem;
+
+        & [data-summary-plan] {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        & [data-summary-price] {
+            color: var(--ink);
+            font-size: 1.05rem;
+            font-weight: 800;
+        }
+    }
+
+    & [data-checkout],
+    & [data-close] {
+        margin-top: 0.9rem;
+        padding: 0.5rem 1.1rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        transition:
+            background var(--ease),
+            box-shadow var(--ease);
+    }
+
+    & [data-checkout] {
+        background: var(--accent);
+        color: var(--accent-fg);
+
+        &:is(:hover, .is-hover, :focus-visible) {
+            background: color-mix(in srgb, var(--accent) 88%, var(--ink));
+            box-shadow: 0 4px 12px -6px rgb(0 0 0 / 0.25);
+        }
+    }
+
+    & [data-close] {
+        background: var(--pill);
+        color: var(--ink);
+
+        &:is(:hover, .is-hover, :focus-visible) {
+            background: color-mix(in srgb, var(--ink-soft) 24%, var(--pill));
+            box-shadow: 0 2px 10px -6px rgb(0 0 0 / 0.22);
+        }
+    }
+
+    & [data-panel] {
+        display: none;
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        padding: 1rem;
+        background: var(--panel-veil);
+        place-items: center;
+
+        &.is-open {
+            display: grid;
+        }
+
+        & article {
+            max-width: 15rem;
+            padding: 0.9rem 1rem;
+            border-radius: var(--radius-tile);
+            background: var(--card);
+            box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.45);
+            text-align: center;
+
+            & p:first-child {
+                margin: 0;
+                color: var(--ink);
+                font-size: 0.95rem;
+            }
+
+            & p:nth-child(2) {
+                margin: 0.3rem 0 0;
+                color: var(--ink-soft);
+                font-size: 0.85rem;
+                line-height: 1.5;
+            }
+        }
+    }
+}
+
+html[data-theme='dark'] .mock {
+    --cream: #1b1410;
+    --cream-2: #241a14;
+    --ink: #f1e8db;
+    --ink-soft: #a89888;
+    --line: #3a2d22;
+    --card: #2a201a;
+    --accent: #d4894a;
+    --accent-fg: #1b1410;
+    --pill: #3a2d22;
+    --panel-veil: rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 40rem) {
+    .mock section ul {
+        grid-template-columns: 1fr;
+    }
+
+    .mock > nav > button:not(:first-child) {
+        padding: 0.3rem 0.5rem;
+    }
+}

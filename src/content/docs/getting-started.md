@@ -1,5 +1,7 @@
 # Getting started
 
+For coding agents: [Working with Coding Agents](./coding-agents.md) (copy-paste prompts; skill [SKILL.md](../../skills/busker/SKILL.md)).
+
 ## 1. Install
 
 ```bash
@@ -10,38 +12,22 @@ Busker has no dependencies and runs in the browser. It ships types and ES module
 
 ## 2. Write the mock
 
-A mock is ordinary markup. Busker needs three things from it, all `data-` attributes so your class names stay yours:
+A mock is ordinary markup. Layout, styles, nav, and what clicks do are all yours. No busker-specific HTML required.
 
 ```html title="index.html"
 <div class="app">
     <nav>
-        <button data-nav-item="home">Home</button>
-        <button data-nav-item="alerts">Alerts</button>
+        <button type="button" data-nav-item="home">Home</button>
+        <button type="button" data-nav-item="alerts">Alerts</button>
     </nav>
 
-    <div class="app__screen">
-        <section data-scene="home" data-nav="home">
-            <p>Nothing is on fire.</p>
-        </section>
-
-        <section data-scene="alerts" data-nav="alerts">
-            <p>Two things are on fire.</p>
-        </section>
-    </div>
-
-    <span data-cursor></span>
+    <main>
+        <p>Your product UI lives here.</p>
+    </main>
 </div>
 ```
 
-`[data-scene]` marks each page of the mock, `[data-nav-item]` marks the nav, and `[data-cursor]` is the pointer busker moves. [Markup](./markup.md) has the full contract.
-
-Scenes are stacked on top of each other so they can cross-fade, which means they take no space of their own. Give the element that holds them a height, and the mock will keep it no matter which scene is up:
-
-```css
-.app__screen {
-    height: 20rem;
-}
-```
+Use any selectors in your routine (`data-nav-item` in the example is just a convenient hook). Wire click handlers in your own JavaScript so each `{ click }` does something visible &mdash; busker calls `.click()` on the element; it does not change the page for you. [Markup](./markup.md) lists what busker reads and writes.
 
 ## 3. Put on a show
 
@@ -67,18 +53,19 @@ if (root) {
 }
 ```
 
-That is the whole thing. Each `{ wait }` is a pause; each `{ click }` is a real press through your handlers. Glide speed comes from the routine's `motion` settings, not from the script, so you never maintain two clocks for the same UI change.
+That is the whole thing. Each `{ wait }` is a pause; each `{ click }` is a real press through your handlers. Glide speed comes from the routine's `motion` settings, not from the script, so you never maintain two clocks for the same UI change. The demo pointer is created for you; to restyle it or use your own SVG, see [Customizing the pointer](./styling.md#customizing-the-pointer).
 
 ## 4. Let people play with it
 
 Every selector in `clickTargets` is wired for the visitor too. Click anything the show can click and busker steps aside: the loop stops, the cursor disappears, and the mock is yours. Click something dead and it flashes what *is* clickable.
 
-You get that for free &mdash; see [When a visitor takes over](./taking-over.md).
+You get that for free &mdash; see [When a visitor takes over](./taking-over.md). By default a "Click to explore" pill tails the visitor's pointer when they hover the mock; pass `exploreHint: false` to turn it off.
 
 ## What busker does not do
 
 - **It does not record or replay.** There is no capture step and no video. The mock is your markup, and the show is a few lines of config.
 - **It does not fake the clicks.** `el.click()` is a real click through your real handlers, so the mock behaves the same whether the cursor pressed the button or a person did.
+- **It does not style the mock or swap views.** Your CSS and your handlers own navigation, modals, filters, and every state change. `busker.css` only covers cursor affordances (dot, ripple, miss hint, explore pill).
 - **It does not run off screen.** The loop only runs while the mock is on screen and the tab is in front.
 
 Next: [Markup](./markup.md) &middot; [Click-driven routines](./routines.md)

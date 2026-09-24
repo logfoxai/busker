@@ -1,6 +1,7 @@
 import {test} from 'kizu';
 import {GlobalRegistrator} from '@happy-dom/global-registrator';
 import {busk} from './busk.ts';
+import {shouldCloseOnOutsideClick} from './components/searchDialog.ts';
 import type {Busker, Routine} from './types.ts';
 
 GlobalRegistrator.register({url: 'https://busker.test', width: 1024, height: 768});
@@ -10,8 +11,8 @@ const MOCK = `
         <button data-nav-item="home">Home</button>
         <button data-nav-item="alerts">Alerts</button>
     </nav>
-    <section data-scene="home" data-nav="home"><p>home</p></section>
-    <section data-scene="list" data-nav="alerts"><button data-row="p0">row</button></section>
+    <section data-panel="home" data-nav="home"><p>home</p></section>
+    <section data-panel="list" data-nav="alerts"><button data-row="p0">row</button></section>
     <span data-cursor></span>
 `;
 
@@ -57,33 +58,33 @@ class FakeObserver implements IntersectionObserver {
 /**
  * happy-dom does no layout, so every rect is zero and the show would think it
  * is off screen. Give the root a size, and give everything inside it a box
- * that goes away when its scene is hidden, the way a real one does.
+ * that goes away when its panel is hidden, the way a real mock would.
  */
-function wireTestScenes(root: HTMLElement): {showScene: (scene: string) => void} {
-    const showScene = (scene: string): void => {
-        root.querySelectorAll<HTMLElement>('[data-scene]').forEach((el) => {
-            el.classList.toggle('is-active', el.dataset.scene === scene);
+function wireTestMock(root: HTMLElement): {showPanel: (panel: string) => void} {
+    const showPanel = (panel: string): void => {
+        root.querySelectorAll<HTMLElement>('[data-panel]').forEach((el) => {
+            el.classList.toggle('is-active', el.dataset.panel === panel);
         });
 
-        const navKey = root.querySelector<HTMLElement>(`[data-scene="${scene}"]`)?.dataset.nav;
+        const navKey = root.querySelector<HTMLElement>(`[data-panel="${panel}"]`)?.dataset.nav;
 
         root.querySelectorAll<HTMLElement>('[data-nav-item]').forEach((el) => {
             el.classList.toggle('is-active', el.dataset.navItem === navKey);
         });
     };
 
-    root.querySelector('[data-nav-item="home"]')?.addEventListener('click', () => showScene('home'));
-    root.querySelector('[data-nav-item="alerts"]')?.addEventListener('click', () => showScene('list'));
-    root.querySelector('[data-row="p0"]')?.addEventListener('click', () => showScene('home'));
+    root.querySelector('[data-nav-item="home"]')?.addEventListener('click', () => showPanel('home'));
+    root.querySelector('[data-nav-item="alerts"]')?.addEventListener('click', () => showPanel('list'));
+    root.querySelector('[data-row="p0"]')?.addEventListener('click', () => showPanel('home'));
 
-    const initial = root.querySelector<HTMLElement>('[data-scene].is-active')?.dataset.scene ?? 'home';
+    const initial = root.querySelector<HTMLElement>('[data-panel].is-active')?.dataset.panel ?? 'home';
 
-    showScene(initial);
+    showPanel(initial);
 
-    return {showScene};
+    return {showPanel};
 }
 
-function stage(routine: Routine): Stage & {showScene: (scene: string) => void} {
+function stage(routine: Routine): Stage & {showPanel: (panel: string) => void} {
     document.body.innerHTML = `<div id="root">${MOCK}</div>`;
 
     const root = document.getElementById('root');
@@ -93,9 +94,9 @@ function stage(routine: Routine): Stage & {showScene: (scene: string) => void} {
     root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
     root.querySelectorAll('*').forEach((el) => {
         el.getBoundingClientRect = (): DOMRect => {
-            const scene = el.closest('[data-scene]');
+            const panel = el.closest('[data-panel]');
 
-            return scene && !scene.classList.contains('is-active')
+            return panel && !panel.classList.contains('is-active')
                 ? new DOMRect(0, 0, 0, 0)
                 : new DOMRect(100, 50, 80, 20);
         };
@@ -111,19 +112,19 @@ function stage(routine: Routine): Stage & {showScene: (scene: string) => void} {
     globalThis.cancelAnimationFrame = (): void => {};
     performance.now = (): number => now;
 
-    const {showScene} = wireTestScenes(root);
+    const {showPanel} = wireTestMock(root);
 
     const show = busk(root, {
         ...routine,
         onLoop: routine.onLoop ?? ((): void => {
-            showScene('home');
+            showPanel('home');
         }),
     });
 
     return {
         root,
         show,
-        showScene,
+        showPanel,
         startShow: () => observers[0].fire(),
         tick: (ms): void => {
             now += ms;
@@ -157,17 +158,17 @@ test('the show clicks for real, so the mock changes through its own handlers', (
 
     const {root, startShow, tick} = stage(routine);
 
-    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-panel="home"]')?.classList.contains('is-active'), true);
 
     startShow();
     tick(350);
 
-    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-panel="list"]')?.classList.contains('is-active'), true);
     assert.equal(root.querySelector('[data-nav-item="alerts"]')?.classList.contains('is-active'), true);
 
 });
 
-test('a glide to a hidden scene uses the same px/s once that scene is visible', (assert) => {
+test('a glide to a hidden panel uses the same px/s once that panel is visible', (assert) => {
 
     document.body.innerHTML = `<div id="root">${MOCK}</div>`;
     const root = document.getElementById('root');
@@ -179,14 +180,14 @@ test('a glide to a hidden scene uses the same px/s once that scene is visible', 
         el.getBoundingClientRect = (): DOMRect => {
             if (el.matches('[data-nav-item="alerts"]')) return new DOMRect(0, 0, 80, 20);
             if (el.matches('[data-row="p0"]')) {
-                const scene = el.closest('[data-scene]');
+                const scene = el.closest('[data-panel]');
 
                 return scene?.classList.contains('is-active')
                     ? new DOMRect(400, 0, 80, 20)
                     : new DOMRect(0, 0, 0, 0);
             }
 
-            const scene = el.closest('[data-scene]');
+            const scene = el.closest('[data-panel]');
 
             return scene && !scene.classList.contains('is-active')
                 ? new DOMRect(0, 0, 0, 0)
@@ -204,7 +205,7 @@ test('a glide to a hidden scene uses the same px/s once that scene is visible', 
     globalThis.cancelAnimationFrame = (): void => {};
     performance.now = (): number => now;
 
-    const {showScene} = wireTestScenes(root);
+    const {showPanel} = wireTestMock(root);
 
     const show = busk(root, {
         motion: {pxPerSecond: 400, minMoveMs: 80, dwellMs: 0},
@@ -214,7 +215,7 @@ test('a glide to a hidden scene uses the same px/s once that scene is visible', 
             {click: '[data-row="p0"]'},
         ],
         clickTargets: ['[data-nav-item="alerts"]', '[data-row="p0"]'],
-        onLoop: () => showScene('home'),
+        onLoop: () => showPanel('home'),
     });
 
     const cursor = root.querySelector<HTMLElement>('[data-cursor]');
@@ -235,7 +236,7 @@ test('a glide to a hidden scene uses the same px/s once that scene is visible', 
         tick(50);
     }
 
-    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-panel="list"]')?.classList.contains('is-active'), true);
 
     const samples = new Set<string>();
 
@@ -256,13 +257,13 @@ test('the page holds still until the press lifts, so the click reads first', (as
 
     startShow();
 
-    // The cursor has arrived and gone down on the nav item. Changing the scene
+    // The cursor has arrived and gone down on the nav item. Changing the panel
     // now would take the button away mid-press, before the click could read.
     tick(150);
-    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-panel="home"]')?.classList.contains('is-active'), true);
 
     tick(200);
-    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-panel="list"]')?.classList.contains('is-active'), true);
 
 });
 
@@ -277,19 +278,19 @@ test('a routine that ends on a click still lands it', (assert) => {
     startShow();
     tick(350);
 
-    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-panel="list"]')?.classList.contains('is-active'), true);
 
 });
 
 test('the cursor holds its place when its own click takes the target away', (assert) => {
 
-    const {root, startShow, tick, showScene} = stage({
+    const {root, startShow, tick, showPanel} = stage({
         motion: TEST_MOTION,
         steps: [{click: '[data-row="p0"]'}],
         clickTargets: ['[data-row="p0"]'],
     });
 
-    showScene('list');
+    showPanel('list');
 
     const cursor = root.querySelector<HTMLElement>('[data-cursor]');
 
@@ -312,7 +313,7 @@ test('the cursor holds its place when its own click takes the target away', (ass
     tick(210);
     tick(16);
 
-    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-panel="home"]')?.classList.contains('is-active'), true);
     assert.equal(cursor?.classList.contains('is-ringing'), true);
     assert.equal(cursor?.style.translate, onTheRow);
     assert.equal(rowBtn?.classList.contains('is-pressed'), false);
@@ -335,7 +336,7 @@ test('the cursor does not chase a target that moves after the glide ends', (asse
                 return new DOMRect(100, rowTop, 80, 20);
             }
 
-            const scene = el.closest('[data-scene]');
+            const scene = el.closest('[data-panel]');
 
             return scene && !scene.classList.contains('is-active')
                 ? new DOMRect(0, 0, 0, 0)
@@ -353,16 +354,16 @@ test('the cursor does not chase a target that moves after the glide ends', (asse
     globalThis.cancelAnimationFrame = (): void => {};
     performance.now = (): number => now;
 
-    const {showScene} = wireTestScenes(root);
+    const {showPanel} = wireTestMock(root);
 
     busk(root, {
         motion: {pxPerSecond: 1e9, minMoveMs: 100, dwellMs: 200},
         steps: [{click: '[data-row="p0"]'}],
         clickTargets: ['[data-row="p0"]'],
-        onLoop: () => showScene('home'),
+        onLoop: () => showPanel('home'),
     });
 
-    showScene('list');
+    showPanel('list');
 
     const cursor = root.querySelector<HTMLElement>('[data-cursor]');
     const tick = (ms: number): void => {
@@ -403,11 +404,11 @@ test('a visitor click stops the show for good', (assert) => {
     clickAsVisitor('[data-nav-item="alerts"]');
 
     assert.equal(root.classList.contains('is-aside'), true);
-    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-panel="list"]')?.classList.contains('is-active'), true);
 
     // The loop is over: the second step never presses.
     tick(1000);
-    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-panel="list"]')?.classList.contains('is-active'), true);
 
 });
 
@@ -416,7 +417,7 @@ test('a visitor click on nothing lights up what is clickable', (assert) => {
     const {root, startShow, clickAsVisitor} = stage(routine);
 
     startShow();
-    clickAsVisitor('[data-scene="home"] p');
+    clickAsVisitor('[data-panel="home"] p');
 
     assert.equal(root.querySelector('[data-nav-item="alerts"]')?.classList.contains('is-hint'), true);
 
@@ -427,8 +428,42 @@ test('every clickable thing looks clickable', (assert) => {
     const {root} = stage(routine);
 
     assert.equal(root.querySelector('[data-nav-item="home"]')?.classList.contains('is-interactive'), true);
-    assert.equal(root.querySelector('[data-scene="home"] p')?.classList.contains('is-interactive'), false);
+    assert.equal(root.querySelector('[data-panel="home"] p')?.classList.contains('is-interactive'), false);
 
+});
+
+test('scripted clicks do not bubble to window listeners that close overlays', (assert) => {
+    const dialogFrame = document.createElement('div');
+    dialogFrame.className = 'dialog-frame';
+    document.body.appendChild(dialogFrame);
+
+    let searchOpen = true;
+    const onWindowClick = (event: MouseEvent): void => {
+        const target = event.target;
+        const targetIsLink =
+            (typeof target === 'object' && target !== null && 'href' in target) ||
+            (target instanceof Element && Boolean(target.closest('a[href]')));
+        if (
+            shouldCloseOnOutsideClick({
+                targetIsLink,
+                targetInDocument: document.body.contains(target as Node),
+                targetInDialogFrame: dialogFrame.contains(target as Node),
+            })
+        ) {
+            searchOpen = false;
+        }
+    };
+    window.addEventListener('click', onWindowClick);
+
+    const {startShow, tick, clickAsVisitor} = stage(routine);
+    startShow();
+    tick(350);
+    assert.equal(searchOpen, true, 'show click stays inside the mock');
+
+    clickAsVisitor('[data-nav-item="alerts"]');
+    assert.equal(searchOpen, false, 'visitor click still closes search');
+
+    window.removeEventListener('click', onWindowClick);
 });
 
 test('each beat presses once, and the loop starts over from the top', (assert) => {
@@ -451,7 +486,7 @@ test('each beat presses once, and the loop starts over from the top', (assert) =
 
     // Past the end of the routine: back to the top, and it presses again.
     tick(1150);
-    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-panel="home"]')?.classList.contains('is-active'), true);
     tick(350);
     assert.equal(clicks, 2);
 
@@ -476,24 +511,24 @@ test('a frame jump past loop end keeps leftover time in the next loop', (assert)
 
 });
 
-test('busk does not change which scene is active on init', (assert) => {
+test('busk does not change which panel is active on init', (assert) => {
 
     document.body.innerHTML = `<div id="root">${MOCK.replace(
-        'data-scene="list"',
-        'data-scene="list" class="is-active"',
-    ).replace('data-scene="home"', 'data-scene="home"')}</div>`;
+        'data-panel="list"',
+        'data-panel="list" class="is-active"',
+    ).replace('data-panel="home"', 'data-panel="home"')}</div>`;
 
     const root = document.getElementById('root');
 
     if (!root) throw new Error('no root');
 
     root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
-    wireTestScenes(root);
+    wireTestMock(root);
 
     const show = busk(root, {clickTargets: routine.clickTargets, steps: routine.steps});
 
-    assert.equal(root.querySelector('[data-scene="list"]')?.classList.contains('is-active'), true);
-    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), false);
+    assert.equal(root.querySelector('[data-panel="list"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-panel="home"]')?.classList.contains('is-active'), false);
     show.destroy();
 
 });
@@ -501,20 +536,20 @@ test('busk does not change which scene is active on init', (assert) => {
 test('onLoop runs when the playhead wraps', (assert) => {
 
     let loops = 0;
-    const {root, startShow, tick, showScene} = stage({
+    const {root, startShow, tick, showPanel} = stage({
         ...routine,
         onLoop: () => {
             loops += 1;
-            showScene('home');
+            showPanel('home');
         },
     });
 
-    showScene('list');
+    showPanel('list');
     startShow();
     tick(60_000);
 
     assert.equal(loops >= 1, true);
-    assert.equal(root.querySelector('[data-scene="home"]')?.classList.contains('is-active'), true);
+    assert.equal(root.querySelector('[data-panel="home"]')?.classList.contains('is-active'), true);
 
 });
 
@@ -850,6 +885,43 @@ test('is-hover applies only to the step target once the cursor reaches it', (ass
 
 });
 
+test('busk creates and removes [data-cursor] when the mock omits it', (assert) => {
+
+    const root = document.createElement('div');
+
+    root.innerHTML = '<button data-pick>Go</button>';
+    document.body.appendChild(root);
+
+    const show = busk(root, {
+        steps: [{wait: 100}],
+        clickTargets: ['[data-pick]'],
+    });
+
+    assert.equal(root.querySelector('[data-cursor]') !== null, true);
+
+    show.destroy();
+
+    assert.equal(root.querySelector('[data-cursor]'), null);
+
+    root.remove();
+
+});
+
+test('destroy leaves a markup-provided [data-cursor] in place', (assert) => {
+
+    const root = document.createElement('div');
+
+    root.innerHTML = '<span data-cursor></span>';
+    document.body.appendChild(root);
+
+    busk(root, {steps: [{wait: 100}]}).destroy();
+
+    assert.equal(root.querySelector('[data-cursor]') !== null, true);
+
+    root.remove();
+
+});
+
 test('destroy puts the mock back the way it was found', (assert) => {
 
     const {root, show, clickAsVisitor} = stage(routine);
@@ -862,5 +934,115 @@ test('destroy puts the mock back the way it was found', (assert) => {
     // The listener is gone too, so clicks fall through to the page.
     clickAsVisitor('[data-nav-item="alerts"]');
     assert.equal(root.classList.contains('is-aside'), false);
+
+});
+
+test('exploreHint pops in on hover and out for good when the visitor takes over', (assert) => {
+
+    const {root, clickAsVisitor} = stage({...routine, exploreHint: true});
+
+    const hint = document.body.querySelector('[data-explore-hint]');
+
+    assert.equal(hint?.classList.contains('is-visible'), false);
+
+    const move = new Event('pointermove') as PointerEvent;
+
+    Object.assign(move, {clientX: 100, clientY: 100, pointerType: 'mouse'});
+    root.dispatchEvent(move);
+
+    assert.equal(hint?.classList.contains('is-visible'), true);
+
+    clickAsVisitor('[data-nav-item="alerts"]');
+
+    assert.equal(hint?.classList.contains('is-visible'), false);
+
+});
+
+test('exploreHint stays up when the show clicks for itself', (assert) => {
+
+    const {root, startShow, tick} = stage({...routine, exploreHint: true});
+
+    const hint = document.body.querySelector('[data-explore-hint]');
+
+    const move = new Event('pointermove') as PointerEvent;
+
+    Object.assign(move, {clientX: 100, clientY: 100, pointerType: 'mouse'});
+    root.dispatchEvent(move);
+
+    assert.equal(hint?.classList.contains('is-visible'), true);
+
+    startShow();
+    tick(350);
+
+    assert.equal(root.classList.contains('is-aside'), false);
+    assert.equal(hint?.classList.contains('is-visible'), true);
+
+});
+
+test('exploreHint stays up through multiple show navigation clicks', (assert) => {
+
+    const {root, startShow, tick} = stage({...routine, exploreHint: true});
+
+    const hint = document.body.querySelector('[data-explore-hint]');
+
+    const move = new Event('pointermove') as PointerEvent;
+
+    Object.assign(move, {clientX: 100, clientY: 100, pointerType: 'mouse'});
+    root.dispatchEvent(move);
+
+    startShow();
+    tick(500);
+
+    assert.equal(root.classList.contains('is-aside'), false);
+    assert.equal(hint?.classList.contains('is-visible'), true);
+
+});
+
+test('exploreHint ignores spurious pointerleave after a show navigation click', (assert) => {
+
+    const {root, startShow, tick} = stage({...routine, exploreHint: true});
+
+    const hint = document.body.querySelector('[data-explore-hint]');
+
+    const move = new Event('pointermove') as PointerEvent;
+
+    Object.assign(move, {clientX: 100, clientY: 100, pointerType: 'mouse'});
+    root.dispatchEvent(move);
+
+    startShow();
+    tick(350);
+
+    const leave = new Event('pointerleave') as PointerEvent;
+
+    Object.assign(leave, {clientX: 0, clientY: 0, pointerType: 'mouse'});
+    root.dispatchEvent(leave);
+
+    assert.equal(hint?.classList.contains('is-visible'), true);
+
+});
+
+test('destroy removes the explore hint element', (assert) => {
+
+    const {show} = stage({...routine, exploreHint: true});
+
+    show.destroy();
+
+    assert.equal(document.body.querySelector('[data-explore-hint]'), null);
+
+});
+
+test('explore hint is on by default', (assert) => {
+
+    stage(routine);
+
+    assert.equal(document.body.querySelector('[data-explore-hint]') != null, true);
+
+});
+
+test('exploreHint false disables the pill', (assert) => {
+
+    stage({...routine, exploreHint: false});
+
+    assert.equal(document.body.querySelector('[data-explore-hint]'), null);
 
 });

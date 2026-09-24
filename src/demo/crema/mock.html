@@ -1,0 +1,86 @@
+<div class="mock" data-mock>
+    <nav>
+        <button type="button" data-nav-item="beans">Crema</button>
+        <button type="button" class="is-active" data-nav-item="beans">Beans</button>
+        <button type="button" data-nav-item="plans">Plans</button>
+        <button type="button" data-nav-item="roasters">Roasters</button>
+    </nav>
+    <main>
+        <section class="is-active" data-scene="beans">
+            <h2>Choose your bean</h2>
+            <ul>
+                <li>
+                    <button type="button" data-bean="huila">
+                        <strong>Huila</strong>
+                        <small>Colombia · chocolate, citrus</small>
+                    </button>
+                </li>
+                <li>
+                    <button type="button" data-bean="oaxaca">
+                        <strong>Oaxaca</strong>
+                        <small>Mexico · honey, almond</small>
+                    </button>
+                </li>
+                <li>
+                    <button type="button" data-bean="yirgacheffe">
+                        <strong>Yirgacheffe</strong>
+                        <small>Ethiopia · floral, bergamot</small>
+                    </button>
+                </li>
+            </ul>
+        </section>
+
+        <section data-scene="plans">
+            <h2>Choose your plan</h2>
+            <ul>
+                <li>
+                    <button type="button" data-plan="solo" data-name="Solo" data-price="$18/mo">
+                        <strong>Solo</strong>
+                        <em>$18<small>/mo</small></em>
+                        <small>250g · 1 roast</small>
+                    </button>
+                </li>
+                <li>
+                    <button type="button" data-plan="duo" data-name="Duo" data-price="$32/mo">
+                        <strong>Duo</strong>
+                        <em>$32<small>/mo</small></em>
+                        <small>500g · 2 roasts</small>
+                    </button>
+                </li>
+                <li>
+                    <button type="button" data-plan="family" data-name="Family" data-price="$54/mo">
+                        <strong>Family</strong>
+                        <em>$54<small>/mo</small></em>
+                        <small>1kg · 4 roasts</small>
+                    </button>
+                </li>
+            </ul>
+        </section>
+
+        <section data-scene="checkout" data-nav="plans">
+            <h2>You're almost there</h2>
+            <p>
+                <span data-summary-plan>Duo</span>
+                <span data-summary-price>$32/mo</span>
+            </p>
+            <button type="button" data-checkout>Start subscription</button>
+        </section>
+
+        <section data-scene="roasters">
+            <h2>The people behind the beans</h2>
+            <ul>
+                <li><strong>Marta</strong> <span>Oaxaca, MX</span></li>
+                <li><strong>Yusuf</strong> <span>Yirgacheffe, ET</span></li>
+                <li><strong>Lena</strong> <span>Huila, CO</span></li>
+            </ul>
+        </section>
+    </main>
+
+    <div data-panel role="dialog" aria-modal="true" aria-label="Subscription confirmed">
+        <article>
+            <p><strong>You're in.</strong></p>
+            <p>First batch ships Monday. We'll email your tracking link.</p>
+            <button type="button" data-close>Close</button>
+        </article>
+    </div>
+</div>

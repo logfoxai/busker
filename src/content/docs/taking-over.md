@@ -16,6 +16,19 @@ Busker's presses go through `el.click()` &mdash; real clicks, real handlers. It 
 
 `event.isTrusted` will not tell you the difference either, by the way: it is `false` for anything scripted, including test-runner and devtools clicks. Busker tracks its own presses directly instead.
 
+## The explore hint
+
+A looping show can read as a video. Set `exploreHint` on the routine and busker shows a pill that tails the visitor's pointer the first time they hover, inviting them in:
+
+```typescript
+busk(root, {
+    exploreHint: true, // or 'Try it yourself', or { text: '…', dismissAfterMs: 4000 }
+    steps: [/* … */],
+});
+```
+
+It pops in once when the pointer enters the mock and tails the pointer on the page. While they stay on the mock it auto pops out **1.8s** after the pill pops in (`dismissAfterMs`, default 1800). That clock starts when the hint becomes visible, not when the pop-in animation finishes (~220ms in `busker.css`), and the pop-out adds ~260ms after the timer — so “gone” can feel closer to ~2.1s wall clock. Moving the mouse does not extend the timer. Moving the mouse does not show it again — only leaving the mock and hovering again starts a fresh visit. Leaving the mock hides it right away; the pill keeps tailing the pointer until the pop-out animation finishes. A visitor click hides it for that visit; the show's own scripted presses do not, and brief `pointerleave` churn after a scripted click that opens a modal or reshapes the layout is ignored too. Takeover dismisses it for good. Busker creates the element; there is no markup to add. Touch pointers never see it. To restyle the pill, see [Styling](./styling.md#explore-hint).
+
 ## Handing over on purpose
 
 `stepAside()` does the same thing from your code &mdash; for a "try it yourself" button, or when a visitor focuses something inside the mock:

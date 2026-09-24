@@ -50,6 +50,18 @@ const motionConfig = p.object({
     easing: p.optional(cubicBezier),
 });
 
+const exploreHintConfig = p.object({
+    text: p.optional(nonEmptyString),
+    dismissAfterMs: p.optional(nonNegativeNumber),
+    durationMs: p.optional(nonNegativeNumber),
+    offsetX: p.optional(nonEmptyString),
+});
+
+const exploreHint = p.union(
+    [p.boolean(), nonEmptyString, exploreHintConfig],
+    'must be true, a label, or an ExploreHintConfig',
+);
+
 const routine = p.object({
     steps: p.array(step, {len: {min: 1}}),
     start: p.optional(point),
@@ -58,6 +70,7 @@ const routine = p.object({
     onLoop: p.optional(runCallback),
     visibility: p.optional(p.number({range: {min: 0, max: 1}})),
     freezeAt: p.optional(nonNegativeNumber),
+    exploreHint: p.optional(exploreHint),
 });
 
 export type RoutineInput = Infer<typeof routine>;

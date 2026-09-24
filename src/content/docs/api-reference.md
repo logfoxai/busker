@@ -26,6 +26,7 @@ Every routine has a non-empty **`steps`** array. Loop length is compiled from th
 | `onLoop` | `() => void` | none | Called when the playhead wraps to 0. |
 | `visibility` | `number` | `1` | How much of the root must be on screen to run, as a fraction. |
 | `freezeAt` | `number` | `0` | Frame to hold under `prefers-reduced-motion`. |
+| `exploreHint` | `boolean \| string \| ExploreHintConfig` | `true` | A "Click to explore" pill that tails the visitor's pointer. On by default; pass `false` to disable, a string for your own label, or a config object. |
 
 ## `Step`
 
@@ -48,6 +49,17 @@ One line in a click-driven script — exactly one of:
 | `easing` | `[0.4, 0, 0.2, 1]` | CSS cubic-bezier control points for glide progress. |
 
 Exports: `cubicBezierEasing`, `DEFAULT_EASING`, `DEFAULT_MOTION`.
+
+## `ExploreHintConfig`
+
+| Field | Default | What it does |
+|---|---|---|
+| `text` | `"Click to explore"` | Pill label. |
+| `dismissAfterMs` | `1800` | Ms after pop-in before auto pop-out (fixed for the visit; pointer motion does not extend it). |
+| `durationMs` | &mdash; | Alias for `dismissAfterMs`. |
+| `offsetX` | `1.75rem` | Gap to the right of the pointer (any CSS length). |
+
+Exports: `EXPLORE_HINT_TEXT`, `EXPLORE_HINT_DISMISS_MS`, `EXPLORE_HINT_OFFSET_X`.
 
 ## `compile(steps, resolveTarget, motion?, start?)`
 

@@ -7,6 +7,67 @@
  * change one, change the other.
  */
 
+:root {
+    /* Explore hint is on document.body — page-level tokens live here. */
+    --busker-cursor-z-index: 2147483647;
+    --busker-hint-offset-x: 1.75rem;
+    --busker-hint-bg: linear-gradient(
+        180deg,
+        rgb(255 255 255 / 0.94) 0%,
+        rgb(248 248 252 / 0.88) 100%
+    );
+    --busker-hint-ink: rgb(0 0 0 / 0.88);
+    --busker-hint-border: rgb(255 255 255 / 0.65);
+    --busker-hint-face-shadow:
+        0 1px 2px rgb(0 0 0 / 0.06),
+        0 4px 14px rgb(0 0 0 / 0.1),
+        inset 0 1px 0 rgb(255 255 255 / 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+        --busker-hint-bg: linear-gradient(
+            180deg,
+            rgb(44 44 52 / 0.94) 0%,
+            rgb(32 32 38 / 0.9) 100%
+        );
+        --busker-hint-ink: rgb(255 255 255 / 0.92);
+        --busker-hint-border: rgb(255 255 255 / 0.14);
+        --busker-hint-face-shadow:
+            0 1px 2px rgb(0 0 0 / 0.35),
+            0 4px 14px rgb(0 0 0 / 0.45),
+            inset 0 1px 0 rgb(255 255 255 / 0.08);
+    }
+}
+
+html[data-theme='dark'] {
+    --busker-hint-bg: linear-gradient(
+        180deg,
+        rgb(44 44 52 / 0.94) 0%,
+        rgb(32 32 38 / 0.9) 100%
+    );
+    --busker-hint-ink: rgb(255 255 255 / 0.92);
+    --busker-hint-border: rgb(255 255 255 / 0.14);
+    --busker-hint-face-shadow:
+        0 1px 2px rgb(0 0 0 / 0.35),
+        0 4px 14px rgb(0 0 0 / 0.45),
+        inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+html[data-theme='light'] {
+    --busker-hint-bg: linear-gradient(
+        180deg,
+        rgb(255 255 255 / 0.94) 0%,
+        rgb(248 248 252 / 0.88) 100%
+    );
+    --busker-hint-ink: rgb(0 0 0 / 0.88);
+    --busker-hint-border: rgb(255 255 255 / 0.65);
+    --busker-hint-face-shadow:
+        0 1px 2px rgb(0 0 0 / 0.06),
+        0 4px 14px rgb(0 0 0 / 0.1),
+        inset 0 1px 0 rgb(255 255 255 / 0.85);
+}
+
 .busker {
     --busker-accent: #7c3aed;
     --busker-cursor-size: 0.95rem;
@@ -14,7 +75,6 @@
     --busker-cursor-edge: #fff;
     --busker-cursor-shadow: rgb(0 0 0 / 0.3);
     --busker-cursor-z-index: 2147483647;
-    --busker-scene-ms: 0.4s;
 
     /* The cursor is positioned against the root. */
     position: relative;
@@ -117,61 +177,82 @@
     display: none;
 }
 
-/* Before busk(): hide inactive scene siblings so SSR matches t=0 without
-   collapsing the stack — the active scene stays in flow. */
-:has(> [data-scene]) > [data-scene]:not(.is-active) {
-    display: none;
-}
-
-/* Once busker owns the root, cross-fade stacking takes over. */
-.busker :has(> [data-scene]) > [data-scene]:not(.is-active) {
-    display: block;
-}
-
-/* Scenes are a stack, so the one going out can fade under the one coming in
-   rather than popping. They are out of flow, so whatever element holds them
-   needs a height of its own — from a parent, a grid track, or its own rule. */
-.busker :has(> [data-scene]) {
-    position: relative;
-}
-
-.busker [data-scene] {
-    inset: 0;
-    opacity: 0;
+/*
+ * "Click to explore" — frosted pill on document.body, fixed to the visitor's
+ * pointer (viewport coords). Not inside the mock, so overflow never clips it.
+ */
+/* left/top only — no transform on this node (cheap follow; face uses painted frost, not backdrop-filter). */
+[data-explore-hint] {
+    left: 0;
     pointer-events: none;
-    position: absolute;
-    translate: 0 4px;
+    position: fixed;
+    top: 0;
     visibility: hidden;
-
-    /* Visibility waits out the fade on the way out and switches at once on the
-       way in, so a scene nobody can see is not read out or tabbed into. */
-    transition:
-        opacity var(--busker-scene-ms) ease,
-        translate var(--busker-scene-ms) ease,
-        visibility 0s linear var(--busker-scene-ms);
+    z-index: var(--busker-cursor-z-index);
 }
 
-.busker [data-scene].is-active {
-    opacity: 1;
-    pointer-events: auto;
-    translate: none;
+/* Pill sits beside the pointer — must never steal hits from the mock underneath. */
+[data-explore-hint-pop],
+[data-explore-hint-face] {
+    pointer-events: none;
+}
+
+[data-explore-hint].is-visible,
+[data-explore-hint].is-hiding {
     visibility: visible;
+}
+
+/* Scale + opacity pop; frosted face is a child (hint uses left/top only for follow). */
+[data-explore-hint-pop] {
+    display: inline-block;
+    opacity: 0;
+    scale: 0.72;
+    translate: 0 -50%;
+    transform-origin: center center;
     transition:
-        opacity var(--busker-scene-ms) ease,
-        translate var(--busker-scene-ms) ease;
+        opacity 0.16s cubic-bezier(0.55, 0.08, 0.72, 0.22),
+        scale 0.16s cubic-bezier(0.55, 0.08, 0.72, 0.22);
+}
+
+[data-explore-hint-face] {
+    background: var(--busker-hint-bg);
+    border: 1px solid var(--busker-hint-border);
+    border-radius: 999px;
+    box-shadow: var(--busker-hint-face-shadow);
+    box-sizing: border-box;
+    color: var(--busker-hint-ink);
+    display: inline-flex;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1rem;
+    padding: 0.3rem 0.7rem;
+    white-space: nowrap;
+}
+
+[data-explore-hint].is-visible [data-explore-hint-pop] {
+    opacity: 1;
+    scale: 1;
+    transition:
+        opacity 0.22s cubic-bezier(0.34, 1.65, 0.64, 1),
+        scale 0.22s cubic-bezier(0.34, 1.65, 0.64, 1);
+}
+
+[data-explore-hint].is-hiding:not(.is-visible) [data-explore-hint-pop] {
+    opacity: 0;
+    scale: 0.78;
+    transition:
+        opacity 0.28s cubic-bezier(0.33, 1, 0.68, 1),
+        scale 0.26s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .busker [data-cursor] {
+    .busker [data-cursor],
+    [data-explore-hint-pop] {
         transition: none;
     }
 
     .busker .is-hint {
         animation: none;
-    }
-
-    .busker [data-scene],
-    .busker [data-scene].is-active {
-        transition: none;
     }
 }
