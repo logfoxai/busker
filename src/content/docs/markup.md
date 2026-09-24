@@ -1,14 +1,10 @@
 # Markup
 
-Busker reads one required attribute on your mock (`data-cursor`) plus a few optional press hints. It writes back a handful of classes for the cursor and affordances. Nothing else is assumed: no wrapper components, no required class names, no shadow DOM.
+Busker reads a few optional attributes on your mock and writes back classes for the cursor and affordances. Nothing else is assumed: no wrapper components, no required class names, no shadow DOM.
 
 ## What busker reads
 
-| Attribute | On | What it means |
-|---|---|---|
-| `data-cursor` | one element | The pointer. Busker positions it and shows the press. |
-
-Anything else &mdash; nav, rows, buttons, modals, inputs &mdash; is just your markup, targeted by whatever selector you like in `steps`, `clickTargets`, and your own click handlers.
+Anything &mdash; nav, rows, buttons, modals, inputs &mdash; is just your markup, targeted by whatever selector you like in `steps`, `clickTargets`, and your own click handlers.
 
 Optional press hints (yours to add):
 
@@ -40,7 +36,7 @@ One element is busker's own, not yours: when the routine sets [`exploreHint`](./
 
 Layout, colour, typography, and every UI change after a click are **100% yours**. Wire `click` handlers (or a framework) so scripted `{ click }` steps and visitor presses run the same code. Use any attributes and class names you want; busker only needs selectors that resolve when a step runs.
 
-[`busker.css`](./styling.md) covers cursor affordances only (dot, ripple, miss hint, explore pill). It does not style your product UI.
+[`busker.css`](./styling.md) covers demo affordances only (pointer, ripple, miss hint, explore pill). It does not style your product UI. To change the pointer, see [Customizing the pointer](./styling.md#customizing-the-pointer).
 
 ## The root element
 
@@ -48,11 +44,5 @@ The root is the element you pass to `busk()`. Two things follow from that:
 
 - **The cursor is positioned against it.** `busker.css` sets `position: relative` on `.busker` for you. If you are writing your own styles, the root needs to be a positioning context.
 - **Visibility is measured on it.** The show runs while the root is on screen, which means the root should be the visible frame of the mock, not a wrapper that is taller than the viewport. See [`visibility`](./api-reference.md#routine) if you want to loosen that.
-
-## The cursor
-
-`[data-cursor]` can be any element. `busker.css` styles it as the soft dot busker's own demos use, sized by `--busker-cursor-size`. To draw your own pointer instead, put an `<svg>` in there and skip the cursor rules &mdash; see [Styling](./styling.md).
-
-The cursor is hidden until `busk()` runs, so it never flashes on a page whose JavaScript has not loaded, and it stays hidden under `prefers-reduced-motion`.
 
 ← [Getting started](./getting-started.md) &middot; Next: [Click-driven routines](./routines.md)

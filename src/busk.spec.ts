@@ -885,6 +885,43 @@ test('is-hover applies only to the step target once the cursor reaches it', (ass
 
 });
 
+test('busk creates and removes [data-cursor] when the mock omits it', (assert) => {
+
+    const root = document.createElement('div');
+
+    root.innerHTML = '<button data-pick>Go</button>';
+    document.body.appendChild(root);
+
+    const show = busk(root, {
+        steps: [{wait: 100}],
+        clickTargets: ['[data-pick]'],
+    });
+
+    assert.equal(root.querySelector('[data-cursor]') !== null, true);
+
+    show.destroy();
+
+    assert.equal(root.querySelector('[data-cursor]'), null);
+
+    root.remove();
+
+});
+
+test('destroy leaves a markup-provided [data-cursor] in place', (assert) => {
+
+    const root = document.createElement('div');
+
+    root.innerHTML = '<span data-cursor></span>';
+    document.body.appendChild(root);
+
+    busk(root, {steps: [{wait: 100}]}).destroy();
+
+    assert.equal(root.querySelector('[data-cursor]') !== null, true);
+
+    root.remove();
+
+});
+
 test('destroy puts the mock back the way it was found', (assert) => {
 
     const {root, show, clickAsVisitor} = stage(routine);

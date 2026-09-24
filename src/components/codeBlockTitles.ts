@@ -1,3 +1,5 @@
+import {CODE_FILE_ICON_PATH, type CodeFileIconId} from './codeFileIconPaths';
+
 export const COPY_FEEDBACK_MS = 1500;
 
 export function copyButtonContent(
@@ -184,13 +186,18 @@ export function copyButtonMarkup(attrs: {
     );
 }
 
-function createKindMark(kind: string): HTMLElement {
-    const badge = document.createElement('span');
-    badge.className = 'cs-code-kind';
-    badge.dataset.kind = kind;
-    badge.textContent = kind;
-    badge.setAttribute('aria-hidden', 'true');
-    return badge;
+function createFileIconMark(kind: string): SVGSVGElement {
+    const iconId = splashCodeTabIconFromKind(kind) ?? 'code';
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.classList.add('cs-code-file-icon');
+    svg.dataset.kind = kind;
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('viewBox', '0 0 256 256');
+    svg.setAttribute('fill', 'currentColor');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', CODE_FILE_ICON_PATH[iconId]);
+    svg.append(path);
+    return svg;
 }
 
 function ensureDots(header: HTMLElement): void {
@@ -239,21 +246,8 @@ function ensureCopyInHeader(frame: HTMLElement, header: HTMLElement): void {
     });
 }
 
-/** Phosphor `File*` icon id for splash tab chrome (not text badges). */
-export type SplashCodeTabIconId =
-    | 'html'
-    | 'css'
-    | 'ts'
-    | 'tsx'
-    | 'js'
-    | 'jsx'
-    | 'json'
-    | 'md'
-    | 'py'
-    | 'go'
-    | 'rs'
-    | 'yml'
-    | 'code';
+/** Phosphor `File*` icon id for code tab chrome (splash tabs + docs code blocks). */
+export type SplashCodeTabIconId = CodeFileIconId;
 
 const SPLASH_TAB_ICON: Readonly<Record<string, SplashCodeTabIconId>> = {
     HTML: 'html',
@@ -291,7 +285,7 @@ function buildTitleNodes(text: string): Node[] {
     const nodes: Node[] = [];
 
     if (kind) {
-        nodes.push(createKindMark(kind));
+        nodes.push(createFileIconMark(kind));
     }
 
     const name = document.createElement('span');
@@ -349,7 +343,12 @@ function enhanceTitle(frame: HTMLElement): void {
         return;
     }
 
-    if (title.dataset.csEnhanced === '1' && title.querySelector('.cs-code-name')) {
+    if (
+        title.dataset.csEnhanced === '1'
+        && title.querySelector('.cs-code-name')
+        && title.querySelector('.cs-code-file-icon')
+        && !title.querySelector('.cs-code-kind')
+    ) {
         return;
     }
 

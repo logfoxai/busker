@@ -80,7 +80,6 @@ export function exploreHint(
     hint.style.pointerEvents = 'none';
     hint.dataset.exploreHint = '';
     hint.dataset.exploreHintFor = root.id;
-    if (root.closest('[data-hero-mock]')) hint.dataset.exploreHintScope = 'hero-mock';
     hint.setAttribute('aria-hidden', 'true');
     const pop = document.createElement('span');
     pop.dataset.exploreHintPop = '';

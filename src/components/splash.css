@@ -1,6 +1,5 @@
 /*
- * Splash homepage — aligned with callspec src/components/splash.css (hero + chrome).
- * Loaded from src/pages/index.astro.
+ * Busker splash homepage — src/pages/index.astro
  */
 
 html:not([data-has-sidebar]):has(.splash-page) {
@@ -9,8 +8,8 @@ html:not([data-has-sidebar]):has(.splash-page) {
     --splash-section-pad-y: clamp(4rem, 8vw, 5.5rem);
     --splash-section-inner-gap: clamp(2rem, 4vw, 2.75rem);
     --splash-intro-gap: clamp(1.25rem, 2.5vw, 1.75rem);
+    --splash-accent-icon: hsl(262 52% 62%);
 
-    /* Dark splash chrome */
     &[data-theme='dark'] {
         --sl-color-bg: #07080c;
         --sl-color-black: #07080c;
@@ -30,22 +29,8 @@ html:not([data-has-sidebar]):has(.splash-page) {
         --sl-color-text: var(--sl-color-gray-2);
         --cs-ink: #f4f6fb;
         --cs-muted: #9aa3b5;
-        --cs-line: #2a2f3c;
-        --splash-hero-stage-bg: hsl(228 16% 9%);
-        --splash-hero-viewport-bg: hsl(228 15% 14%);
-        --splash-demo-bg: var(--splash-hero-stage-bg);
-        --splash-hero-secondary-bg: hsl(228 14% 26%);
-        --splash-demo-secondary-bg: hsl(228 12% 32%);
-        --splash-demo-secondary-hover-bg: hsl(228 10% 44%);
-        --splash-primary-hover-bg: hsl(262 58% 72%);
-        --splash-primary-hover-fg: hsl(262 28% 8%);
+        --splash-secondary-bg: hsl(228 14% 26%);
         --splash-secondary-hover-bg: hsl(228 12% 34%);
-        --splash-secondary-hover-fg: var(--cs-ink);
-        --splash-code-wash:
-            radial-gradient(ellipse 85% 70% at 8% 0%, hsl(262 48% 52% / 0.085), transparent 58%),
-            radial-gradient(ellipse 75% 65% at 100% 100%, hsl(172 50% 40% / 0.058), transparent 55%),
-            hsl(228 16% 10%);
-        --splash-code-edge: color-mix(in srgb, hsl(172 40% 55%) 3%, var(--cs-line));
         color-scheme: dark;
 
         &,
@@ -54,7 +39,6 @@ html:not([data-has-sidebar]):has(.splash-page) {
         }
     }
 
-    /* Light splash chrome */
     &[data-theme='light'] {
         --sl-color-bg: #ffffff;
         --sl-color-black: #ffffff;
@@ -74,21 +58,9 @@ html:not([data-has-sidebar]):has(.splash-page) {
         --sl-color-text: var(--sl-color-gray-2);
         --cs-ink: #10131a;
         --cs-muted: #5a6170;
-        --cs-line: #dde1ea;
-        --splash-hero-stage-bg: hsl(228 16% 92%);
-        --splash-hero-viewport-bg: hsl(228 22% 97%);
-        --splash-demo-bg: var(--splash-hero-stage-bg);
-        --splash-hero-secondary-bg: hsl(228 14% 84%);
-        --splash-demo-secondary-bg: #ffffff;
-        --splash-primary-hover-bg: hsl(262 52% 58%);
-        --splash-primary-hover-fg: #f8fafc;
+        --splash-secondary-bg: hsl(228 14% 84%);
         --splash-secondary-hover-bg: hsl(228 12% 78%);
-        --splash-secondary-hover-fg: var(--cs-ink);
-        --splash-code-wash:
-            radial-gradient(ellipse 85% 70% at 8% 0%, hsl(262 55% 62% / 0.18), transparent 58%),
-            radial-gradient(ellipse 75% 65% at 100% 100%, hsl(172 45% 48% / 0.13), transparent 55%),
-            var(--cs-code-bg, #f4f5f8);
-        --splash-code-edge: color-mix(in srgb, hsl(172 35% 42%) 6%, var(--cs-line));
+        --splash-accent-icon: hsl(262 48% 48%);
         color-scheme: light;
 
         &,
@@ -120,98 +92,49 @@ html:not([data-has-sidebar]):has(.splash-page) {
         padding-inline: var(--sl-content-pad-x);
     }
 
-    main {
+    main,
+    .sl-container {
         position: relative;
     }
 
     .sl-container {
-        position: relative;
         z-index: 1;
+
+        & > .sl-markdown-content {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
     }
 
-    .sl-container > .sl-markdown-content {
-        margin-top: 0;
-        padding-top: 0;
-        border-top: none;
-    }
-}
-
-/* ─── Hero ───────────────────────────────────────────────────────────────── */
-
-.splash-hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 0;
-    padding-block: var(--splash-section-pad-y) 0;
-    position: relative;
-    z-index: 1;
-
-    & > .splash-hero__lead,
-    & > .splash-hero__cta {
-        margin-block-start: var(--splash-intro-gap);
-    }
-
-    .splash-hero__code {
-        margin: 0;
-        font-family: var(--cs-font-heading);
-        font-size: clamp(3.5rem, 10vw, 5.5rem);
-        font-weight: 600;
-        letter-spacing: -0.06em;
-        line-height: 0.95;
-        color: var(--cs-cyan);
-        animation: splash-fade-up 0.55s ease both;
-    }
-
-    .splash-hero__headline {
-        margin: 0;
-        width: 100%;
-        max-width: none;
-        font-family: var(--cs-font-heading);
-        font-size: clamp(2.35rem, 6.2vw, 4rem);
-        font-weight: 600;
-        letter-spacing: -0.045em;
-        line-height: 1.18;
-        text-wrap: balance;
+    .splash-hero__actions .sl-link-button.secondary {
+        border: none;
+        box-shadow: none;
         color: var(--cs-ink);
-        overflow: visible;
-        padding-block-end: 0.08em;
-        animation: splash-fade-up 0.6s ease 0.05s both;
+
+        &:hover {
+            box-shadow: none;
+            color: var(--cs-ink);
+        }
     }
 
-    .splash-hero__click-icon {
-        display: inline-block;
-        width: 0.82em;
-        height: 0.82em;
-        margin-inline-start: 0.18em;
-        vertical-align: -0.1em;
-        color: hsl(262 52% 62%);
+    &[data-theme='dark'] .splash-hero__actions .sl-link-button.secondary {
+        --cs-btn-fill: var(--splash-secondary-bg);
+        background: var(--splash-secondary-bg);
+
+        &:hover {
+            --cs-btn-fill: var(--splash-secondary-hover-bg);
+            background: var(--splash-secondary-hover-bg);
+        }
     }
 
-    html:not([data-has-sidebar]):has(.splash-page)[data-theme='light'] .splash-hero__click-icon {
-        color: hsl(262 48% 48%);
-    }
+    &[data-theme='light'] .splash-hero__actions .sl-link-button.secondary {
+        --cs-btn-light-fill: var(--splash-secondary-bg);
+        background: var(--splash-secondary-bg);
 
-    .splash-hero__pitch {
-        margin: 0;
-        max-width: none;
-        width: 100%;
-        font-family: var(--cs-font-heading);
-        font-size: clamp(1.05rem, 2.1vw, 1.45rem);
-        font-weight: 550;
-        letter-spacing: -0.025em;
-        line-height: 1.35;
-        text-wrap: nowrap;
-        white-space: nowrap;
-        text-align: center;
-        color: var(--cs-ink);
-        animation: splash-fade-up 0.6s ease 0.1s both;
-
-        @media (max-width: 40rem) {
-            white-space: normal;
-            text-wrap: balance;
-            font-size: clamp(1.05rem, 3.8vw, 1.25rem);
+        &:hover {
+            --cs-btn-light-fill: var(--splash-secondary-hover-bg);
+            background: var(--splash-secondary-hover-bg);
         }
     }
 }
@@ -221,92 +144,43 @@ html:not([data-has-sidebar]):has(.splash-page) {
     flex-direction: column;
 }
 
-.splash-home {
-    margin-block-start: var(--splash-section-inner-gap);
-    margin-inline: auto;
-    max-width: 54rem;
-}
-
-.splash-hero__cta {
+.splash-page .splash-hero {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.4rem;
-    margin-inline: 0;
-    margin-block-end: 0;
+    gap: var(--splash-intro-gap);
+    padding-block: var(--splash-section-pad-y) 0;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.splash-page .splash-hero .splash-hero__headline {
+    margin: 0;
     width: 100%;
-}
-
-.splash-hero .splash-hero__cta {
-    animation: splash-fade-up 0.6s ease 0.18s both;
-}
-
-.splash-hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 0.85rem;
-    margin: 0 0 0.85rem;
-}
-
-.splash-hero__actions .sl-link-button {
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     font-family: var(--cs-font-heading);
-    font-size: 1.2rem;
+    font-size: clamp(2.35rem, 6.2vw, 4rem);
     font-weight: 600;
-    letter-spacing: -0.015em;
-    height: 3.5rem;
-    min-height: 3.5rem;
-    padding: 0 1.85rem;
-    border: none;
-    border-radius: 999px;
-    line-height: 1;
-    gap: 0.65rem;
-    transition:
-        background-color 0.15s ease,
-        color 0.15s ease,
-        box-shadow 0.15s ease;
-
-    /* Beat Starlight LinkButton desktop padding/type (50rem media). */
-    @media (min-width: 50rem) {
-        font-size: 1.2rem;
-        padding: 0 1.85rem;
-    }
-
-    svg,
-    .splash-hero__cta-icon {
-        flex-shrink: 0;
-        width: 1.55rem;
-        height: 1.55rem;
-        transition: transform 0.15s ease;
-    }
-
-    &.sl-link-button--forward:hover svg {
-        transform: translateX(0.2rem);
-    }
-
-    &.sl-link-button--back:hover svg {
-        transform: translateX(-0.2rem);
-    }
-
-    /* Primary — solid fill from docs-brand-buttons.css */
-    &.primary {
-        font-weight: 600;
-    }
-
-    &.secondary {
-        font-weight: 600;
-    }
+    letter-spacing: -0.045em;
+    line-height: 1.18;
+    text-wrap: balance;
+    color: var(--cs-ink);
+    overflow: visible;
+    padding-block-end: 0.08em;
+    animation: splash-fade-up 0.6s ease 0.05s both;
 }
 
-/* Longer intro copy (busker splash). */
-.splash-hero .splash-hero__lead {
-    margin-inline: 0;
-    margin-block-end: 0;
+.splash-page .splash-hero .splash-hero__click-icon {
+    display: inline-block;
+    width: 0.82em;
+    height: 0.82em;
+    margin-inline-start: 0.18em;
+    vertical-align: -0.1em;
+    color: var(--splash-accent-icon);
+}
+
+.splash-page .splash-hero .splash-hero__lead {
+    margin: 0;
     max-width: 48rem;
     width: 100%;
     font-family: var(--cs-font-heading);
@@ -315,12 +189,67 @@ html:not([data-has-sidebar]):has(.splash-page) {
     letter-spacing: -0.025em;
     line-height: 1.5;
     text-wrap: balance;
-    text-align: center;
     color: var(--cs-ink);
     animation: splash-fade-up 0.6s ease 0.1s both;
 }
 
-.splash-hero .splash-hero__meta {
+.splash-page .splash-hero .splash-hero__cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    margin: 0;
+    animation: splash-fade-up 0.6s ease 0.18s both;
+}
+
+.splash-page .splash-hero .splash-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.85rem;
+    margin: 0 0 0.85rem;
+}
+
+.splash-page .splash-hero .splash-hero__actions .sl-link-button {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    height: 3.5rem;
+    min-height: 3.5rem;
+    padding: 0 1.85rem;
+    border: none;
+    border-radius: 999px;
+    font-family: var(--cs-font-heading);
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1;
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.splash-page .splash-hero .splash-hero__actions .sl-link-button svg {
+    flex-shrink: 0;
+    width: 1.55rem;
+    height: 1.55rem;
+    transition: transform 0.15s ease;
+}
+
+.splash-page .splash-hero .splash-hero__actions .sl-link-button.sl-link-button--forward:hover svg {
+    transform: translateX(0.2rem);
+}
+
+.splash-page .splash-hero .splash-hero__actions .sl-link-button.sl-link-button--back:hover svg {
+    transform: translateX(-0.2rem);
+}
+
+.splash-page .splash-hero .splash-hero__meta {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -334,12 +263,12 @@ html:not([data-has-sidebar]):has(.splash-page) {
     animation: splash-fade-up 0.6s ease 0.22s both;
 }
 
-.splash-hero .splash-hero__meta > li {
+.splash-page .splash-hero .splash-hero__meta > li {
     display: inline-flex;
     align-items: center;
 }
 
-.splash-hero .splash-hero__meta > li:not(:first-child)::before {
+.splash-page .splash-hero .splash-hero__meta > li:not(:first-child)::before {
     content: '';
     flex-shrink: 0;
     width: 0.3125rem;
@@ -351,23 +280,38 @@ html:not([data-has-sidebar]):has(.splash-page) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .splash-hero__headline,
-    .splash-hero__pitch,
-    .splash-hero__lead,
-    .splash-hero__meta,
-    .splash-hero__cta,
-    .splash-hero__actions,
-    .splash-features,
-    .splash-hero__stage {
+    .splash-page .splash-hero .splash-hero__headline,
+    .splash-page .splash-hero .splash-hero__lead,
+    .splash-page .splash-hero .splash-hero__cta,
+    .splash-page .splash-hero .splash-hero__meta {
         animation: none;
     }
 
-    .splash-hero__actions .sl-link-button--forward:hover svg,
-    .splash-hero__actions .sl-link-button--back:hover svg,
-    .splash-hero__actions .sl-link-button:hover,
-    .splash-hero__actions .sl-link-button:active {
+    .splash-page .splash-hero .splash-hero__actions .sl-link-button:hover svg,
+    .splash-page .splash-hero .splash-hero__actions .sl-link-button:active {
         transform: none;
     }
+}
+
+.splash-page .splash-home {
+    margin-block-start: var(--splash-section-inner-gap);
+    margin-inline: auto;
+    max-width: 54rem;
+}
+
+.splash-page .splash-home .splash__code {
+    margin-top: 3.5rem;
+}
+
+.splash-page .splash-home .splash__code h2 {
+    margin: 0 0 1rem;
+    font-family: var(--cs-font-heading);
+    color: var(--cs-ink);
+}
+
+.splash-page .splash-home .splash__code > p {
+    margin: 0 0 1.5rem;
+    color: var(--cs-muted);
 }
 
 @keyframes splash-fade-up {
@@ -379,65 +323,5 @@ html:not([data-has-sidebar]):has(.splash-page) {
     to {
         opacity: 1;
         transform: none;
-    }
-}
-
-html[data-theme='dark'] .splash-hero__actions .sl-link-button.secondary {
-    --cs-btn-fill: var(--splash-hero-secondary-bg);
-    background: var(--splash-hero-secondary-bg);
-    border: none;
-    box-shadow: none;
-    color: var(--cs-ink);
-
-    &:hover {
-        --cs-btn-fill: var(--splash-secondary-hover-bg);
-        background: var(--splash-secondary-hover-bg);
-        box-shadow: none;
-        color: var(--splash-secondary-hover-fg);
-    }
-}
-
-html[data-theme='dark'] .splash-demo .splash-hero__actions .sl-link-button.secondary:not(.splash-demo__run-local) {
-    --cs-btn-fill: var(--splash-demo-secondary-bg);
-    background: var(--splash-demo-secondary-bg);
-    border: none;
-    box-shadow: none;
-    color: var(--cs-ink);
-
-    &:hover {
-        --cs-btn-fill: var(--splash-demo-secondary-hover-bg);
-        background: var(--splash-demo-secondary-hover-bg);
-        box-shadow: none;
-        color: var(--splash-secondary-hover-fg);
-    }
-}
-
-html:not([data-has-sidebar]):has(.splash-page)[data-theme='light'] .splash-hero .splash-hero__actions .sl-link-button.secondary {
-    --cs-btn-light-fill: var(--splash-hero-secondary-bg);
-    background: var(--splash-hero-secondary-bg);
-    border: none;
-    box-shadow: none;
-    color: var(--cs-ink);
-
-    &:hover {
-        --cs-btn-light-fill: var(--splash-secondary-hover-bg);
-        background: var(--splash-secondary-hover-bg);
-        box-shadow: none;
-        color: var(--splash-secondary-hover-fg);
-    }
-}
-
-html:not([data-has-sidebar]):has(.splash-page)[data-theme='light'] .splash-demo .splash-hero__actions .sl-link-button.secondary:not(.splash-demo__run-local) {
-    --cs-btn-light-fill: var(--splash-demo-secondary-bg);
-    background: var(--splash-demo-secondary-bg);
-    border: none;
-    box-shadow: none;
-    color: var(--cs-ink);
-
-    &:hover {
-        --cs-btn-light-fill: var(--splash-demo-secondary-hover-bg);
-        background: var(--splash-demo-secondary-hover-bg);
-        box-shadow: none;
-        color: var(--splash-secondary-hover-fg);
     }
 }

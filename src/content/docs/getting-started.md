@@ -1,5 +1,7 @@
 # Getting started
 
+For coding agents: [Working with Coding Agents](./coding-agents.md) (copy-paste prompts; skill [SKILL.md](../../skills/busker/SKILL.md)).
+
 ## 1. Install
 
 ```bash
@@ -10,7 +12,7 @@ Busker has no dependencies and runs in the browser. It ships types and ES module
 
 ## 2. Write the mock
 
-A mock is ordinary markup. Busker needs **`[data-cursor]`** on the element that should move. Everything else &mdash; layout, styles, nav, what clicks do &mdash; is yours.
+A mock is ordinary markup. Layout, styles, nav, and what clicks do are all yours. No busker-specific HTML required.
 
 ```html title="index.html"
 <div class="app">
@@ -22,8 +24,6 @@ A mock is ordinary markup. Busker needs **`[data-cursor]`** on the element that 
     <main>
         <p>Your product UI lives here.</p>
     </main>
-
-    <span data-cursor></span>
 </div>
 ```
 
@@ -53,7 +53,7 @@ if (root) {
 }
 ```
 
-That is the whole thing. Each `{ wait }` is a pause; each `{ click }` is a real press through your handlers. Glide speed comes from the routine's `motion` settings, not from the script, so you never maintain two clocks for the same UI change.
+That is the whole thing. Each `{ wait }` is a pause; each `{ click }` is a real press through your handlers. Glide speed comes from the routine's `motion` settings, not from the script, so you never maintain two clocks for the same UI change. The demo pointer is created for you; to restyle it or use your own SVG, see [Customizing the pointer](./styling.md#customizing-the-pointer).
 
 ## 4. Let people play with it
 

@@ -10,7 +10,7 @@ npm run validate
 
 After `npm ci`, run **`npm run astro:sync`** once so `.astro/types.d.ts` exists for the docs site (Starlight splash and guides). The editor uses `tsconfig.astro.json` for `.astro` files and `tsconfig.lib.json` for the library.
 
-**Cmd+click class names** on the splash page (e.g. `splash__lead` in the markup → the `<style is:global>` block in the same `index.astro`): install the recommended [HTML CSS Support](https://marketplace.visualstudio.com/items?itemName=ecmel.vscode-html-css) extension, then reload the window (`css.enabledLanguages` includes `astro` in `.vscode/settings.json`).
+**Cmd+click class names** on the splash page (e.g. `splash-hero__lead` in `index.astro` → nested under `.splash-page .splash-hero` in `src/components/splash.css`): install [HTML CSS Support](https://marketplace.visualstudio.com/items?itemName=ecmel.vscode-html-css), then reload the window (`css.enabledLanguages` includes `astro` in `.vscode/settings.json`).
 
 ## Scripts
 

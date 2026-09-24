@@ -8,22 +8,20 @@ import '@logfox/busker/busker.css';
 
 Or copy it into your own stylesheet and edit it. There is nothing clever in there.
 
-## Custom properties
+## Customizing the pointer
 
-Set these on the root, or anywhere above it:
+You do not add pointer markup to your mock. When `busk()` starts, busker creates a `[data-cursor]` element on the root unless you already put one there. The default is a soft dot (not an arrow) so it reads as part of the demo, not the visitor's OS cursor.
+
+**Tune the default** with CSS variables on the mock root (or any ancestor):
 
 | Property | Default | What it is |
 |---|---|---|
-| `--busker-accent` | `#7c3aed` | The press colour and the ripple. Set this to your brand colour. |
-| `--busker-cursor-size` | `0.95rem` | Diameter of the dot. |
-| `--busker-cursor-fill` | `rgb(0 0 0 / 0.42)` | The dot at rest. |
-| `--busker-cursor-edge` | `#fff` | The ring around the dot that keeps it visible on dark UI. |
-| `--busker-cursor-shadow` | `rgb(0 0 0 / 0.3)` | The dot's drop shadow. |
-| `--busker-cursor-z-index` | `2147483647` | Keeps the pointer above in-mock overlays and modals. |
-| `--busker-hint-bg` | light frosted gradient on `:root` (see `busker.css`) | Explore-hint pill fill (painted frost, no blur). |
-| `--busker-hint-ink` | dark text in light mode, light text in dark mode | The explore-hint label. |
-| `--busker-hint-border` | matches mode in `busker.css` | Pill outline. |
-| `--busker-hint-face-shadow` | matches mode in `busker.css` | Pill depth (no `backdrop-filter`). |
+| `--busker-accent` | `#7c3aed` | Press colour and click ripple. Match your brand. |
+| `--busker-cursor-size` | `0.95rem` | Dot diameter. |
+| `--busker-cursor-fill` | `rgb(0 0 0 / 0.42)` | Dot fill at rest. |
+| `--busker-cursor-edge` | `#fff` | Ring so the dot stays visible on dark UI. |
+| `--busker-cursor-shadow` | `rgb(0 0 0 / 0.3)` | Dot drop shadow. |
+| `--busker-cursor-z-index` | `2147483647` | Stack above in-mock overlays. |
 
 ```css
 .my-mock {
@@ -32,13 +30,17 @@ Set these on the root, or anywhere above it:
 }
 ```
 
-## Drawing your own pointer
-
-The default cursor is a soft dot rather than an arrow, because an arrow on a screenshot of an app reads as *your* mouse and people try to move it. If you want an arrow anyway, put one in the cursor element and drop the dot styling:
+**Use your own shape** (arrow, branded SVG, etc.): add one element with `data-cursor` inside the mock root before you call `busk()`. Busker moves that element instead of creating a dot. `destroy()` removes a busker-created cursor only; it leaves yours in the DOM.
 
 ```html
-<span data-cursor><svg viewBox="0 0 11 18" width="16"><path d="M0 0 L0 16 L4 12.5 L6.5 18 L9 17 L6.5 11.5 L11 11 Z"/></svg></span>
+<span data-cursor aria-hidden="true">
+    <svg viewBox="0 0 11 18" width="16" aria-hidden="true">
+        <path d="M0 0 L0 16 L4 12.5 L6.5 18 L9 17 L6.5 11.5 L11 11 Z"/>
+    </svg>
+</span>
 ```
+
+Turn off the default dot styling so your art shows through:
 
 ```css
 .busker [data-cursor] {
@@ -50,7 +52,7 @@ The default cursor is a soft dot rather than an arrow, because an arrow on a scr
 }
 ```
 
-Busker only sets `translate` (position) and the `is-*` classes. Everything else is yours.
+Busker only sets `translate` (position) and the `is-*` press/ripple classes on `[data-cursor]`. Size, colour, and artwork are yours.
 
 ## Demo hover
 

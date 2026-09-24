@@ -20,16 +20,30 @@ const DEFAULT_START: Point = [0.5, 0.5];
 /** How long a missed click keeps the clickable things lit up. */
 const HINT_MS = 1500;
 
+function mountDemoCursor(root: HTMLElement): {el: HTMLElement; owned: boolean} {
+    const existing = root.querySelector<HTMLElement>('[data-cursor]');
+
+    if (existing) return {el: existing, owned: false};
+
+    const el = document.createElement('span');
+
+    el.setAttribute('data-cursor', '');
+    el.setAttribute('aria-hidden', 'true');
+    root.appendChild(el);
+
+    return {el, owned: true};
+}
+
 /**
  * Put on a show inside `root`.
  *
- * Markup: `[data-cursor]` for the pointer. UI state (scenes, modals, etc.) is
- * yours — use real click handlers and optional `tasks` / `onLoop`.
+ * UI state (scenes, modals, etc.) is yours — use real click handlers and optional
+ * `tasks` / `onLoop`. Busker creates `[data-cursor]` when your markup omits it.
  */
 export function busk(root: HTMLElement, routine: Routine): Busker {
     assertScriptRoutine(routine);
 
-    const cursor = root.querySelector<HTMLElement>('[data-cursor]');
+    const {el: cursor, owned: cursorOwned} = mountDemoCursor(root);
 
     const motion: MotionConfig = {...DEFAULT_MOTION, ...routine.motion};
     const glideEase = cubicBezierEasingCached(motion.easing ?? DEFAULT_MOTION.easing);
@@ -283,8 +297,6 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     }
 
     function drawCursor(move: Move | null, index: number, t: number): void {
-        if (!cursor) return;
-
         let from: Point | null = null;
         let to: Point | null = null;
 
@@ -551,7 +563,8 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         root.querySelectorAll('.is-pressed').forEach((el) => el.classList.remove('is-pressed'));
         root.querySelectorAll('.is-interactive').forEach((el) => el.classList.remove('is-interactive'));
         root.classList.remove('busker', 'is-aside');
-        cursor?.classList.remove('is-visible', 'is-pressing', 'is-ringing');
+        cursor.classList.remove('is-visible', 'is-pressing', 'is-ringing');
+        if (cursorOwned) cursor.remove();
     }
 
     root.addEventListener('click', stopScriptedClickBubble);
@@ -588,7 +601,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         window.addEventListener('load', scheduleSyncViewportPlayback, {once: true});
         document.fonts?.ready.then(scheduleSyncViewportPlayback);
         syncViewportPlayback();
-        cursor?.classList.add('is-visible');
+        cursor.classList.add('is-visible');
     }
 
     return {

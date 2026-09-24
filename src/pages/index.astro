@@ -5,6 +5,7 @@ import '../../busker.css';
 import '../demo/crema/mock.css';
 import '../components/splash.css';
 import SplashCodeTabs from '../components/SplashCodeTabs.astro';
+import SplashCopyAgentPromptButton from '../components/SplashCopyAgentPromptButton.astro';
 
 import cremaDemoTs from '../demo/crema/demo.ts?raw';
 import cremaMockHtml from '../demo/crema/mock.html?raw';
@@ -40,11 +41,12 @@ const cremaCodeTabs = [
                 --><CursorClick class="splash-hero__click-icon" aria-hidden="true" />
             </h1>
             <h2 class="splash-hero__lead">
-                Like a Figma prototype&mdash;wire a click to the screen it opens&mdash;except the
-                mock is your real UI on the page: plain HTML, CSS, and JavaScript, or React or
-                whatever framework you already use. You bring the design and the markup; Busker
-                does not. We only run the script: move the cursor, run your code at each step, and
-                step aside when someone wants to click through themselves.
+                The easy way to put a Figma-style product mock on your site. You build the screens
+                like you already would; Busker runs the demo: cursor movement, clicks on your real
+                controls, and playback that feels like a screen recording.                 It stays in sync because
+                it is live UI, not a video or a pile of timers you have to re-tune. When a visitor
+                clicks, the show stops and the mock is fully interactive, like a Figma prototype:
+                real clicks, clear hotspots, and hints that invite them to explore on their own.
             </h2>
             <div class="splash-hero__cta">
                 <div class="splash-hero__actions">
@@ -56,6 +58,7 @@ const cremaCodeTabs = [
                     >
                         Get started
                     </LinkButton>
+                    <SplashCopyAgentPromptButton />
                     <LinkButton href="https://github.com/logfoxai/busker" variant="secondary" icon="github">
                         GitHub
                     </LinkButton>
@@ -83,28 +86,10 @@ const cremaCodeTabs = [
     </div>
 </StarlightPage>
 
-<style is:global>
-    /* Busker-only sections below the callspec-aligned splash hero. */
-
-    .splash-home .splash__code {
-        margin-top: 3.5rem;
-
-        & h2 {
-            margin: 0 0 1rem;
-            font-family: var(--cs-font-heading);
-            color: var(--cs-ink);
-        }
-
-        & > p {
-            margin: 0 0 1.5rem;
-            color: var(--cs-muted);
-        }
-
-    }
-</style>
-
 <script>
     import {initCremaDemo} from '../demo/crema/demo';
+    import {wireSplashAgentCopyButton} from '../components/splashAgentPrompt';
 
     initCremaDemo();
+    wireSplashAgentCopyButton();
 </script>

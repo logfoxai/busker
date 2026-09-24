@@ -122,6 +122,7 @@ export default defineConfig({
                     label: 'Introduction',
                     items: [
                         {label: 'Getting started', slug: 'getting-started'},
+                        {label: 'Skill & prompts', slug: 'coding-agents'},
                         {label: 'Markup', slug: 'markup'},
                     ],
                 },

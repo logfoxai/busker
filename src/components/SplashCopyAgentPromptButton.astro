@@ -1,0 +1,18 @@
+---
+import {LinkButton} from '@astrojs/starlight/components';
+
+const idleLabel = 'For coding agents';
+---
+
+<LinkButton
+    href="#"
+    variant="primary"
+    icon="right-arrow"
+    class="sl-link-button--forward"
+    data-splash-agent-copy
+    data-splash-agent-copy-idle-label={idleLabel}
+    title="Copy a prompt for Cursor, Claude Code, or similar tools"
+    role="button"
+>
+    <span data-splash-agent-copy-label>{idleLabel}</span>
+</LinkButton>
