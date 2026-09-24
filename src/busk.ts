@@ -385,13 +385,20 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const hint = routine.exploreHint
-        ? exploreHint(root, routine.exploreHint, reducedMotion, {
-              click: () => clickingItself,
-              leave: () =>
-                  clickingItself || performance.now() < hintScriptedLeaveGraceUntil,
-          })
-        : null;
+    const exploreHintOption = routine.exploreHint;
+    const hint =
+        exploreHintOption === false
+            ? null
+            : exploreHint(
+                  root,
+                  exploreHintOption === undefined ? true : exploreHintOption,
+                  reducedMotion,
+                  {
+                      click: () => clickingItself,
+                      leave: () =>
+                          clickingItself || performance.now() < hintScriptedLeaveGraceUntil,
+                  },
+              );
 
     function play(): void {
         if (playing || aside || destroyed || reducedMotion || duration <= 0) return;
@@ -422,6 +429,11 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         shownPressing = false;
         shownRinging = false;
     }
+
+    /** Keep scripted `.click()` inside the mock from reaching window listeners (e.g. docs search). */
+    const stopScriptedClickBubble = (e: Event): void => {
+        if (clickingItself) e.stopPropagation();
+    };
 
     const onClick = (e: Event): void => {
         if (destroyed) return;
@@ -497,6 +509,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         viewportSyncQueued = false;
         observer?.disconnect();
         hint?.destroy();
+        root.removeEventListener('click', stopScriptedClickBubble);
         root.removeEventListener('click', onClick);
         document.removeEventListener('visibilitychange', onVisibilityChange);
         window.removeEventListener('scroll', scheduleSyncViewportPlayback);
@@ -509,6 +522,8 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         root.classList.remove('busker', 'is-aside');
         cursor?.classList.remove('is-visible', 'is-pressing', 'is-ringing');
     }
+
+    root.addEventListener('click', stopScriptedClickBubble);
 
     if (clickTargets.length) {
         for (const selector of clickTargets) {

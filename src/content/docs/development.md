@@ -4,14 +4,20 @@
 git clone https://github.com/logfoxai/busker.git
 cd busker
 npm ci
+npm run astro:sync
 npm run validate
 ```
+
+After `npm ci`, run **`npm run astro:sync`** once so `.astro/types.d.ts` exists for the docs site (Starlight splash and guides). The editor uses `tsconfig.astro.json` for `.astro` files and `tsconfig.lib.json` for the library.
+
+**Cmd+click class names** on the splash page (e.g. `splash__lead` in the markup → the `<style is:global>` block in the same `index.astro`): install the recommended [HTML CSS Support](https://marketplace.visualstudio.com/items?itemName=ecmel.vscode-html-css) extension, then reload the window (`css.enabledLanguages` includes `astro` in `.vscode/settings.json`).
 
 ## Scripts
 
 | Script | What it does |
 |---|---|
-| `npm run build` | `tsc` → `dist/` |
+| `npm run build` | `tsc -p tsconfig.lib.json` → `dist/` |
+| `npm run astro:sync` | Generates `.astro/types.d.ts` for docs / IDE |
 | `npm test` | [kizu](https://github.com/mhweiner/kizu) specs under c8 coverage |
 | `npm run lint` | `eslint --fix` |
 | `npm run astro:dev` | The docs site at `localhost:4321` |

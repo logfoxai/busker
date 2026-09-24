@@ -26,7 +26,7 @@ Every routine has a non-empty **`steps`** array. Loop length is compiled from th
 | `onLoop` | `() => void` | none | Called when the playhead wraps to 0. |
 | `visibility` | `number` | `1` | How much of the root must be on screen to run, as a fraction. |
 | `freezeAt` | `number` | `0` | Frame to hold under `prefers-reduced-motion`. |
-| `exploreHint` | `boolean \| string \| ExploreHintConfig` | none | A "Click to explore" pill that tails the visitor's pointer. `true` for the default label, a string for your own. |
+| `exploreHint` | `boolean \| string \| ExploreHintConfig` | `true` | A "Click to explore" pill that tails the visitor's pointer. On by default; pass `false` to disable, a string for your own label, or a config object. |
 
 ## `Step`
 

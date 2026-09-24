@@ -1,0 +1,386 @@
+/*
+ * Splash homepage — aligned with callspec src/components/splash.css (hero + chrome).
+ * Loaded from src/pages/index.astro.
+ */
+
+html:not([data-has-sidebar]):has(.splash-page) {
+    --sl-content-width: min(80rem, calc(100vw - 2rem));
+    --sl-content-pad-x: clamp(1.25rem, 3.5vw, 2.75rem);
+    --splash-section-pad-y: clamp(4rem, 8vw, 5.5rem);
+    --splash-section-inner-gap: clamp(2rem, 4vw, 2.75rem);
+    --splash-intro-gap: clamp(1.25rem, 2.5vw, 1.75rem);
+
+    /* Dark splash chrome */
+    &[data-theme='dark'] {
+        --sl-color-bg: #07080c;
+        --sl-color-black: #07080c;
+        --sl-color-bg-nav: #07080c;
+        --sl-color-bg-sidebar: #07080c;
+        --sl-color-white: #f5f6fa;
+        --sl-color-gray-1: #e8e9ef;
+        --sl-color-gray-2: #a8acb8;
+        --sl-color-gray-3: #7a7f8c;
+        --sl-color-gray-4: #5c6170;
+        --sl-color-gray-5: #2a2d38;
+        --sl-color-gray-6: #1a1d26;
+        --sl-color-gray-7: #12141a;
+        --sl-color-hairline: #1e212b;
+        --sl-color-hairline-light: #1e212b;
+        --sl-color-hairline-shade: #1a1d26;
+        --sl-color-text: var(--sl-color-gray-2);
+        --cs-ink: #f4f6fb;
+        --cs-muted: #9aa3b5;
+        --cs-line: #2a2f3c;
+        --splash-hero-stage-bg: hsl(228 16% 9%);
+        --splash-hero-viewport-bg: hsl(228 15% 14%);
+        --splash-demo-bg: var(--splash-hero-stage-bg);
+        --splash-hero-secondary-bg: hsl(228 14% 26%);
+        --splash-demo-secondary-bg: hsl(228 12% 32%);
+        --splash-demo-secondary-hover-bg: hsl(228 10% 44%);
+        --splash-primary-hover-bg: hsl(262 58% 72%);
+        --splash-primary-hover-fg: hsl(262 28% 8%);
+        --splash-secondary-hover-bg: hsl(228 12% 34%);
+        --splash-secondary-hover-fg: var(--cs-ink);
+        --splash-code-wash:
+            radial-gradient(ellipse 85% 70% at 8% 0%, hsl(262 48% 52% / 0.085), transparent 58%),
+            radial-gradient(ellipse 75% 65% at 100% 100%, hsl(172 50% 40% / 0.058), transparent 55%),
+            hsl(228 16% 10%);
+        --splash-code-edge: color-mix(in srgb, hsl(172 40% 55%) 3%, var(--cs-line));
+        color-scheme: dark;
+
+        &,
+        & body {
+            background: #07080c;
+        }
+    }
+
+    /* Light splash chrome */
+    &[data-theme='light'] {
+        --sl-color-bg: #ffffff;
+        --sl-color-black: #ffffff;
+        --sl-color-bg-nav: #ffffff;
+        --sl-color-bg-sidebar: #f4f5f8;
+        --sl-color-white: #12141a;
+        --sl-color-gray-1: #1e212b;
+        --sl-color-gray-2: #3a3f4d;
+        --sl-color-gray-3: #5c6170;
+        --sl-color-gray-4: #8b90a0;
+        --sl-color-gray-5: #d5d8e2;
+        --sl-color-gray-6: #e8eaf0;
+        --sl-color-gray-7: #f4f5f8;
+        --sl-color-hairline: #e2e5ee;
+        --sl-color-hairline-light: #e8eaf0;
+        --sl-color-hairline-shade: #e8eaf0;
+        --sl-color-text: var(--sl-color-gray-2);
+        --cs-ink: #10131a;
+        --cs-muted: #5a6170;
+        --cs-line: #dde1ea;
+        --splash-hero-stage-bg: hsl(228 16% 92%);
+        --splash-hero-viewport-bg: hsl(228 22% 97%);
+        --splash-demo-bg: var(--splash-hero-stage-bg);
+        --splash-hero-secondary-bg: hsl(228 14% 84%);
+        --splash-demo-secondary-bg: #ffffff;
+        --splash-primary-hover-bg: hsl(262 52% 58%);
+        --splash-primary-hover-fg: #f8fafc;
+        --splash-secondary-hover-bg: hsl(228 12% 78%);
+        --splash-secondary-hover-fg: var(--cs-ink);
+        --splash-code-wash:
+            radial-gradient(ellipse 85% 70% at 8% 0%, hsl(262 55% 62% / 0.18), transparent 58%),
+            radial-gradient(ellipse 75% 65% at 100% 100%, hsl(172 45% 48% / 0.13), transparent 55%),
+            var(--cs-code-bg, #f4f5f8);
+        --splash-code-edge: color-mix(in srgb, hsl(172 35% 42%) 6%, var(--cs-line));
+        color-scheme: light;
+
+        &,
+        & body {
+            background: #ffffff;
+        }
+    }
+
+    /* Same plane as the page — frosted, no bar chrome. */
+    header.header {
+        background-color: color-mix(in srgb, var(--sl-color-bg) 72%, transparent);
+        border-bottom: none;
+        backdrop-filter: blur(14px) saturate(1.25);
+        -webkit-backdrop-filter: blur(14px) saturate(1.25);
+        box-shadow: none;
+    }
+
+    .content-panel .sl-container {
+        width: min(100%, var(--sl-content-width));
+        max-width: var(--sl-content-width);
+        margin-inline: auto;
+    }
+
+    .page,
+    .content-panel:first-of-type {
+        background: transparent;
+    }
+
+    .content-panel:first-of-type {
+        position: relative;
+        overflow: visible;
+        padding-block: 0;
+        padding-inline: var(--sl-content-pad-x);
+    }
+
+    main {
+        position: relative;
+    }
+
+    .sl-container {
+        position: relative;
+        z-index: 1;
+    }
+
+    .sl-container > .sl-markdown-content {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+    }
+}
+
+/* ─── Hero ───────────────────────────────────────────────────────────────── */
+
+.splash-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--splash-intro-gap);
+    padding-block: var(--splash-section-pad-y) 0;
+    position: relative;
+    z-index: 1;
+
+    .splash-hero__code {
+        margin: 0;
+        font-family: var(--cs-font-heading);
+        font-size: clamp(3.5rem, 10vw, 5.5rem);
+        font-weight: 600;
+        letter-spacing: -0.06em;
+        line-height: 0.95;
+        color: var(--cs-cyan);
+        animation: splash-fade-up 0.55s ease both;
+    }
+
+    .splash-hero__headline {
+        margin: 0;
+        width: 100%;
+        max-width: none;
+        font-family: var(--cs-font-heading);
+        font-size: clamp(2.35rem, 6.2vw, 4rem);
+        font-weight: 600;
+        letter-spacing: -0.045em;
+        line-height: 1.18;
+        text-wrap: balance;
+        color: var(--cs-ink);
+        overflow: visible;
+        padding-block-end: 0.08em;
+        animation: splash-fade-up 0.6s ease 0.05s both;
+    }
+
+    .splash-hero__pitch {
+        margin: 0;
+        max-width: none;
+        width: 100%;
+        font-family: var(--cs-font-heading);
+        font-size: clamp(1.05rem, 2.1vw, 1.45rem);
+        font-weight: 550;
+        letter-spacing: -0.025em;
+        line-height: 1.35;
+        text-wrap: nowrap;
+        white-space: nowrap;
+        text-align: center;
+        color: var(--cs-ink);
+        animation: splash-fade-up 0.6s ease 0.1s both;
+
+        @media (max-width: 40rem) {
+            white-space: normal;
+            text-wrap: balance;
+            font-size: clamp(1.05rem, 3.8vw, 1.25rem);
+        }
+    }
+}
+
+.splash-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.85rem;
+    margin: 0.5rem 0 0;
+}
+
+.splash-hero .splash-hero__actions {
+    animation: splash-fade-up 0.6s ease 0.18s both;
+}
+
+.splash-hero__actions .sl-link-button {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--cs-font-heading);
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    height: 3.5rem;
+    min-height: 3.5rem;
+    padding: 0 1.85rem;
+    border: none;
+    border-radius: 999px;
+    line-height: 1;
+    gap: 0.65rem;
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease;
+
+    /* Beat Starlight LinkButton desktop padding/type (50rem media). */
+    @media (min-width: 50rem) {
+        font-size: 1.2rem;
+        padding: 0 1.85rem;
+    }
+
+    svg,
+    .splash-hero__cta-icon {
+        flex-shrink: 0;
+        width: 1.55rem;
+        height: 1.55rem;
+        transition: transform 0.15s ease;
+    }
+
+    &.sl-link-button--forward:hover svg {
+        transform: translateX(0.2rem);
+    }
+
+    &.sl-link-button--back:hover svg {
+        transform: translateX(-0.2rem);
+    }
+
+    /* Primary — gradient from docs-brand-buttons.css */
+    &.primary {
+        font-weight: 600;
+    }
+
+    /* GitHub — text link style, not bordered secondary pill */
+    &.secondary[href*='github'] {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        color: var(--cs-ink);
+
+        &:hover {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            color: var(--docs-primary-bg);
+        }
+    }
+
+    &.secondary {
+        font-weight: 600;
+    }
+}
+
+/* Longer intro copy (busker splash). */
+.splash-hero .splash-hero__lead {
+    margin: 0;
+    max-width: 48rem;
+    width: 100%;
+    font-family: var(--cs-font-heading);
+    font-size: clamp(1.05rem, 2.1vw, 1.35rem);
+    font-weight: 550;
+    letter-spacing: -0.025em;
+    line-height: 1.5;
+    text-wrap: balance;
+    text-align: center;
+    color: var(--cs-ink);
+    animation: splash-fade-up 0.6s ease 0.1s both;
+}
+
+.splash-hero .splash-hero__meta {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--cs-muted);
+    animation: splash-fade-up 0.6s ease 0.22s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .splash-hero__headline,
+    .splash-hero__pitch,
+    .splash-hero__lead,
+    .splash-hero__meta,
+    .splash-hero__actions,
+    .splash-features,
+    .splash-hero__stage {
+        animation: none;
+    }
+
+    .splash-hero__actions .sl-link-button--forward:hover svg,
+    .splash-hero__actions .sl-link-button--back:hover svg,
+    .splash-hero__actions .sl-link-button:hover,
+    .splash-hero__actions .sl-link-button:active {
+        transform: none;
+    }
+}
+
+@keyframes splash-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(0.65rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+html[data-theme='dark'] .splash-hero__actions .sl-link-button.secondary:not([href*='github']) {
+    --cs-btn-fill: var(--splash-hero-secondary-bg);
+    background: var(--splash-hero-secondary-bg);
+    color: var(--cs-ink);
+
+    &:hover {
+        --cs-btn-fill: var(--splash-secondary-hover-bg);
+        background: var(--splash-secondary-hover-bg);
+        color: var(--splash-secondary-hover-fg);
+    }
+}
+
+html[data-theme='dark'] .splash-demo .splash-hero__actions .sl-link-button.secondary:not(.splash-demo__run-local):not([href*='github']) {
+    --cs-btn-fill: var(--splash-demo-secondary-bg);
+    background: var(--splash-demo-secondary-bg);
+    color: var(--cs-ink);
+
+    &:hover {
+        --cs-btn-fill: var(--splash-demo-secondary-hover-bg);
+        background: var(--splash-demo-secondary-hover-bg);
+        color: var(--splash-secondary-hover-fg);
+    }
+}
+
+html:not([data-has-sidebar]):has(.splash-page)[data-theme='light'] .splash-hero .splash-hero__actions .sl-link-button.secondary:not([href*='github']) {
+    --cs-btn-light-fill: var(--splash-hero-secondary-bg);
+    background: var(--splash-hero-secondary-bg);
+    color: var(--cs-ink);
+
+    &:hover {
+        --cs-btn-light-fill: var(--splash-secondary-hover-bg);
+        background: var(--splash-secondary-hover-bg);
+        color: var(--splash-secondary-hover-fg);
+    }
+}
+
+html:not([data-has-sidebar]):has(.splash-page)[data-theme='light'] .splash-demo .splash-hero__actions .sl-link-button.secondary:not(.splash-demo__run-local):not([href*='github']) {
+    --cs-btn-light-fill: var(--splash-demo-secondary-bg);
+    background: var(--splash-demo-secondary-bg);
+    color: var(--cs-ink);
+
+    &:hover {
+        --cs-btn-light-fill: var(--splash-demo-secondary-hover-bg);
+        background: var(--splash-demo-secondary-hover-bg);
+        color: var(--splash-secondary-hover-fg);
+    }
+}

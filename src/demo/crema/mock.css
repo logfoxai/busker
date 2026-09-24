@@ -1,0 +1,377 @@
+/* Crema splash mock — pair with mock.html and mock.ts */
+
+.mock {
+    --busker-accent: #b5651d;
+    --cream: #f7f1e8;
+    --cream-2: #efe6d6;
+    --chrome: #efe6d6;
+    --dot: #d8c9b0;
+    --ink: #3a2a1a;
+    --ink-soft: #7a6650;
+    --line: #e2d6c2;
+    --card: #fff;
+    --accent: #b5651d;
+    --accent-fg: #fff;
+    --pill: #e7d8c0;
+    --panel-veil: rgba(58, 42, 26, 0.34);
+
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.55);
+    overflow: hidden;
+    user-select: none;
+
+    & .mock__chrome {
+        align-items: center;
+        background: var(--chrome);
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        gap: 0.4rem;
+        padding: 0.6rem 0.8rem;
+
+        & span {
+            background: var(--dot);
+            border-radius: 999px;
+            height: 0.55rem;
+            width: 0.55rem;
+        }
+    }
+
+    & .mock__body {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        height: 20rem;
+        position: relative;
+    }
+
+    & .mock__nav {
+        align-items: center;
+        background: var(--cream);
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        gap: 0.5rem;
+        justify-content: space-between;
+        padding: 0.7rem 1.1rem;
+    }
+
+    & .mock__brand {
+        background: none;
+        border: 0;
+        color: var(--ink);
+        cursor: pointer;
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        transition: color 0.16s ease;
+
+        &:is(:hover, .is-hover, :focus-visible) {
+            color: var(--accent);
+        }
+
+        &:is(:active, .is-pressed) {
+            color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+        }
+    }
+
+    & .mock__nav-items {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    & .mock__nav-item {
+        background: none;
+        border: 0;
+        border-radius: 999px;
+        color: var(--ink-soft);
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 0.3rem 0.75rem;
+        transition:
+            background 0.16s ease,
+            color 0.16s ease;
+
+        &:not(.is-active):is(:hover, .is-hover, :focus-visible) {
+            background: var(--cream-2);
+            color: var(--ink);
+        }
+
+        &:is(:active, .is-pressed) {
+            background: color-mix(in srgb, var(--ink) 10%, transparent);
+            color: var(--ink);
+        }
+
+        &.is-active {
+            background: var(--pill);
+            color: var(--ink);
+        }
+
+        &.is-active:is(:active, .is-pressed) {
+            background: color-mix(in srgb, var(--accent) 20%, var(--pill));
+        }
+    }
+
+    & .mock__main {
+        overflow: hidden;
+        position: relative;
+    }
+
+    & .mock__scene {
+        padding: 1.4rem 1.4rem 1.6rem;
+    }
+
+    & .mock__hero {
+        max-width: 26rem;
+    }
+
+    & .mock__hero-title {
+        color: var(--ink);
+        font-size: 1.7rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+        margin: 0 0 0.6rem;
+    }
+
+    & .mock__hero-sub {
+        color: var(--ink-soft);
+        font-size: 0.92rem;
+        line-height: 1.55;
+        margin: 0 0 1.1rem;
+    }
+
+    & .mock__section-title {
+        color: var(--ink);
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 0 0 0.9rem;
+    }
+
+    & .mock__plans {
+        display: grid;
+        gap: 0.7rem;
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    & .mock__plan {
+        align-items: flex-start;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 0.6rem;
+        color: var(--ink);
+        cursor: pointer;
+        display: grid;
+        font: inherit;
+        gap: 0.1rem;
+        padding: 0.8rem 0.8rem 0.9rem;
+        text-align: left;
+        transition:
+            background 0.16s ease,
+            border-color 0.16s ease,
+            box-shadow 0.16s ease;
+
+        & b {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        &:is(:hover, .is-hover, :focus-visible) {
+            background: var(--cream-2);
+            border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+        }
+
+        &:is(:active, .is-pressed) {
+            background: color-mix(in srgb, var(--cream-2) 88%, var(--line));
+            box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.1);
+            transform: scale(0.96);
+        }
+    }
+
+    & .mock__plan--featured {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 1px var(--accent) inset;
+
+        &:is(:hover, .is-hover, :focus-visible) {
+            box-shadow:
+                0 0 0 1px var(--accent) inset,
+                0 6px 16px -8px rgb(0 0 0 / 0.2);
+        }
+    }
+
+    & .mock__plan-price {
+        font-size: 1.25rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+
+        & span {
+            color: var(--ink-soft);
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+    }
+
+    & .mock__plan-desc {
+        color: var(--ink-soft);
+        font-size: 0.78rem;
+    }
+
+    & .mock__summary {
+        align-items: baseline;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 0.6rem;
+        display: flex;
+        gap: 0.6rem;
+        justify-content: space-between;
+        padding: 0.8rem 1rem;
+    }
+
+    & .mock__summary-plan {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    & .mock__summary-price {
+        color: var(--ink);
+        font-size: 1.05rem;
+        font-weight: 800;
+    }
+
+    & .mock__btn {
+        background: var(--accent);
+        border: 0;
+        border-radius: 999px;
+        color: var(--accent-fg);
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-top: 0.9rem;
+        padding: 0.5rem 1.1rem;
+        transition:
+            background 0.16s ease,
+            box-shadow 0.16s ease;
+
+        &:is(:hover, .is-hover, :focus-visible) {
+            background: color-mix(in srgb, var(--accent) 88%, var(--ink));
+            box-shadow: 0 4px 12px -6px rgb(0 0 0 / 0.25);
+        }
+
+        &:is(:active, .is-pressed) {
+            background: color-mix(in srgb, var(--accent) 78%, var(--ink));
+            box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.18);
+            transform: scale(0.96);
+        }
+    }
+
+    & .mock__btn--quiet {
+        background: var(--pill);
+        color: var(--ink);
+
+        &:is(:hover, .is-hover, :focus-visible) {
+            background: color-mix(in srgb, var(--pill) 65%, var(--line));
+            box-shadow: none;
+        }
+
+        &:is(:active, .is-pressed) {
+            background: color-mix(in srgb, var(--pill) 55%, var(--line));
+            box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.12);
+            transform: scale(0.96);
+        }
+    }
+
+    & .mock__panel {
+        background: var(--panel-veil);
+        display: none;
+        inset: 0;
+        padding: 1rem;
+        place-items: center;
+        position: absolute;
+        z-index: 2;
+
+        &.is-open {
+            display: grid;
+        }
+    }
+
+    & .mock__panel-card {
+        background: var(--card);
+        border-radius: 0.6rem;
+        box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.45);
+        max-width: 15rem;
+        padding: 0.9rem 1rem;
+        text-align: center;
+    }
+
+    & .mock__panel-title {
+        color: var(--ink);
+        font-size: 0.95rem;
+    }
+
+    & .mock__panel-sub {
+        color: var(--ink-soft);
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin: 0.3rem 0 0;
+    }
+
+    & .mock__roasters {
+        display: grid;
+        gap: 0.6rem;
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    & .mock__roaster {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 0.6rem;
+        display: grid;
+        gap: 0.1rem;
+        padding: 0.7rem 0.8rem;
+
+        & b {
+            color: var(--ink);
+            font-size: 0.9rem;
+        }
+
+        & span {
+            color: var(--ink-soft);
+            font-size: 0.78rem;
+        }
+    }
+}
+
+html[data-theme='dark'] .mock {
+    --cream: #1b1410;
+    --cream-2: #241a14;
+    --chrome: #241a14;
+    --dot: #4a3a2c;
+    --ink: #f1e8db;
+    --ink-soft: #a89888;
+    --line: #3a2d22;
+    --card: #2a201a;
+    --accent: #d4894a;
+    --accent-fg: #1b1410;
+    --pill: #3a2d22;
+    --panel-veil: rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 40rem) {
+    .mock {
+        & .mock__plans,
+        & .mock__roasters {
+            grid-template-columns: 1fr;
+        }
+
+        & .mock__nav-items {
+            gap: 0.15rem;
+        }
+
+        & .mock__nav-item {
+            padding: 0.3rem 0.5rem;
+        }
+    }
+}

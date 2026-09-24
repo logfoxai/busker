@@ -73,7 +73,7 @@ That is the whole thing. Each `{ wait }` is a pause; each `{ click }` is a real 
 
 Every selector in `clickTargets` is wired for the visitor too. Click anything the show can click and busker steps aside: the loop stops, the cursor disappears, and the mock is yours. Click something dead and it flashes what *is* clickable.
 
-You get that for free &mdash; see [When a visitor takes over](./taking-over.md). If the looping show reads as a video, set `exploreHint: true` on the routine and a "Click to explore" pill tails the visitor's pointer to invite them in.
+You get that for free &mdash; see [When a visitor takes over](./taking-over.md). By default a "Click to explore" pill tails the visitor's pointer when they hover the mock; pass `exploreHint: false` to turn it off.
 
 ## What busker does not do
 

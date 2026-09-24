@@ -19,14 +19,18 @@ if (!fs.existsSync(htmlPath)) {
 const html = fs.readFileSync(htmlPath, 'utf8');
 
 const required = [
-	'splash',
-	'splash__hero',
+	'splash-page',
+	'splash-hero',
+	'splash-hero__headline',
 	'splash__demo',
 	'splash__code',
 	'mock',
 	'data-mock',
 	'data-cursor',
 	'busk(root,',
+	'mock.html',
+	'mock.css',
+	'mock.ts',
 	'Scripted cursor demos',
 	'that click',
 	'Zero dependencies',

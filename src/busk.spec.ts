@@ -1,6 +1,7 @@
 import {test} from 'kizu';
 import {GlobalRegistrator} from '@happy-dom/global-registrator';
 import {busk} from './busk.ts';
+import {shouldCloseOnOutsideClick} from './components/searchDialog.ts';
 import type {Busker, Routine} from './types.ts';
 
 GlobalRegistrator.register({url: 'https://busker.test', width: 1024, height: 768});
@@ -429,6 +430,40 @@ test('every clickable thing looks clickable', (assert) => {
     assert.equal(root.querySelector('[data-nav-item="home"]')?.classList.contains('is-interactive'), true);
     assert.equal(root.querySelector('[data-scene="home"] p')?.classList.contains('is-interactive'), false);
 
+});
+
+test('scripted clicks do not bubble to window listeners that close overlays', (assert) => {
+    const dialogFrame = document.createElement('div');
+    dialogFrame.className = 'dialog-frame';
+    document.body.appendChild(dialogFrame);
+
+    let searchOpen = true;
+    const onWindowClick = (event: MouseEvent): void => {
+        const target = event.target;
+        const targetIsLink =
+            (typeof target === 'object' && target !== null && 'href' in target) ||
+            (target instanceof Element && Boolean(target.closest('a[href]')));
+        if (
+            shouldCloseOnOutsideClick({
+                targetIsLink,
+                targetInDocument: document.body.contains(target as Node),
+                targetInDialogFrame: dialogFrame.contains(target as Node),
+            })
+        ) {
+            searchOpen = false;
+        }
+    };
+    window.addEventListener('click', onWindowClick);
+
+    const {startShow, tick, clickAsVisitor} = stage(routine);
+    startShow();
+    tick(350);
+    assert.equal(searchOpen, true, 'show click stays inside the mock');
+
+    clickAsVisitor('[data-nav-item="alerts"]');
+    assert.equal(searchOpen, false, 'visitor click still closes search');
+
+    window.removeEventListener('click', onWindowClick);
 });
 
 test('each beat presses once, and the loop starts over from the top', (assert) => {
@@ -959,9 +994,17 @@ test('destroy removes the explore hint element', (assert) => {
 
 });
 
-test('no explore hint without the option', (assert) => {
+test('explore hint is on by default', (assert) => {
 
     stage(routine);
+
+    assert.equal(document.body.querySelector('[data-explore-hint]') != null, true);
+
+});
+
+test('exploreHint false disables the pill', (assert) => {
+
+    stage({...routine, exploreHint: false});
 
     assert.equal(document.body.querySelector('[data-explore-hint]'), null);
 

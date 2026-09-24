@@ -82,10 +82,10 @@ export interface Routine {
     freezeAt?: number;
     /**
      * A pill that follows the visitor's pointer whenever they hover, inviting
-     * them to click. `true` for the default label, a string for your own, or
-     * an `ExploreHintConfig` for full control. Pops out a few seconds into
-     * each visit and pops back in on the next one; once they click, it is
-     * gone for good.
+     * them to click. On by default (`true` / default label). Pass `false` to
+     * disable, a string for your own label, or `ExploreHintConfig` for full
+     * control. Pops out a few seconds into each visit and pops back in on the
+     * next one; once they click, it is gone for good.
      */
     exploreHint?: boolean | string | ExploreHintConfig;
 }

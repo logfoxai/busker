@@ -1,0 +1,79 @@
+<div class="mock" data-mock>
+    <div class="mock__chrome"><span></span><span></span><span></span></div>
+    <div class="mock__body">
+        <nav class="mock__nav">
+            <button class="mock__brand" data-nav-item="beans">Crema</button>
+            <div class="mock__nav-items">
+                <button class="mock__nav-item" data-nav-item="beans">Beans</button>
+                <button class="mock__nav-item" data-nav-item="plans">Plans</button>
+                <button class="mock__nav-item" data-nav-item="roasters">Roasters</button>
+            </div>
+        </nav>
+
+        <div class="mock__main">
+            <section class="mock__scene" data-scene="beans" data-nav="beans">
+                <div class="mock__hero">
+                    <h2 class="mock__hero-title">Fresh roasts,<br />to your door.</h2>
+                    <p class="mock__hero-sub">
+                        Single-origin beans, roasted the morning they ship. No warehouse, no staleness.
+                    </p>
+                    <button class="mock__btn mock__btn--primary" data-cta>See plans</button>
+                </div>
+            </section>
+
+            <section class="mock__scene" data-scene="plans" data-nav="plans">
+                <h3 class="mock__section-title">Pick your pace</h3>
+                <div class="mock__plans">
+                    <button class="mock__plan" data-plan="solo" data-name="Solo" data-price="$18/mo">
+                        <b>Solo</b>
+                        <span class="mock__plan-price">$18<span>/mo</span></span>
+                        <span class="mock__plan-desc">250g · 1 roast</span>
+                    </button>
+                    <button
+                        class="mock__plan mock__plan--featured"
+                        data-plan="duo"
+                        data-name="Duo"
+                        data-price="$32/mo"
+                    >
+                        <b>Duo</b>
+                        <span class="mock__plan-price">$32<span>/mo</span></span>
+                        <span class="mock__plan-desc">500g · 2 roasts</span>
+                    </button>
+                    <button class="mock__plan" data-plan="family" data-name="Family" data-price="$54/mo">
+                        <b>Family</b>
+                        <span class="mock__plan-price">$54<span>/mo</span></span>
+                        <span class="mock__plan-desc">1kg · 4 roasts</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="mock__scene" data-scene="checkout" data-nav="plans">
+                <h3 class="mock__section-title">You're almost there</h3>
+                <div class="mock__summary">
+                    <span class="mock__summary-plan" data-summary-plan>Duo</span>
+                    <span class="mock__summary-price" data-summary-price>$32/mo</span>
+                </div>
+                <button class="mock__btn mock__btn--primary" data-checkout>Start subscription</button>
+                <div class="mock__panel" data-panel>
+                    <div class="mock__panel-card">
+                        <b class="mock__panel-title">You're in.</b>
+                        <p class="mock__panel-sub">
+                            First batch ships Monday. We'll email your tracking link.
+                        </p>
+                        <button class="mock__btn mock__btn--quiet" data-close>Close</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mock__scene" data-scene="roasters" data-nav="roasters">
+                <h3 class="mock__section-title">The people behind the beans</h3>
+                <div class="mock__roasters">
+                    <div class="mock__roaster"><b>Marta</b><span>Oaxaca, MX</span></div>
+                    <div class="mock__roaster"><b>Yusuf</b><span>Yirgacheffe, ET</span></div>
+                    <div class="mock__roaster"><b>Lena</b><span>Huila, CO</span></div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <span data-cursor></span>
+</div>
