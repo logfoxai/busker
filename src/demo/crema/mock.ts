@@ -1,11 +1,5 @@
-import {busk} from '../../index.js';
-
-/** Wire the Crema splash mock and start the demo loop. */
-export function initCremaDemo(): void {
-    const root = document.querySelector<HTMLElement>('[data-mock]');
-
-    if (!root) return;
-
+/** Crema splash mock — click handlers and panel state (not part of busker). */
+export function wireCremaMock(root: HTMLElement): (open?: string) => void {
     const showScene = (scene: string): void => {
         root.querySelectorAll<HTMLElement>('[data-scene]').forEach((el) => {
             el.classList.toggle('is-active', el.dataset.scene === scene);
@@ -23,10 +17,14 @@ export function initCremaDemo(): void {
         root.querySelector('[data-panel]')?.classList.remove('is-open');
     };
 
-    root.querySelector('[data-nav-item="beans"]')?.addEventListener('click', () => showScene('beans'));
+    root.querySelectorAll('[data-nav-item="beans"]').forEach((el) => {
+        el.addEventListener('click', () => showScene('beans'));
+    });
     root.querySelector('[data-nav-item="plans"]')?.addEventListener('click', () => showScene('plans'));
     root.querySelector('[data-nav-item="roasters"]')?.addEventListener('click', () => showScene('roasters'));
-    root.querySelector('[data-cta]')?.addEventListener('click', () => showScene('plans'));
+    root.querySelectorAll('[data-bean]').forEach((bean) => {
+        bean.addEventListener('click', () => showScene('plans'));
+    });
     root.querySelectorAll('[data-plan]').forEach((plan) => {
         plan.addEventListener('click', () => showScene('checkout'));
     });
@@ -49,35 +47,5 @@ export function initCremaDemo(): void {
 
     wireScenes('beans');
 
-    busk(root, {
-        start: [0.55, 0.3],
-        onLoop: () => wireScenes('beans'),
-        steps: [
-            {wait: 900},
-            {click: '[data-cta]'},
-            {wait: 1500},
-            {click: '[data-plan="duo"]'},
-            {wait: 2200},
-            {click: '[data-checkout]'},
-            {wait: 2600},
-            {click: '[data-close]'},
-            {wait: 900},
-            {click: '[data-nav-item="plans"]'},
-            {wait: 1400},
-            {click: '[data-plan="solo"]'},
-            {wait: 900},
-            {move: [0.55, 0.3]},
-        ],
-        clickTargets: [
-            '[data-nav-item="beans"]',
-            '[data-nav-item="plans"]',
-            '[data-nav-item="roasters"]',
-            '[data-cta]',
-            '[data-plan="solo"]',
-            '[data-plan="duo"]',
-            '[data-plan="family"]',
-            '[data-checkout]',
-            '[data-close]',
-        ],
-    });
+    return wireScenes;
 }

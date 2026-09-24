@@ -20,9 +20,10 @@ After `npm ci`, run **`npm run astro:sync`** once so `.astro/types.d.ts` exists 
 | `npm run astro:sync` | Generates `.astro/types.d.ts` for docs / IDE |
 | `npm test` | [kizu](https://github.com/mhweiner/kizu) specs under c8 coverage |
 | `npm run lint` | `eslint --fix` |
-| `npm run astro:dev` | The docs site at `localhost:4321` |
-| `npm run astro:build` | The docs site → `docs-site/` |
-| `npm run validate` | Everything CI runs, in the same order. Run it before you push. |
+| `npm run dev` | Alias for `astro:dev` |
+| `npm run astro:dev` | The docs site at `localhost:4321` (only one dev server at a time) |
+| `npm run astro:build` | The docs site → `docs-site/`. Skips `astro sync` while dev is listening so the dev server is not disturbed. |
+| `npm run validate` | Everything CI runs, in the same order. Run it before you push — you can keep `astro:dev` up. |
 
 ## Layout
 

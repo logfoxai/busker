@@ -378,14 +378,6 @@ html[data-has-sidebar] .sl-markdown-content table
     white-space: nowrap;
 }
 
-@layer starlight.core {
-    html[data-has-sidebar] header.header {
-        background-color: var(--docs-header-bg);
-        backdrop-filter: blur(14px) saturate(1.25);
-        -webkit-backdrop-filter: blur(14px) saturate(1.25);
-    }
-}
-
 /*
  * Page title band — equal block padding so the H1 is vertically centered
  * (unlayered: beats ContentPanel `padding: 1.5rem` + PageTitle margin).
@@ -1929,21 +1921,15 @@ html[data-theme='light'] .expressive-code .frame.is-terminal > .header {
  * Window dots — one mask, same on bash + TS.
  * (EC’s terminal/editor frames used different chrome; this replaces both.)
  */
-.expressive-code .cs-code-dots {
-    --cs-dots: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 10'%3E%3Ccircle cx='5' cy='5' r='4' fill='black'/%3E%3Ccircle cx='20' cy='5' r='4' fill='black'/%3E%3Ccircle cx='35' cy='5' r='4' fill='black'/%3E%3C/svg%3E");
+.cs-code-dots {
+    --cs-dots-mac: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 12'%3E%3Ccircle cx='6' cy='6' r='5.5' fill='%23ff5f57'/%3E%3Ccircle cx='26' cy='6' r='5.5' fill='%23febc2e'/%3E%3Ccircle cx='46' cy='6' r='5.5' fill='%2328c840'/%3E%3C/svg%3E");
     display: block;
     flex: 0 0 auto;
     align-self: center;
-    width: 1.85rem;
-    height: 0.45rem;
+    width: 2.05rem;
+    height: 0.5rem;
     margin: 0;
-    background: hsl(228 10% 48%);
-    -webkit-mask: var(--cs-dots) center / contain no-repeat;
-    mask: var(--cs-dots) center / contain no-repeat;
-}
-
-html[data-theme='light'] .expressive-code .cs-code-dots {
-    background: hsl(228 12% 42%);
+    background: var(--cs-dots-mac) center / contain no-repeat;
 }
 
 /* Active tab */
@@ -2040,6 +2026,60 @@ html[data-theme='light'] .expressive-code .frame.is-terminal .title {
     background: #2b6cb0;
 }
 
+.expressive-code .frame.has-title .cs-code-kind[data-kind='HTML'] {
+    background: #e34c26;
+}
+
+/* Splash tabs — IDE-style file icons (Phosphor File*) */
+.splash-code-tabs__tab .cs-code-file-icon {
+    flex: 0 0 auto;
+    width: 1.05rem;
+    height: 1.05rem;
+    color: var(--cs-muted);
+}
+
+.splash-code-tabs__tab .cs-code-file-icon[data-kind='HTML'] {
+    color: #e44d26;
+}
+
+.splash-code-tabs__tab .cs-code-file-icon[data-kind='CSS'] {
+    color: #663399;
+}
+
+.splash-code-tabs__tab .cs-code-file-icon[data-kind='TS'],
+.splash-code-tabs__tab .cs-code-file-icon[data-kind='TSX'] {
+    color: #3178c6;
+}
+
+.splash-code-tabs__tab .cs-code-file-icon[data-kind='JS'],
+.splash-code-tabs__tab .cs-code-file-icon[data-kind='JSX'] {
+    color: #c9a227;
+}
+
+.splash-code-tabs__tab .cs-code-file-icon[data-kind='JSON'] {
+    color: #8a8a2a;
+}
+
+.splash-code-tabs__tab .cs-code-file-icon[data-kind='MD'] {
+    color: #555b6e;
+}
+
+.splash-code-tabs__tab .cs-code-file-icon[data-kind='PY'] {
+    color: #3776ab;
+}
+
+.splash-code-tabs__tab .cs-code-file-icon[data-kind='GO'] {
+    color: #007d9c;
+}
+
+.splash-code-tabs__tab .cs-code-file-icon[data-kind='RS'] {
+    color: #b7410e;
+}
+
+.splash-code-tabs__tab .cs-code-file-icon[data-kind='YML'] {
+    color: #6b7280;
+}
+
 .expressive-code .frame.has-title .cs-code-kind[data-kind='PY'] {
     background: #3776ab;
 }
@@ -2086,7 +2126,8 @@ html[data-theme='light'] .expressive-code .cs-code-file {
  * Kill EC’s floating tooltip — we own the feedback UI.
  */
 .expressive-code .frame.has-title > .header > .copy,
-.expressive-code .frame.is-terminal > .header > .copy {
+.expressive-code .frame.is-terminal > .header > .copy,
+.splash-code-tabs__copy-host > .copy {
     position: static !important;
     display: flex !important;
     align-items: center !important;
@@ -2099,15 +2140,22 @@ html[data-theme='light'] .expressive-code .cs-code-file {
     z-index: 3;
 }
 
+.splash-code-tabs__copy-host > .copy {
+    margin: 0 !important;
+}
+
 .expressive-code .frame.has-title > .header > .copy > [aria-live],
-.expressive-code .frame.is-terminal > .header > .copy > [aria-live] {
+.expressive-code .frame.is-terminal > .header > .copy > [aria-live],
+.splash-code-tabs__copy-host > .copy > [aria-live] {
     display: none !important;
 }
 
 .expressive-code .frame.has-title .copy button.cs-copy-btn,
 .expressive-code .frame.is-terminal .copy button.cs-copy-btn,
+.splash-code-tabs__copy-host .copy button.cs-copy-btn,
 .expressive-code .frame.has-title .copy button.cs-copy-btn:not(:hover),
 .expressive-code .frame.is-terminal .copy button.cs-copy-btn:not(:hover),
+.splash-code-tabs__copy-host .copy button.cs-copy-btn:not(:hover),
 .expressive-code .frame.has-title:not(:hover) .copy button.cs-copy-btn,
 .expressive-code .frame.is-terminal:not(:hover) .copy button.cs-copy-btn {
     opacity: 1 !important;
@@ -2139,14 +2187,17 @@ html[data-theme='light'] .expressive-code .cs-code-file {
 }
 
 .expressive-code .frame.has-title .copy button.cs-copy-btn > div,
-.expressive-code .frame.is-terminal .copy button.cs-copy-btn > div {
+.expressive-code .frame.is-terminal .copy button.cs-copy-btn > div,
+.splash-code-tabs__copy-host .copy button.cs-copy-btn > div {
     display: none !important;
 }
 
 .expressive-code .frame.has-title .copy button.cs-copy-btn::before,
 .expressive-code .frame.is-terminal .copy button.cs-copy-btn::before,
+.splash-code-tabs__copy-host .copy button.cs-copy-btn::before,
 .expressive-code .frame.has-title .copy button.cs-copy-btn::after,
-.expressive-code .frame.is-terminal .copy button.cs-copy-btn::after {
+.expressive-code .frame.is-terminal .copy button.cs-copy-btn::after,
+.splash-code-tabs__copy-host .copy button.cs-copy-btn::after {
     content: none !important;
     display: none !important;
     background: none !important;
@@ -2161,7 +2212,8 @@ html[data-theme='light'] .expressive-code .cs-code-file {
 }
 
 .expressive-code .frame.has-title .copy button.cs-copy-btn .cs-copy-icon,
-.expressive-code .frame.is-terminal .copy button.cs-copy-btn .cs-copy-icon {
+.expressive-code .frame.is-terminal .copy button.cs-copy-btn .cs-copy-icon,
+.splash-code-tabs__copy-host .copy button.cs-copy-btn .cs-copy-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2172,7 +2224,8 @@ html[data-theme='light'] .expressive-code .cs-code-file {
 }
 
 .expressive-code .frame.has-title .copy button.cs-copy-btn .cs-copy-glyph,
-.expressive-code .frame.is-terminal .copy button.cs-copy-btn .cs-copy-glyph {
+.expressive-code .frame.is-terminal .copy button.cs-copy-btn .cs-copy-glyph,
+.splash-code-tabs__copy-host .copy button.cs-copy-btn .cs-copy-glyph {
     display: block;
     width: 100%;
     height: 100%;
@@ -2180,15 +2233,18 @@ html[data-theme='light'] .expressive-code .cs-code-file {
 }
 
 .expressive-code .frame.has-title .copy button.cs-copy-btn:hover,
-.expressive-code .frame.is-terminal .copy button.cs-copy-btn:hover {
+.expressive-code .frame.is-terminal .copy button.cs-copy-btn:hover,
+.splash-code-tabs__copy-host .copy button.cs-copy-btn:hover {
     color: var(--ec-codeFg, #d4d8e4) !important;
     background: color-mix(in srgb, var(--ec-codeFg, #d4d8e4) 8%, transparent) !important;
 }
 
 html[data-theme='light'] .expressive-code .frame.has-title .copy button.cs-copy-btn,
 html[data-theme='light'] .expressive-code .frame.is-terminal .copy button.cs-copy-btn,
+html[data-theme='light'] .splash-code-tabs__copy-host .copy button.cs-copy-btn,
 html[data-theme='light'] .expressive-code .frame.has-title .copy button.cs-copy-btn:not(:hover),
 html[data-theme='light'] .expressive-code .frame.is-terminal .copy button.cs-copy-btn:not(:hover),
+html[data-theme='light'] .splash-code-tabs__copy-host .copy button.cs-copy-btn:not(:hover),
 html[data-theme='light'] .expressive-code .frame.has-title:not(:hover) .copy button.cs-copy-btn,
 html[data-theme='light'] .expressive-code .frame.is-terminal:not(:hover) .copy button.cs-copy-btn {
     /* Avoid translucent mixes — they read as washed-out on light panels */
@@ -2196,7 +2252,8 @@ html[data-theme='light'] .expressive-code .frame.is-terminal:not(:hover) .copy b
 }
 
 html[data-theme='light'] .expressive-code .frame.has-title .copy button.cs-copy-btn:hover,
-html[data-theme='light'] .expressive-code .frame.is-terminal .copy button.cs-copy-btn:hover {
+html[data-theme='light'] .expressive-code .frame.is-terminal .copy button.cs-copy-btn:hover,
+html[data-theme='light'] .splash-code-tabs__copy-host .copy button.cs-copy-btn:hover {
     color: var(--cs-ink) !important;
     background: color-mix(in srgb, var(--cs-ink) 6%, transparent) !important;
 }
@@ -2204,6 +2261,7 @@ html[data-theme='light'] .expressive-code .frame.is-terminal .copy button.cs-cop
 /* Success green wins over hover when copied */
 .expressive-code .frame.has-title .copy button.cs-copy-btn.cs-copied,
 .expressive-code .frame.is-terminal .copy button.cs-copy-btn.cs-copied,
+.splash-code-tabs__copy-host .copy button.cs-copy-btn.cs-copied,
 .expressive-code .frame.has-title .copy button.cs-copy-btn.cs-copied:hover,
 .expressive-code .frame.is-terminal .copy button.cs-copy-btn.cs-copied:hover,
 .expressive-code .frame.has-title .copy button.cs-copy-btn.cs-copied:focus,
@@ -2494,5 +2552,122 @@ html[data-theme='dark'] .demo-screenshot__img--for-light {
 
 html[data-theme='dark'] .demo-screenshot__img--for-dark {
     display: block;
+}
+
+/* Splash homepage — tabbed demo source (SplashCodeTabs.astro) */
+.splash-code-tabs {
+    --cs-code-border: var(--docs-code-border);
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--cs-code-border);
+    border-radius: 0.55rem;
+    overflow: hidden;
+    background: transparent;
+}
+
+html[data-theme='light'] .splash-code-tabs {
+    background: var(--cs-code-bg);
+}
+
+.splash-code-tabs__bar {
+    align-items: center;
+    background: transparent;
+    border-bottom: 1px solid var(--cs-code-border);
+    display: flex;
+    gap: 0.55rem;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.45rem 0.35rem 0.7rem;
+}
+
+html[data-theme='light'] .splash-code-tabs__bar {
+    background: var(--docs-code-border);
+}
+
+.splash-code-tabs__tablist {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.splash-code-tabs__copy-host {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+    padding-inline-end: 0.15rem;
+}
+
+.splash-code-tabs__tab {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-radius: 0.35rem;
+    color: var(--cs-muted);
+    cursor: pointer;
+    display: inline-flex;
+    font-family: var(--sl-font-mono, ui-monospace, monospace);
+    font-size: 0.74rem;
+    font-weight: 500;
+    gap: 0.35rem;
+    letter-spacing: 0.01em;
+    line-height: 1.25;
+    max-width: min(100%, 12rem);
+    padding: 0.28rem 0.6rem;
+    white-space: nowrap;
+}
+
+.splash-code-tabs__tab .cs-code-name {
+    display: inline;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.splash-code-tabs__tab .cs-code-file {
+    color: inherit;
+    font-weight: 600;
+}
+
+html[data-theme='light'] .splash-code-tabs__tab {
+    color: hsl(228, 14%, 30%);
+}
+
+.splash-code-tabs__tab:is(:hover, :focus-visible) {
+    background: color-mix(in srgb, var(--cs-muted) 12%, transparent);
+    color: var(--cs-ink);
+    outline: none;
+}
+
+.splash-code-tabs__tab.is-active {
+    background: color-mix(in srgb, var(--cs-code-bg) 88%, white);
+    color: var(--cs-ink);
+}
+
+html[data-theme='light'] .splash-code-tabs__tab.is-active {
+    background: var(--cs-code-bg);
+    color: var(--cs-ink);
+}
+
+.splash-code-tabs__panel:not(.is-active) {
+    display: none;
+}
+
+.splash-code-tabs .expressive-code {
+    margin: 0;
+}
+
+.splash-code-tabs .expressive-code .frame.has-title,
+.splash-code-tabs .expressive-code .frame.is-terminal {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.splash-code-tabs .expressive-code .frame.has-title > .header,
+.splash-code-tabs .expressive-code .frame.is-terminal > .header {
+    display: none !important;
 }
 

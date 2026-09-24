@@ -7,6 +7,8 @@ import {
     ecDataCodeToText,
     fileKindFromName,
     isFilePathTitle,
+    codeTabLabelFromTitle,
+    splashCodeTabIconFromKind,
     kindFromTitle,
     tryCopyText,
 } from './codeBlockTitles.ts';
@@ -97,8 +99,23 @@ test('fileKindFromName maps common extensions', (assert) => {
     assert.equal(fileKindFromName('package.json'), 'JSON');
     assert.equal(fileKindFromName('README.md'), 'MD');
     assert.equal(fileKindFromName('styles.css'), 'CSS');
+    assert.equal(fileKindFromName('mock.html'), 'HTML');
     assert.equal(fileKindFromName('main.py'), 'PY');
     assert.equal(fileKindFromName('main.go'), 'GO');
+});
+
+test('codeTabLabelFromTitle matches code block title chips', (assert) => {
+    assert.equal(codeTabLabelFromTitle('demo.ts').kind, 'TS');
+    assert.equal(codeTabLabelFromTitle('demo.ts').file, 'demo.ts');
+    assert.equal(codeTabLabelFromTitle('mock.html').kind, 'HTML');
+    assert.equal(codeTabLabelFromTitle('mock.html').file, 'mock.html');
+});
+
+test('splashCodeTabIconFromKind maps lang chips to file icons', (assert) => {
+    assert.equal(splashCodeTabIconFromKind('HTML'), 'html');
+    assert.equal(splashCodeTabIconFromKind('CSS'), 'css');
+    assert.equal(splashCodeTabIconFromKind('TS'), 'ts');
+    assert.equal(splashCodeTabIconFromKind(null), null);
 });
 
 test('fileKindFromName is case-insensitive and path-aware', (assert) => {

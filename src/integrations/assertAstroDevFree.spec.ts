@@ -98,7 +98,7 @@ test('assertAstroDevFree scans the Astro fallback port range by default', async 
             message = err instanceof Error ? err.message : String(err);
         }
         assert.equal(message.includes(String(server?.port)), true);
-        assert.equal(message.includes('sidebar slugs'), true);
+        assert.equal(message.includes('astro:dev'), true);
     } finally {
         await server?.close();
     }
@@ -107,11 +107,12 @@ test('assertAstroDevFree scans the Astro fallback port range by default', async 
 test('astro:dev wipes compiler caches after the port check; astro:build does not', (assert) => {
     const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
     const devPrefix = 'node scripts/assert-astro-dev-free.mjs && node scripts/clean-astro-cache.mjs &&';
-    const buildPrefix = 'node scripts/assert-astro-dev-free.mjs &&';
 
     assert.equal(pkg.scripts['astro:dev'].startsWith(devPrefix), true);
-    assert.equal(pkg.scripts['astro:build'].startsWith(buildPrefix), true);
+    assert.equal(pkg.scripts['astro:build'], 'node scripts/astro-build.mjs');
+    assert.equal(pkg.scripts['dev'], 'npm run astro:dev');
     assert.equal(pkg.scripts['astro:build'].includes('clean-astro-cache.mjs'), false);
+    assert.equal(pkg.scripts['astro:build'].includes('assert-astro-dev-free'), false);
     assert.equal(ASTRO_DEV_PORT, 4321);
     assert.equal(ASTRO_DEV_PORT_MAX, 4330);
 });

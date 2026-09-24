@@ -145,6 +145,20 @@ test('pops in at the pointer on first hover', (assert) => {
     assert.equal(el.style.top, '200px');
 });
 
+test('uses mock-root hint tokens when they differ from the page', (assert) => {
+    document.documentElement.style.setProperty('--busker-hint-ink', 'rgb(0 0 0 / 0.88)');
+
+    const {root, el} = stage();
+
+    root.style.setProperty('--busker-hint-ink', 'rgb(255 0 0 / 1)');
+    hover(root, 100, 200);
+
+    assert.equal(el.style.getPropertyValue('--busker-hint-ink').trim(), 'rgb(255 0 0 / 1)');
+
+    document.documentElement.style.removeProperty('--busker-hint-ink');
+    root.style.removeProperty('--busker-hint-ink');
+});
+
 test('custom offsetX shifts the pill to the right of the pointer', (assert) => {
     const {root, el} = stage({offsetX: '2rem'});
 

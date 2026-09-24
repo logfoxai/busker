@@ -61,6 +61,11 @@ declare module 'virtual:starlight/components/ThemeSelect' {
 	export default ThemeSelect;
 }
 
+declare module 'phosphor-astro/*.astro' {
+	const Icon: StarlightComponent;
+	export default Icon;
+}
+
 declare namespace App {
 	interface Locals {
 		starlightRoute: {

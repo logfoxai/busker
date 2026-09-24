@@ -1,6 +1,6 @@
 # Styling
 
-`busker.css` is optional. It styles the cursor, the ripple, the pointer affordance, the miss hint, the explore hint, and an optional `[data-scene]` cross-fade recipe &mdash; about 100 lines, all scoped to `.busker`.
+`busker.css` is optional. It styles the cursor, the ripple, the pointer affordance, the miss hint, and the explore hint &mdash; about 80 lines, all scoped to `.busker`. It does **not** style your mock.
 
 ```typescript
 import '@logfox/busker/busker.css';
@@ -20,9 +20,10 @@ Set these on the root, or anywhere above it:
 | `--busker-cursor-edge` | `#fff` | The ring around the dot that keeps it visible on dark UI. |
 | `--busker-cursor-shadow` | `rgb(0 0 0 / 0.3)` | The dot's drop shadow. |
 | `--busker-cursor-z-index` | `2147483647` | Keeps the pointer above in-mock overlays and modals. |
-| `--busker-hint-bg` | light frosted gradient (see `busker.css`) | Explore-hint pill fill (painted frost, no blur). |
-| `--busker-hint-ink` | `#fff` | The explore-hint label. |
-| `--busker-scene-ms` | `0.4s` | How long one scene takes to cross-fade into the next. |
+| `--busker-hint-bg` | light frosted gradient on `:root` (see `busker.css`) | Explore-hint pill fill (painted frost, no blur). |
+| `--busker-hint-ink` | dark text in light mode, light text in dark mode | The explore-hint label. |
+| `--busker-hint-border` | matches mode in `busker.css` | Pill outline. |
+| `--busker-hint-face-shadow` | matches mode in `busker.css` | Pill depth (no `backdrop-filter`). |
 
 ```css
 .my-mock {
@@ -120,7 +121,9 @@ When the routine sets [`exploreHint`](./taking-over.md#the-explore-hint), busker
 <span data-explore-hint><span data-explore-hint-pop><span data-explore-hint-face>Click to explore</span></span></span>
 ```
 
-The outer span follows the pointer with `left` / `top` only (no transforms on that node). `[data-explore-hint-pop]` scales in and out; `[data-explore-hint-face]` is a painted frosted pill (gradient, border, shadow — no `backdrop-filter`, so follow + pop stay smooth). Set `--busker-hint-bg` and `--busker-hint-ink` on `.busker` or target `[data-explore-hint-face]` in your CSS. Restyle the pill through `[data-explore-hint-face]`:
+The outer span follows the pointer with `left` / `top` only (no transforms on that node). `[data-explore-hint-pop]` scales in and out; `[data-explore-hint-face]` is a painted frosted pill (gradient, border, shadow — no `backdrop-filter`, so follow + pop stay smooth).
+
+Because the pill is appended to `document.body`, **`busker.css` defines explore-hint colours on `:root`**, not on `.busker`. They track **`prefers-color-scheme`** and **`html[data-theme='light'|'dark']`** (Starlight and similar doc themes) automatically. Override on **`.busker`** only when a mock needs its own pill (for example a always-light product frame on a dark landing page). Restyle the pill through `[data-explore-hint-face]`:
 
 ```css
 [data-explore-hint-face] {
@@ -131,21 +134,9 @@ The outer span follows the pointer with `left` / `top` only (no transforms on th
 
 `--busker-hint-bg` and `--busker-hint-ink` cover the common case. Horizontal gap from the pointer defaults to `1.75rem` — override with `offsetX` on `ExploreHintConfig` or `--busker-hint-offset-x` on the root for CSS-only tweaks (the JS default matches the variable). Per-visit duration defaults to 1800ms via `dismissAfterMs` or `durationMs` (starts when the hint pops in; moving the mouse does not extend it). The pill sits one step below the cursor (`calc(var(--busker-cursor-z-index) - 1)`) and never intercepts clicks; any click on the mock hides it until the next hover (takeover calls `dismiss()` for good). Under `prefers-reduced-motion` the pop and fade are off and the follow snaps instead of gliding.
 
-## Optional scene cross-fade
+## Your mock
 
-Busker does not activate scenes. If your mock uses `[data-scene]` and toggles `.is-active` in your own JavaScript, `busker.css` can cross-fade them.
-
-Before `busk()` runs, inactive scene siblings are hidden with `display: none` while the active one stays in flow, so SSR and the first paint do not show every page at once. Once `.busker` is on the root, scenes stack and cross-fade instead.
-
-Because stacked scenes are out of flow, **the element holding them needs a height of its own** &mdash; from a parent, a grid track, or its own rule.
-
-Set `--busker-scene-ms` to retime the fade, or turn it into a cut:
-
-```css
-.my-mock {
-    --busker-scene-ms: 0s;
-}
-```
+Product layout, nav, modals, and transitions live in **your** stylesheets. Busker never reads your nav or page markup and never hides siblings for you. When a step or a visitor clicks, your handlers update the DOM; busker only moves the cursor and toggles the affordance classes in [Markup](./markup.md#what-busker-writes).
 
 ## Two lengths are in both places
 

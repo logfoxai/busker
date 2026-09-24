@@ -2,39 +2,45 @@
     <div class="mock__chrome"><span></span><span></span><span></span></div>
     <div class="mock__body">
         <nav class="mock__nav">
-            <button class="mock__brand" data-nav-item="beans">Crema</button>
+            <button class="mock__brand is-active" data-nav-item="beans">Crema</button>
             <div class="mock__nav-items">
-                <button class="mock__nav-item" data-nav-item="beans">Beans</button>
+                <button class="mock__nav-item is-active" data-nav-item="beans">Beans</button>
                 <button class="mock__nav-item" data-nav-item="plans">Plans</button>
                 <button class="mock__nav-item" data-nav-item="roasters">Roasters</button>
             </div>
         </nav>
 
         <div class="mock__main">
-            <section class="mock__scene" data-scene="beans" data-nav="beans">
-                <div class="mock__hero">
-                    <h2 class="mock__hero-title">Fresh roasts,<br />to your door.</h2>
-                    <p class="mock__hero-sub">
-                        Single-origin beans, roasted the morning they ship. No warehouse, no staleness.
-                    </p>
-                    <button class="mock__btn mock__btn--primary" data-cta>See plans</button>
+            <section class="mock__scene is-active" data-scene="beans" data-nav="beans">
+                <h3 class="mock__section-title">Choose your bean</h3>
+                <div class="mock__beans">
+                    <button class="mock__bean" data-bean="huila">
+                        <b>Huila</b>
+                        <span class="mock__bean-note">Colombia</span>
+                        <span class="mock__bean-desc">Chocolate · citrus</span>
+                    </button>
+                    <button class="mock__bean" data-bean="oaxaca">
+                        <b>Oaxaca</b>
+                        <span class="mock__bean-note">Mexico</span>
+                        <span class="mock__bean-desc">Honey · almond</span>
+                    </button>
+                    <button class="mock__bean" data-bean="yirgacheffe">
+                        <b>Yirgacheffe</b>
+                        <span class="mock__bean-note">Ethiopia</span>
+                        <span class="mock__bean-desc">Floral · bergamot</span>
+                    </button>
                 </div>
             </section>
 
             <section class="mock__scene" data-scene="plans" data-nav="plans">
-                <h3 class="mock__section-title">Pick your pace</h3>
+                <h3 class="mock__section-title">Choose your plan</h3>
                 <div class="mock__plans">
                     <button class="mock__plan" data-plan="solo" data-name="Solo" data-price="$18/mo">
                         <b>Solo</b>
                         <span class="mock__plan-price">$18<span>/mo</span></span>
                         <span class="mock__plan-desc">250g · 1 roast</span>
                     </button>
-                    <button
-                        class="mock__plan mock__plan--featured"
-                        data-plan="duo"
-                        data-name="Duo"
-                        data-price="$32/mo"
-                    >
+                    <button class="mock__plan" data-plan="duo" data-name="Duo" data-price="$32/mo">
                         <b>Duo</b>
                         <span class="mock__plan-price">$32<span>/mo</span></span>
                         <span class="mock__plan-desc">500g · 2 roasts</span>

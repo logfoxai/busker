@@ -56,7 +56,7 @@ Same guides as [busker.logfox.ai](https://busker.logfox.ai). Links are repo-rela
 ### Introduction
 
 - [Getting started](src/content/docs/getting-started.md)
-- [Markup](src/content/docs/markup.md) &mdash; the five attributes busker reads and the classes it writes
+- [Markup](src/content/docs/markup.md) &mdash; `data-cursor`, optional press hints, and the classes busker writes
 
 ### Routines
 

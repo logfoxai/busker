@@ -1,22 +1,32 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import {Code, LinkButton} from '@astrojs/starlight/components';
+import {LinkButton} from '@astrojs/starlight/components';
 import '../../busker.css';
 import '../demo/crema/mock.css';
 import '../components/splash.css';
+import SplashCodeTabs from '../components/SplashCodeTabs.astro';
 
+import cremaDemoTs from '../demo/crema/demo.ts?raw';
 import cremaMockHtml from '../demo/crema/mock.html?raw';
 import cremaMockCss from '../demo/crema/mock.css?raw';
 import cremaMockTs from '../demo/crema/mock.ts?raw';
+import CursorClick from 'phosphor-astro/CursorClick.astro';
 
 const PAGE_TITLE_ID = '_top';
+
+const cremaCodeTabs = [
+    {id: 'demo', label: 'demo.ts', lang: 'typescript', code: cremaDemoTs},
+    {id: 'html', label: 'mock.html', lang: 'html', code: cremaMockHtml},
+    {id: 'css', label: 'mock.css', lang: 'css', code: cremaMockCss},
+    {id: 'mock', label: 'mock.ts', lang: 'typescript', code: cremaMockTs},
+];
 ---
 
 <StarlightPage
     frontmatter={{
-        title: 'busker — scripted cursor demos that click',
+        title: 'Busker — for product demos that really click',
         description:
-            'Drive a fake product UI with a routine, not a stopwatch. The cursor clicks, so the page changes through your own handlers — and visitors can take over.',
+            'Stop messing around with timeouts and complex state machines. Build an interactive, scripted product mock with any library or framework, or just basic HTML, CSS, and JavaScript.',
         template: 'splash',
         tableOfContents: false,
         hero: {title: 'busker'},
@@ -25,29 +35,37 @@ const PAGE_TITLE_ID = '_top';
 >
     <div class="splash-page not-content">
         <section class="splash-hero">
-            <h1 id={PAGE_TITLE_ID} class="sr-only" data-page-title>busker</h1>
-            <h2 class="splash-hero__headline">Scripted cursor demos that&nbsp;click.</h2>
-            <p class="splash-hero__lead">
-                The easy way to build an <strong>interactive product mock</strong>. Write the
-                screens in plain HTML, then link a click to the screen it opens &mdash; the same
-                move as wiring frames in a Figma prototype, except this one ships on your page.
-                Busker plays it back with a cursor that glides and clicks, so the mock
-                changes through its own handlers. Click it yourself and busker steps aside.
-            </p>
-            <div class="splash-hero__actions">
-                <LinkButton
-                    href="/getting-started/"
-                    variant="primary"
-                    icon="right-arrow"
-                    class="sl-link-button--forward"
-                >
-                    Get started
-                </LinkButton>
-                <LinkButton href="https://github.com/logfoxai/busker" variant="secondary" icon="github">
-                    GitHub
-                </LinkButton>
+            <h1 id={PAGE_TITLE_ID} class="splash-hero__headline" data-page-title>
+                Product demos that really click<!--
+                --><CursorClick class="splash-hero__click-icon" aria-hidden="true" />
+            </h1>
+            <h2 class="splash-hero__lead">
+                Like a Figma prototype&mdash;wire a click to the screen it opens&mdash;except the
+                mock is your real UI on the page: plain HTML, CSS, and JavaScript, or React or
+                whatever framework you already use. You bring the design and the markup; Busker
+                does not. We only run the script: move the cursor, run your code at each step, and
+                step aside when someone wants to click through themselves.
+            </h2>
+            <div class="splash-hero__cta">
+                <div class="splash-hero__actions">
+                    <LinkButton
+                        href="/getting-started/"
+                        variant="primary"
+                        icon="right-arrow"
+                        class="sl-link-button--forward"
+                    >
+                        Get started
+                    </LinkButton>
+                    <LinkButton href="https://github.com/logfoxai/busker" variant="secondary" icon="github">
+                        GitHub
+                    </LinkButton>
+                </div>
+                <ul class="splash-hero__meta">
+                    <li>Zero dependencies</li>
+                    <li>~4kB</li>
+                    <li>MIT</li>
+                </ul>
             </div>
-            <p class="splash-hero__meta">Zero dependencies &middot; ~4kB &middot; MIT</p>
         </section>
 
         <div class="splash-home">
@@ -56,15 +74,10 @@ const PAGE_TITLE_ID = '_top';
             <section class="splash__code">
                 <h2>That demo, in full</h2>
                 <p>
-                    Markup, styles, and wiring in three files. Scenes change because the cursor
-                    pressed a button &mdash; same as when you press it.
+                    A short routine plus markup, styles, and wiring. The UI changes because the
+                    cursor pressed a button &mdash; same as when you press it.
                 </p>
-                <h3 class="splash__code-file">mock.html</h3>
-                <Code code={cremaMockHtml} lang="html" />
-                <h3 class="splash__code-file">mock.css</h3>
-                <Code code={cremaMockCss} lang="css" />
-                <h3 class="splash__code-file">mock.ts</h3>
-                <Code code={cremaMockTs} lang="typescript" />
+                <SplashCodeTabs files={cremaCodeTabs} defaultId="demo" />
             </section>
         </div>
     </div>
@@ -72,11 +85,6 @@ const PAGE_TITLE_ID = '_top';
 
 <style is:global>
     /* Busker-only sections below the callspec-aligned splash hero. */
-
-    .splash-home {
-        margin-inline: auto;
-        max-width: 54rem;
-    }
 
     .splash-home .splash__code {
         margin-top: 3.5rem;
@@ -92,21 +100,11 @@ const PAGE_TITLE_ID = '_top';
             color: var(--cs-muted);
         }
 
-        & .splash__code-file {
-            font-size: 0.95rem;
-            font-weight: 600;
-            margin: 2rem 0 0.75rem;
-            color: var(--cs-ink);
-
-            &:first-of-type {
-                margin-top: 0;
-            }
-        }
     }
 </style>
 
 <script>
-    import {initCremaDemo} from '../demo/crema/mock';
+    import {initCremaDemo} from '../demo/crema/demo';
 
     initCremaDemo();
 </script>

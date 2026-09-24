@@ -97,12 +97,8 @@ html:not([data-has-sidebar]):has(.splash-page) {
         }
     }
 
-    /* Same plane as the page — frosted, no bar chrome. */
-    header.header {
-        background-color: color-mix(in srgb, var(--sl-color-bg) 72%, transparent);
+    header.header.site-header {
         border-bottom: none;
-        backdrop-filter: blur(14px) saturate(1.25);
-        -webkit-backdrop-filter: blur(14px) saturate(1.25);
         box-shadow: none;
     }
 
@@ -147,10 +143,15 @@ html:not([data-has-sidebar]):has(.splash-page) {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: var(--splash-intro-gap);
+    gap: 0;
     padding-block: var(--splash-section-pad-y) 0;
     position: relative;
     z-index: 1;
+
+    & > .splash-hero__lead,
+    & > .splash-hero__cta {
+        margin-block-start: var(--splash-intro-gap);
+    }
 
     .splash-hero__code {
         margin: 0;
@@ -179,6 +180,19 @@ html:not([data-has-sidebar]):has(.splash-page) {
         animation: splash-fade-up 0.6s ease 0.05s both;
     }
 
+    .splash-hero__click-icon {
+        display: inline-block;
+        width: 0.82em;
+        height: 0.82em;
+        margin-inline-start: 0.18em;
+        vertical-align: -0.1em;
+        color: hsl(262 52% 62%);
+    }
+
+    html:not([data-has-sidebar]):has(.splash-page)[data-theme='light'] .splash-hero__click-icon {
+        color: hsl(262 48% 48%);
+    }
+
     .splash-hero__pitch {
         margin: 0;
         max-width: none;
@@ -202,17 +216,38 @@ html:not([data-has-sidebar]):has(.splash-page) {
     }
 }
 
+.splash-page {
+    display: flex;
+    flex-direction: column;
+}
+
+.splash-home {
+    margin-block-start: var(--splash-section-inner-gap);
+    margin-inline: auto;
+    max-width: 54rem;
+}
+
+.splash-hero__cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    margin-inline: 0;
+    margin-block-end: 0;
+    width: 100%;
+}
+
+.splash-hero .splash-hero__cta {
+    animation: splash-fade-up 0.6s ease 0.18s both;
+}
+
 .splash-hero__actions {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
     gap: 0.85rem;
-    margin: 0.5rem 0 0;
-}
-
-.splash-hero .splash-hero__actions {
-    animation: splash-fade-up 0.6s ease 0.18s both;
+    margin: 0 0 0.85rem;
 }
 
 .splash-hero__actions .sl-link-button {
@@ -258,24 +293,9 @@ html:not([data-has-sidebar]):has(.splash-page) {
         transform: translateX(-0.2rem);
     }
 
-    /* Primary — gradient from docs-brand-buttons.css */
+    /* Primary — solid fill from docs-brand-buttons.css */
     &.primary {
         font-weight: 600;
-    }
-
-    /* GitHub — text link style, not bordered secondary pill */
-    &.secondary[href*='github'] {
-        background: transparent;
-        border: none;
-        box-shadow: none;
-        color: var(--cs-ink);
-
-        &:hover {
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            color: var(--docs-primary-bg);
-        }
     }
 
     &.secondary {
@@ -285,11 +305,12 @@ html:not([data-has-sidebar]):has(.splash-page) {
 
 /* Longer intro copy (busker splash). */
 .splash-hero .splash-hero__lead {
-    margin: 0;
+    margin-inline: 0;
+    margin-block-end: 0;
     max-width: 48rem;
     width: 100%;
     font-family: var(--cs-font-heading);
-    font-size: clamp(1.05rem, 2.1vw, 1.35rem);
+    font-size: clamp(0.95rem, 1.85vw, 1.15rem);
     font-weight: 550;
     letter-spacing: -0.025em;
     line-height: 1.5;
@@ -300,10 +321,33 @@ html:not([data-has-sidebar]):has(.splash-page) {
 }
 
 .splash-hero .splash-hero__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
     margin: 0;
+    padding: 0;
+    list-style: none;
     font-size: 0.85rem;
     color: var(--cs-muted);
     animation: splash-fade-up 0.6s ease 0.22s both;
+}
+
+.splash-hero .splash-hero__meta > li {
+    display: inline-flex;
+    align-items: center;
+}
+
+.splash-hero .splash-hero__meta > li:not(:first-child)::before {
+    content: '';
+    flex-shrink: 0;
+    width: 0.3125rem;
+    height: 0.3125rem;
+    margin-inline: 0.65rem;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.55;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -311,6 +355,7 @@ html:not([data-has-sidebar]):has(.splash-page) {
     .splash-hero__pitch,
     .splash-hero__lead,
     .splash-hero__meta,
+    .splash-hero__cta,
     .splash-hero__actions,
     .splash-features,
     .splash-hero__stage {
@@ -337,50 +382,62 @@ html:not([data-has-sidebar]):has(.splash-page) {
     }
 }
 
-html[data-theme='dark'] .splash-hero__actions .sl-link-button.secondary:not([href*='github']) {
+html[data-theme='dark'] .splash-hero__actions .sl-link-button.secondary {
     --cs-btn-fill: var(--splash-hero-secondary-bg);
     background: var(--splash-hero-secondary-bg);
+    border: none;
+    box-shadow: none;
     color: var(--cs-ink);
 
     &:hover {
         --cs-btn-fill: var(--splash-secondary-hover-bg);
         background: var(--splash-secondary-hover-bg);
+        box-shadow: none;
         color: var(--splash-secondary-hover-fg);
     }
 }
 
-html[data-theme='dark'] .splash-demo .splash-hero__actions .sl-link-button.secondary:not(.splash-demo__run-local):not([href*='github']) {
+html[data-theme='dark'] .splash-demo .splash-hero__actions .sl-link-button.secondary:not(.splash-demo__run-local) {
     --cs-btn-fill: var(--splash-demo-secondary-bg);
     background: var(--splash-demo-secondary-bg);
+    border: none;
+    box-shadow: none;
     color: var(--cs-ink);
 
     &:hover {
         --cs-btn-fill: var(--splash-demo-secondary-hover-bg);
         background: var(--splash-demo-secondary-hover-bg);
+        box-shadow: none;
         color: var(--splash-secondary-hover-fg);
     }
 }
 
-html:not([data-has-sidebar]):has(.splash-page)[data-theme='light'] .splash-hero .splash-hero__actions .sl-link-button.secondary:not([href*='github']) {
+html:not([data-has-sidebar]):has(.splash-page)[data-theme='light'] .splash-hero .splash-hero__actions .sl-link-button.secondary {
     --cs-btn-light-fill: var(--splash-hero-secondary-bg);
     background: var(--splash-hero-secondary-bg);
+    border: none;
+    box-shadow: none;
     color: var(--cs-ink);
 
     &:hover {
         --cs-btn-light-fill: var(--splash-secondary-hover-bg);
         background: var(--splash-secondary-hover-bg);
+        box-shadow: none;
         color: var(--splash-secondary-hover-fg);
     }
 }
 
-html:not([data-has-sidebar]):has(.splash-page)[data-theme='light'] .splash-demo .splash-hero__actions .sl-link-button.secondary:not(.splash-demo__run-local):not([href*='github']) {
+html:not([data-has-sidebar]):has(.splash-page)[data-theme='light'] .splash-demo .splash-hero__actions .sl-link-button.secondary:not(.splash-demo__run-local) {
     --cs-btn-light-fill: var(--splash-demo-secondary-bg);
     background: var(--splash-demo-secondary-bg);
+    border: none;
+    box-shadow: none;
     color: var(--cs-ink);
 
     &:hover {
         --cs-btn-light-fill: var(--splash-demo-secondary-hover-bg);
         background: var(--splash-demo-secondary-hover-bg);
+        box-shadow: none;
         color: var(--splash-secondary-hover-fg);
     }
 }

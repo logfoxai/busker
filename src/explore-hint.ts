@@ -46,7 +46,7 @@ function pruneOrphanHints(): void {
 export interface ExploreHintHostGuard {
     /** Ignore bubbled clicks while the show presses (`el.click()`). */
     click?: () => boolean;
-    /** Ignore pointerleave while layout churns after a scripted press (scene/modal). */
+    /** Ignore pointerleave while layout churns after a scripted press (e.g. modal open). */
     leave?: () => boolean;
 }
 
@@ -130,15 +130,34 @@ export function exploreHint(
         invalidateMockRect();
     };
 
+    const hintThemeProps = ['--busker-hint-bg', '--busker-hint-ink'] as const;
+
+    /** Pill is on body; inherit page tokens from :root unless the mock root overrides. */
     const theme = (): void => {
-        const s = getComputedStyle(root);
-        for (const prop of ['--busker-hint-bg', '--busker-hint-ink'] as const) {
-            const v = s.getPropertyValue(prop).trim();
-            if (v) face.style.setProperty(prop, v);
+        const docStyle = getComputedStyle(document.documentElement);
+        const rootStyle = getComputedStyle(root);
+
+        for (const prop of hintThemeProps) {
+            const onMock = rootStyle.getPropertyValue(prop).trim();
+            const onPage = docStyle.getPropertyValue(prop).trim();
+
+            if (onMock && onMock !== onPage) hint.style.setProperty(prop, onMock);
+            else hint.style.removeProperty(prop);
         }
-        hint.style.zIndex = s.getPropertyValue('--busker-cursor-z-index').trim() || '2147483647';
+
+        hint.style.zIndex =
+            rootStyle.getPropertyValue('--busker-cursor-z-index').trim() || '2147483647';
     };
     theme();
+
+    const themeMedia = matchMedia('(prefers-color-scheme: dark)');
+    const onThemeChange = (): void => theme();
+    themeMedia.addEventListener('change', onThemeChange);
+    const themeObserver = new MutationObserver(onThemeChange);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme'],
+    });
 
     const placeNow = (event: PointerEvent): void => {
         lastPointerX = event.clientX;
@@ -395,6 +414,8 @@ export function exploreHint(
             unregisterHint(registryEntry);
             clearDismissTimer();
             if (leaveRaf) cancelAnimationFrame(leaveRaf);
+            themeMedia.removeEventListener('change', onThemeChange);
+            themeObserver.disconnect();
             document.removeEventListener('visibilitychange', onDocumentHidden);
             stopVisibleWatch();
             settle(true);
