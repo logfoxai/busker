@@ -26,6 +26,7 @@ const required = [
 	'splash__code',
 	'splash__prose',
 	'What is a busk?',
+	'How you build it',
 	'skills/busker/SKILL.md',
 	'/coding-agents/',
 	'splash-code-tabs',

@@ -29,7 +29,7 @@ const cremaCodeTabs = [
     frontmatter={{
         title: 'Busker — for product demos that really click',
         description:
-            'Stop messing around with timeouts and complex state machines. Build an interactive, scripted product mock with any library or framework, or just basic HTML, CSS, and JavaScript.',
+            'Scripted cursor demos on live UI—click targets, handoff when visitors click. HTML/CSS/JS or any framework.',
         template: 'splash',
         tableOfContents: false,
         hero: {title: 'busker'},
@@ -43,12 +43,9 @@ const cremaCodeTabs = [
                 --><CursorClick class="splash-hero__click-icon" aria-hidden="true" />
             </h1>
             <h2 class="splash-hero__lead">
-                The easy way to put a Figma-style product mock on your site. You build the screens
-                like you already would; Busker runs the demo: cursor movement, clicks on your real
-                controls, and playback that feels like a screen recording.                 It stays in sync because
-                it is live UI, not a video or a pile of timers you have to re-tune. When a visitor
-                clicks, the show stops and the mock is fully interactive, like a Figma prototype:
-                real clicks, clear hotspots, and hints that invite them to explore on their own.
+                Ship a Figma-style product demo on your site: you build the screens, Busker loops a
+                scripted cursor that clicks your real controls&mdash;live UI, not a video. Click targets
+                show what is tappable; one visitor click ends the show and hands them the mock.
             </h2>
             <div class="splash-hero__cta">
                 <div class="splash-hero__actions">
@@ -83,6 +80,20 @@ const cremaCodeTabs = [
                     cursor pressed a button &mdash; same as when you press it.
                 </p>
                 <SplashCodeTabs files={cremaCodeTabs} defaultId="demo" />
+            </section>
+
+            <section class="splash__prose">
+                <h2>How you build it</h2>
+                <p>
+                    Plain HTML, CSS, and JavaScript is enough for straightforward demos like the one
+                    above. Bigger UI or an app you already have? Use React, Vue, Svelte, or anything
+                    else&mdash;Busker only needs a root element and selectors that match at runtime.
+                </p>
+                <p>
+                    Layout, styles, and what each click does are yours. See{' '}
+                    <a href="/getting-started/">Getting started</a> for install and wiring, and{' '}
+                    <a href="/markup/">Markup</a> for what Busker reads from the DOM.
+                </p>
             </section>
 
             <section class="splash__prose">
