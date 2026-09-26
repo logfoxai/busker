@@ -1,13 +1,12 @@
 # Click-driven routines
 
-A routine is a **script**: a list of steps that run top to bottom, loop after loop. Each step does exactly one thing — click, wait, move the cursor, or run your code. **One clock.** UI changes, ambient ticks, and livetail rows use **`{ click }`** (your handlers) or **`{ run }`** — not a second schedule on the routine.
+A routine is a **script**: a list of steps that run top to bottom, loop after loop. Each step does exactly one thing — click, wait, move the cursor, or run your code. **One clock.** Anything that changes your mock uses **`{ click }`** (your handlers) or **`{ run }`** — not a second schedule on the routine.
 
 ```typescript
-wireScenes(root);
+// Your click handlers and resetApp() — busker does not wire these.
 
 busk(root, {
     start: [0.55, 0.25],
-    onLoop: () => wireScenes(root, 'home'),
     steps: [
         {wait: 900},
         {click: '[data-nav-item="alerts"]'},
@@ -17,6 +16,7 @@ busk(root, {
         {click: '[data-close]'},
         {wait: 900},
         {move: [0.55, 0.25]},
+        {run: () => resetApp(root)},
     ],
     clickTargets: ['[data-nav-item="home"]', '[data-nav-item="alerts"]', '[data-row="p0"]'],
 });
@@ -29,7 +29,7 @@ busk(root, {
 | `{ click: 'selector' }` | Glide to the element, dwell, press, and **really** `.click()` it. |
 | `{ wait: ms }` | Pause — reading time after whatever just opened or happened. |
 | `{ move: selector \| [x, y] }` | Glide somewhere **without** pressing (park the cursor before the loop ends). |
-| `{ run: () => void }` | Your code once at this beat (add a CSS class, reveal a row, start typing in your own code). |
+| `{ run: () => void }` | Your code once at this beat (toggle a class, append a row, update copy — whatever your mock needs). |
 
 That is the whole vocabulary. Pauses are never folded into click steps, so the script reads like a storyboard and nothing drifts when you edit a `{ wait }`.
 
@@ -60,17 +60,7 @@ Each loop re-compiles the script from fresh layout. Hidden step targets are **re
 clickTargets: ['[data-nav-item="alerts"]', '[data-filter]'],
 ```
 
-Busker does **not** change your UI. Wire `click` handlers (or rely on scripted `{ click }` steps) for scenes, filters, and modals.
-
-## `onLoop`
-
-Reset state when the playhead wraps — scenes, filters, clearing typed search, etc.:
-
-```typescript
-onLoop: () => wireScenes(root, 'home'),
-```
-
-`onLoop` runs when the playhead wraps to 0, after the last step (including ring-out on a final click).
+Busker does **not** change your UI. Wire `click` handlers (or rely on scripted `{ click }` steps) for navigation, filters, and modals. To reset the mock before the next lap, add a final `{ run: () => … }` step (often after a `{ move }` that parks the cursor).
 
 ## Where the cursor starts
 
@@ -85,6 +75,9 @@ onLoop: () => wireScenes(root, 'home'),
 | `{ to: [0.5, 0.5], wait: 900 }` | `{ wait: 900 }, { move: [0.5, 0.5] }` |
 | `{ run: fn, wait: 400 }` | `{ wait: 400 }, { run: fn }` |
 | `tasks`, `toggles`, `typing`, `countdowns` on the routine | **`{ run }` steps** in order (or click handlers) |
+| `onLoop` | final **`{ run: () => reset() }`** step in `steps` |
+| `ScriptRoutine` / `assertScriptRoutine` | **`Routine`** / **`assertRoutine`** |
+| `compile()` → `{ moves, tasks, … }` | **`{ glides, runs, duration }`** — see [`compile()` helper](./compile.md) |
 | per-step `moveFor` / `dwell` | optional routine `motion` |
 
 Loop length for a test? Use [`compile()`](./compile.md).

@@ -20,6 +20,7 @@
   "entry": [
     "src/cs-pagefind/pagefind.ts",
     "src/components/codeBlockTitles.ts",
+    "src/components/splashAgentPrompt.ts",
     "src/components/pagefindMount.ts",
     "src/components/searchDialog.ts",
     "src/components/searchKeyboardNav.ts",

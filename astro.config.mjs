@@ -88,6 +88,7 @@ export default defineConfig({
                 './src/styles/fonts.css',
                 './src/styles/docs-shared.css',
                 './src/styles/starlight-custom.css',
+                './src/styles/docs-brand-buttons.css',
             ],
             components: {
                 Head: './src/overrides/Head.astro',
@@ -113,6 +114,7 @@ export default defineConfig({
                     label: 'Introduction',
                     items: [
                         {label: 'Getting started', slug: 'getting-started'},
+                        {label: 'Skill & prompts', slug: 'coding-agents'},
                         {label: 'Markup', slug: 'markup'},
                     ],
                 },

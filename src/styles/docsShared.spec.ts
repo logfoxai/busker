@@ -39,6 +39,17 @@ test('docs highlight aliases the primary fill token', (assert) => {
     assert.equal(shared.includes('--docs-primary-hover-bg: var(--docs-primary-bg)'), true);
 });
 
+test('Starlight CTAs load solid primary pill buttons', (assert) => {
+    const astro = readFileSync(path.join(root, 'astro.config.mjs'), 'utf8');
+    const brand = readFileSync(path.join(root, 'src/styles/docs-brand-buttons.css'), 'utf8');
+
+    assert.equal(astro.includes('./src/styles/docs-brand-buttons.css'), true);
+    assert.equal(brand.includes('border-radius: 999px'), true);
+    assert.equal(brand.includes('background: var(--docs-primary-bg)'), true);
+    assert.equal(brand.includes('linear-gradient'), false);
+    assert.equal(brand.includes('outline: 2px solid var(--docs-primary-bg)'), true);
+});
+
 test('lockup mark svg is block-level so explorer matches docs alignment', (assert) => {
     const shared = readFileSync(path.join(root, 'src/styles/docs-shared.css'), 'utf8');
 

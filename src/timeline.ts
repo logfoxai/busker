@@ -1,5 +1,5 @@
 import {cubicBezierEasing, type CubicBezier} from './easing.ts';
-import type {MotionConfig, Move, Point, Step, Task} from './types.ts';
+import type {Glide, MotionConfig, Point, ScheduledRun, Step} from './types.ts';
 
 /** How long the cursor stays squashed after a press. */
 export const PRESS_MS = 200;
@@ -40,7 +40,7 @@ function shortHopReadabilityMs(distancePx: number): number {
 }
 
 /** Glide duration from distance at constant `pxPerSecond` (no max cap). */
-export function moveDurationMs(distancePx: number, motion: MotionConfig = {}): number {
+export function glideDurationMs(distancePx: number, motion: MotionConfig = {}): number {
     const m = {...DEFAULT_MOTION, ...motion};
     const fromSpeed =
         distancePx <= 0 ? 0 : Math.round((distancePx / m.pxPerSecond) * 1000);
@@ -66,11 +66,11 @@ export function compileScriptTimeline(
     resolveTarget: ResolveTarget,
     motion: MotionConfig = {},
     start: Point = [0, 0],
-): {moves: Move[]; duration: number; tasks: Task[]; stepStartsMs: number[]} {
+): {glides: Glide[]; duration: number; runs: ScheduledRun[]; stepStartsMs: number[]} {
     const m = {...DEFAULT_MOTION, ...motion};
     let t = 0;
-    const moves: Move[] = [];
-    const tasks: Task[] = [];
+    const glides: Glide[] = [];
+    const runs: ScheduledRun[] = [];
     const stepStartsMs: number[] = [];
     let cursorAt = start;
 
@@ -81,30 +81,30 @@ export function compileScriptTimeline(
         if ('click' in step && step.click !== undefined) {
             const dest = resolveTarget(step.click, cursorAt) ?? cursorAt;
             const dist = distancePx(cursorAt, dest);
-            const moveMs = moveDurationMs(dist, m);
-            const until = from + moveMs;
+            const glideMs = glideDurationMs(dist, m);
+            const until = from + glideMs;
             const press = until + m.dwellMs;
 
             cursorAt = dest;
             t = press + PRESS_MS;
-            moves.push({to: step.click, from, until, press});
+            glides.push({to: step.click, from, until, press});
             continue;
         }
 
         if ('move' in step && step.move !== undefined) {
             const dest = resolveTarget(step.move, cursorAt) ?? cursorAt;
             const dist = distancePx(cursorAt, dest);
-            const moveMs = moveDurationMs(dist, m);
-            const until = from + moveMs;
+            const glideMs = glideDurationMs(dist, m);
+            const until = from + glideMs;
 
             cursorAt = dest;
             t = until;
-            moves.push({to: step.move, from, until});
+            glides.push({to: step.move, from, until});
             continue;
         }
 
         if ('run' in step) {
-            tasks.push({at: t, run: step.run});
+            runs.push({at: t, run: step.run});
             continue;
         }
 
@@ -113,10 +113,10 @@ export function compileScriptTimeline(
         }
     }
 
-    const last = moves[moves.length - 1];
+    const last = glides[glides.length - 1];
     const duration = last?.press === undefined ? t : Math.max(t, last.press + RING_MS);
 
-    return {moves, duration, tasks, stepStartsMs};
+    return {glides, duration, runs, stepStartsMs};
 }
 
 export function compile(
@@ -124,10 +124,10 @@ export function compile(
     resolveTarget: ResolveTarget,
     motion: MotionConfig = {},
     start: Point = [0, 0],
-): {moves: Move[]; duration: number; tasks: Task[]} {
-    const {moves, duration, tasks} = compileScriptTimeline(steps, resolveTarget, motion, start);
+): {glides: Glide[]; duration: number; runs: ScheduledRun[]} {
+    const {glides, duration, runs} = compileScriptTimeline(steps, resolveTarget, motion, start);
 
-    return {moves, duration, tasks};
+    return {glides, duration, runs};
 }
 
 /** When each script step begins (ms from loop start), for passive effects aligned to the same schedule as `busk()`. */
@@ -144,31 +144,31 @@ export function compileStepStarts(
  * Lengthen one glide and push every later beat by the same amount. Used when
  * compile() could not measure a hidden target and guessed ~zero distance.
  */
-export function stretchMoveGlide(
-    moves: Move[],
-    tasks: Task[],
+export function stretchGlide(
+    glides: Glide[],
+    runs: ScheduledRun[],
     index: number,
     glideMs: number,
     playheadMs?: number,
 ): number {
-    const move = moves[index];
+    const glide = glides[index];
 
-    if (!move) return 0;
+    if (!glide) return 0;
 
-    const delta = glideMs - (move.until - move.from);
+    const delta = glideMs - (glide.until - glide.from);
 
     if (delta === 0) return 0;
 
-    const t = playheadMs ?? move.from;
+    const t = playheadMs ?? glide.from;
 
     // Shortening mid-glide would teleport the cursor; only safe at the start of the hop.
-    if (delta < 0 && t > move.from + glideMs) return 0;
+    if (delta < 0 && t > glide.from + glideMs) return 0;
 
-    move.until += delta;
-    if (move.press !== undefined) move.press += delta;
+    glide.until += delta;
+    if (glide.press !== undefined) glide.press += delta;
 
-    for (let j = index + 1; j < moves.length; j++) {
-        const later = moves[j];
+    for (let j = index + 1; j < glides.length; j++) {
+        const later = glides[j];
 
         if (!later) continue;
 
@@ -177,31 +177,30 @@ export function stretchMoveGlide(
         if (later.press !== undefined) later.press += delta;
     }
 
-    for (const task of tasks) {
-        if (task.at >= move.from) task.at += delta;
+    for (const run of runs) {
+        if (run.at >= glide.from) run.at += delta;
     }
 
     return delta;
 }
 
-/** Index of the move the cursor is on at `t`, or -1 before the first one starts. */
-export function moveIndexAt(moves: Move[], t: number): number {
-    return moves.findLastIndex((move) => t >= move.from);
+/** Index of the glide the cursor is on at `t`, or -1 before the first one starts. */
+export function glideIndexAt(glides: Glide[], t: number): number {
+    return glides.findLastIndex((glide) => t >= glide.from);
 }
 
 /** Where the cursor sits at `t`: mid-glide between `from` and `to`, or parked on `to`. */
 export function positionAt(
     from: Point,
     to: Point,
-    move: Move | null,
+    glide: Glide | null,
     t: number,
     ease: (u: number) => number = cubicBezierEasing(DEFAULT_EASING),
 ): Point {
-    if (!move || t >= move.until) return to;
+    if (!glide || t >= glide.until) return to;
 
-    const linear = (t - move.from) / (move.until - move.from);
+    const linear = (t - glide.from) / (glide.until - glide.from);
     const p = ease(linear);
 
     return [from[0] + (to[0] - from[0]) * p, from[1] + (to[1] - from[1]) * p];
 }
-

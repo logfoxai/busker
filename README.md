@@ -37,7 +37,7 @@ busk(document.querySelector('.app'), {
 });
 ```
 
-The show loops while the mock is on screen and stops when the tab is in the background. The first time a visitor clicks, busker steps aside &mdash; the cursor disappears and the mock is theirs to poke at. Click something dead and it flashes what is not.
+The show loops while the mock is on screen and stops when the tab is in the background. The first time a visitor clicks, busker steps aside &mdash; the cursor disappears and the mock is theirs to poke at. Click something dead and it flashes what is not. Worried the loop reads as a video? `exploreHint: true` floats a "Click to explore" pill at the visitor's pointer.
 
 Zero dependencies, about 4kB, no build step, no framework.
 
@@ -56,7 +56,7 @@ Same guides as [busker.logfox.ai](https://busker.logfox.ai). Links are repo-rela
 ### Introduction
 
 - [Getting started](src/content/docs/getting-started.md)
-- [Markup](src/content/docs/markup.md) &mdash; the five attributes busker reads and the classes it writes
+- [Markup](src/content/docs/markup.md) &mdash; `data-cursor`, optional press hints, and the classes busker writes
 
 ### Routines
 

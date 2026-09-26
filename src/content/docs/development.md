@@ -4,19 +4,26 @@
 git clone https://github.com/logfoxai/busker.git
 cd busker
 npm ci
+npm run astro:sync
 npm run validate
 ```
+
+After `npm ci`, run **`npm run astro:sync`** once so `.astro/types.d.ts` exists for the docs site (Starlight splash and guides). The editor uses `tsconfig.astro.json` for `.astro` files and `tsconfig.lib.json` for the library.
+
+**Cmd+click class names** on the splash page (e.g. `splash-hero__lead` in `index.astro` → nested under `.splash-page .splash-hero` in `src/components/splash.css`): install [HTML CSS Support](https://marketplace.visualstudio.com/items?itemName=ecmel.vscode-html-css), then reload the window (`css.enabledLanguages` includes `astro` in `.vscode/settings.json`).
 
 ## Scripts
 
 | Script | What it does |
 |---|---|
-| `npm run build` | `tsc` → `dist/` |
+| `npm run build` | `tsc -p tsconfig.lib.json` → `dist/` |
+| `npm run astro:sync` | Generates `.astro/types.d.ts` for docs / IDE |
 | `npm test` | [kizu](https://github.com/mhweiner/kizu) specs under c8 coverage |
 | `npm run lint` | `eslint --fix` |
-| `npm run astro:dev` | The docs site at `localhost:4321` |
-| `npm run astro:build` | The docs site → `docs-site/` |
-| `npm run validate` | Everything CI runs, in the same order. Run it before you push. |
+| `npm run dev` | Alias for `astro:dev` |
+| `npm run astro:dev` | The docs site at `localhost:4321` (only one dev server at a time) |
+| `npm run astro:build` | The docs site → `docs-site/`. Skips `astro sync` while dev is listening so the dev server is not disturbed. |
+| `npm run validate` | Everything CI runs, in the same order. Run it before you push — you can keep `astro:dev` up. |
 
 ## Layout
 

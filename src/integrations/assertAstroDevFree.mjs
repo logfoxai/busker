@@ -40,7 +40,7 @@ function astroDevBusyMessage(ports) {
 
     return (
         `Astro dev appears to be running on http://127.0.0.1:${primary}${also}. ` +
-        'Stop it before starting another or running astro:build — wiping .astro while dev is up breaks Starlight sidebar slugs.'
+        'Stop it before starting another `astro:dev` — only one docs dev server at a time.'
     );
 }
 

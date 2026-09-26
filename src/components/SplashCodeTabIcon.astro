@@ -1,0 +1,52 @@
+---
+import type {SplashCodeTabIconId} from './codeBlockTitles';
+import FileCode from 'phosphor-astro/FileCode.astro';
+import FileCss from 'phosphor-astro/FileCss.astro';
+import FileHtml from 'phosphor-astro/FileHtml.astro';
+import FileJs from 'phosphor-astro/FileJs.astro';
+import FileJsx from 'phosphor-astro/FileJsx.astro';
+import FileMd from 'phosphor-astro/FileMd.astro';
+import FilePy from 'phosphor-astro/FilePy.astro';
+import FileRs from 'phosphor-astro/FileRs.astro';
+import FileTs from 'phosphor-astro/FileTs.astro';
+import FileTsx from 'phosphor-astro/FileTsx.astro';
+import FileTxt from 'phosphor-astro/FileTxt.astro';
+
+interface Props {
+    icon: SplashCodeTabIconId;
+    kind: string;
+}
+
+const {icon, kind} = Astro.props;
+const className = 'cs-code-file-icon';
+---
+
+{
+    icon === 'html' ? (
+        <FileHtml class={className} data-kind={kind} aria-hidden="true" />
+    ) : icon === 'css' ? (
+        <FileCss class={className} data-kind={kind} aria-hidden="true" />
+    ) : icon === 'ts' ? (
+        <FileTs class={className} data-kind={kind} aria-hidden="true" />
+    ) : icon === 'tsx' ? (
+        <FileTsx class={className} data-kind={kind} aria-hidden="true" />
+    ) : icon === 'js' ? (
+        <FileJs class={className} data-kind={kind} aria-hidden="true" />
+    ) : icon === 'jsx' ? (
+        <FileJsx class={className} data-kind={kind} aria-hidden="true" />
+    ) : icon === 'json' ? (
+        <FileTxt class={className} data-kind={kind} aria-hidden="true" />
+    ) : icon === 'md' ? (
+        <FileMd class={className} data-kind={kind} aria-hidden="true" />
+    ) : icon === 'py' ? (
+        <FilePy class={className} data-kind={kind} aria-hidden="true" />
+    ) : icon === 'go' ? (
+        <FileCode class={className} data-kind={kind} aria-hidden="true" />
+    ) : icon === 'rs' ? (
+        <FileRs class={className} data-kind={kind} aria-hidden="true" />
+    ) : icon === 'yml' ? (
+        <FileTxt class={className} data-kind={kind} aria-hidden="true" />
+    ) : (
+        <FileCode class={className} data-kind={kind} aria-hidden="true" />
+    )
+}
