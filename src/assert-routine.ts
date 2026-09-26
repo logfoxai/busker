@@ -10,7 +10,7 @@ function formatErrors(errors: Record<string, string>): string {
 }
 
 /** Throw if `routine` is not a valid {@link Routine}. Does not touch the DOM. */
-export function assertScriptRoutine(routine: unknown): asserts routine is Routine {
+export function assertRoutine(routine: unknown): asserts routine is Routine {
     const result = validateRoutine(routine);
 
     if (!result.isValid) {

@@ -3,10 +3,10 @@ import {
     compile,
     DEFAULT_MOTION,
     easeInOutCubic,
-    moveDurationMs,
-    moveIndexAt,
+    glideDurationMs,
+    glideIndexAt,
     positionAt,
-    stretchMoveGlide,
+    stretchGlide,
 } from './timeline.ts';
 import type {Point} from './types.ts';
 
@@ -27,30 +27,30 @@ const resolveTestTarget = (to: string | Point, from: Point): Point | null => {
 
 test('compile: waits and clicks run in order with auto glide timing', (assert) => {
 
-    const {moves, duration} = compile(
+    const {glides, duration} = compile(
         [{wait: 100}, {click: '#a'}, {wait: 300}, {click: '#b'}],
         resolveTestTarget,
         FIXED_GLIDE,
         [0, 0],
     );
 
-    assert.equal(moves[0], {to: '#a', from: 100, until: 200, press: 250});
-    assert.equal(moves[1], {to: '#b', from: 750, until: 850, press: 900});
+    assert.equal(glides[0], {to: '#a', from: 100, until: 200, press: 250});
+    assert.equal(glides[1], {to: '#b', from: 750, until: 850, press: 900});
     assert.equal(duration, 1400);
 
 });
 
 test('compile: a click step follows the previous beat immediately when there is no wait', (assert) => {
 
-    const {moves} = compile(
+    const {glides} = compile(
         [{click: '#a'}, {click: '#b'}],
         resolveTestTarget,
         {...FIXED_GLIDE, dwellMs: 10},
         [0, 0],
     );
 
-    assert.equal(moves[0].press, 110);
-    assert.equal(moves[1].from, 310);
+    assert.equal(glides[0].press, 110);
+    assert.equal(glides[1].from, 310);
 
 });
 
@@ -64,47 +64,47 @@ test('compile: a loop that ends on a click still runs until the ring has read', 
 
 test('compile: a move step glides without a press', (assert) => {
 
-    const {moves, duration} = compile(
+    const {glides, duration} = compile(
         [{wait: 100}, {move: [2, 0]}],
         resolveTestTarget,
         FIXED_GLIDE,
         [0, 0],
     );
 
-    assert.equal(moves[0].press, undefined);
+    assert.equal(glides[0].press, undefined);
     assert.equal(duration, 200);
 
 });
 
-test('compile: a run step schedules a task without moving the cursor', (assert) => {
+test('compile: a run step schedules a scheduled run without moving the cursor', (assert) => {
 
-    const {moves, duration, tasks} = compile(
+    const {glides, duration, runs} = compile(
         [{wait: 100}, {run: (): void => {}}, {click: '#a'}],
         resolveTestTarget,
         {...FIXED_GLIDE, dwellMs: 0},
         [0, 0],
     );
 
-    assert.equal(tasks.length, 1);
-    assert.equal(tasks[0].at, 100);
-    assert.equal(moves[0].from, 100);
+    assert.equal(runs.length, 1);
+    assert.equal(runs[0].at, 100);
+    assert.equal(glides[0].from, 100);
     assert.equal(duration, 700);
 
 });
 
-test('stretchMoveGlide: lengthens one beat and pushes the rest', (assert) => {
+test('stretchGlide: lengthens one beat and pushes the rest', (assert) => {
 
-    const moves = [
+    const glides = [
         {to: '#a', from: 100, until: 180, press: 280},
         {to: '#b', from: 480, until: 580, press: 680},
     ];
-    const tasks = [{at: 500, run: (): void => {}}];
+    const runs = [{at: 500, run: (): void => {}}];
 
-    assert.equal(stretchMoveGlide(moves, tasks, 0, 500), 420);
-    assert.equal(moves[0].until, 600);
-    assert.equal(moves[0].press, 700);
-    assert.equal(moves[1].from, 900);
-    assert.equal(tasks[0].at, 920);
+    assert.equal(stretchGlide(glides, runs, 0, 500), 420);
+    assert.equal(glides[0].until, 600);
+    assert.equal(glides[0].press, 700);
+    assert.equal(glides[1].from, 900);
+    assert.equal(runs[0].at, 920);
 
 });
 
@@ -119,35 +119,35 @@ test('compile: hidden targets compile as a short glide until runtime remeasures'
         return from;
     };
 
-    const {moves} = compile(
+    const {glides} = compile(
         [{click: '#nav'}, {click: '#row'}],
         resolveHiddenList,
         {pxPerSecond: 400, minMoveMs: 80, dwellMs: 0},
         [0, 0],
     );
 
-    assert.equal(moves[1].until - moves[1].from, 460);
+    assert.equal(glides[1].until - glides[1].from, 460);
 
     listVisible = true;
-    const delta = stretchMoveGlide(moves, [], 1, moveDurationMs(400, {pxPerSecond: 400, minMoveMs: 80}));
+    const delta = stretchGlide(glides, [], 1, glideDurationMs(400, {pxPerSecond: 400, minMoveMs: 80}));
 
     assert.equal(delta, 540);
-    assert.equal(moves[1].until - moves[1].from, 1000);
+    assert.equal(glides[1].until - glides[1].from, 1000);
 
 });
 
-test('moveDurationMs: constant speed with a floor at zero distance', (assert) => {
+test('glideDurationMs: constant speed with a floor at zero distance', (assert) => {
 
-    assert.equal(moveDurationMs(0), 495);
-    assert.equal(moveDurationMs(580), 1000);
-    assert.equal(moveDurationMs(1160), 2000);
+    assert.equal(glideDurationMs(0), 495);
+    assert.equal(glideDurationMs(580), 1000);
+    assert.equal(glideDurationMs(1160), 2000);
 
 });
 
-test('moveDurationMs: short hops get extra ms so easing reads', (assert) => {
+test('glideDurationMs: short hops get extra ms so easing reads', (assert) => {
 
-    const short = moveDurationMs(40, {pxPerSecond: 520, minMoveMs: 80});
-    const long = moveDurationMs(400, {pxPerSecond: 520, minMoveMs: 80});
+    const short = glideDurationMs(40, {pxPerSecond: 520, minMoveMs: 80});
+    const long = glideDurationMs(400, {pxPerSecond: 520, minMoveMs: 80});
 
     assert.equal(short > 80, true);
     assert.equal(short < long, true);
@@ -155,14 +155,14 @@ test('moveDurationMs: short hops get extra ms so easing reads', (assert) => {
 
 });
 
-test('moveDurationMs: defaults feel human on taps vs cross-screen glides', (assert) => {
+test('glideDurationMs: defaults feel human on taps vs cross-screen glides', (assert) => {
 
-    const tap = moveDurationMs(36, DEFAULT_MOTION);
+    const tap = glideDurationMs(36, DEFAULT_MOTION);
     const speedFloor = Math.max(
         DEFAULT_MOTION.minMoveMs,
         Math.round((36 / DEFAULT_MOTION.pxPerSecond) * 1000),
     );
-    const cross = moveDurationMs(640, DEFAULT_MOTION);
+    const cross = glideDurationMs(640, DEFAULT_MOTION);
 
     assert.equal(tap > speedFloor, true);
     assert.equal(tap >= DEFAULT_MOTION.minMoveMs, true);
@@ -181,25 +181,25 @@ test('easeInOutCubic: still at both ends, halfway at halfway', (assert) => {
 
 });
 
-test('moveIndexAt: nothing before the first beat, then the latest one to have started', (assert) => {
+test('glideIndexAt: nothing before the first beat, then the latest one to have started', (assert) => {
 
-    const moves = [
+    const glides = [
         {to: '#a', from: 100, until: 200},
         {to: '#b', from: 300, until: 400},
     ];
 
-    assert.equal(moveIndexAt(moves, 50), -1);
-    assert.equal(moveIndexAt(moves, 150), 0);
-    assert.equal(moveIndexAt(moves, 250), 0);
-    assert.equal(moveIndexAt(moves, 1000), 1);
+    assert.equal(glideIndexAt(glides, 50), -1);
+    assert.equal(glideIndexAt(glides, 150), 0);
+    assert.equal(glideIndexAt(glides, 250), 0);
+    assert.equal(glideIndexAt(glides, 1000), 1);
 
 });
 
 test('positionAt: parks on the target once it has arrived', (assert) => {
 
-    const move = {to: '#a', from: 0, until: 100};
+    const glide = {to: '#a', from: 0, until: 100};
 
-    assert.equal(positionAt([0, 0], [10, 20], move, 100), [10, 20]);
+    assert.equal(positionAt([0, 0], [10, 20], glide, 100), [10, 20]);
     assert.equal(positionAt([0, 0], [10, 20], null, 100), [10, 20]);
 
 });
@@ -212,4 +212,3 @@ test('positionAt: default easing sits between start and end at halfway through t
     assert.equal(mid[1] > 6 && mid[1] < 18, true);
 
 });
-

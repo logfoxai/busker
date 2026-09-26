@@ -1,16 +1,16 @@
 import {test} from 'kizu';
 import {GlobalRegistrator} from '@happy-dom/global-registrator';
-import {assertScriptRoutine} from './assert-routine.ts';
+import {assertRoutine} from './assert-routine.ts';
 import {busk} from './busk.ts';
 
 GlobalRegistrator.register({url: 'https://busker.test', width: 800, height: 600});
 
-test('assertScriptRoutine: rejects parallel schedule fields', (assert) => {
+test('assertRoutine: rejects parallel schedule fields', (assert) => {
 
     let message = '';
 
     try {
-        assertScriptRoutine({
+        assertRoutine({
             steps: [{wait: 1}],
             toggles: [{target: '#a', class: 'on', from: 0, until: 1}],
         });
@@ -23,12 +23,12 @@ test('assertScriptRoutine: rejects parallel schedule fields', (assert) => {
 
 });
 
-test('assertScriptRoutine: rejects unknown routine keys', (assert) => {
+test('assertRoutine: rejects unknown routine keys', (assert) => {
 
     let message = '';
 
     try {
-        assertScriptRoutine({duration: 1000, steps: [{wait: 1}]});
+        assertRoutine({duration: 1000, steps: [{wait: 1}]});
     } catch (error) {
         message = error instanceof Error ? error.message : String(error);
     }
@@ -38,12 +38,12 @@ test('assertScriptRoutine: rejects unknown routine keys', (assert) => {
 
 });
 
-test('assertScriptRoutine: rejects invalid steps', (assert) => {
+test('assertRoutine: rejects invalid steps', (assert) => {
 
     let message = '';
 
     try {
-        assertScriptRoutine({steps: [{wait: 100, click: '#a'}]});
+        assertRoutine({steps: [{wait: 100, click: '#a'}]});
     } catch (error) {
         message = error instanceof Error ? error.message : String(error);
     }

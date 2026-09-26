@@ -5,14 +5,6 @@ import {test} from 'kizu';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
-test('header social links match Callspec (GitHub + Discord)', (assert) => {
-    const astro = readFileSync(path.join(root, 'astro.config.mjs'), 'utf8');
-
-    assert.equal(astro.includes("icon: 'github'"), true);
-    assert.equal(astro.includes("icon: 'discord'"), true);
-    assert.equal(astro.includes('discord.gg/2wyYnBDhWQ'), true);
-});
-
 test('guide site footer is a Starlight override with GitHub and MIT', (assert) => {
     const astro = readFileSync(path.join(root, 'astro.config.mjs'), 'utf8');
     const footer = readFileSync(path.join(root, 'src/overrides/Footer.astro'), 'utf8');
@@ -22,6 +14,7 @@ test('guide site footer is a Starlight override with GitHub and MIT', (assert) =
     assert.equal(footer.includes('SiteFooter'), true);
     assert.equal(site.includes('github.com/logfoxai/busker'), true);
     assert.equal(site.includes('MIT'), true);
+    assert.equal(site.includes('discord.gg/'), false);
 });
 
 test('custom pages are Astro, not collection MDX', (assert) => {
@@ -44,18 +37,6 @@ test('docs highlight aliases the primary fill token', (assert) => {
     assert.equal(starlight.includes('--sl-color-text-accent: var(--docs-primary-bg)'), true);
     assert.equal(starlight.includes('--sl-color-accent-high: var(--docs-primary-bg)'), true);
     assert.equal(shared.includes('--docs-primary-hover-bg: var(--docs-primary-bg)'), true);
-});
-
-test('header social icons use flat chrome stylesheet', (assert) => {
-    const astro = readFileSync(path.join(root, 'astro.config.mjs'), 'utf8');
-    const social = readFileSync(path.join(root, 'src/styles/docs-social-icons.css'), 'utf8');
-    const override = readFileSync(path.join(root, 'src/overrides/SocialIcons.astro'), 'utf8');
-
-    assert.equal(astro.includes('./src/styles/docs-social-icons.css'), true);
-    assert.equal(astro.includes("SocialIcons: './src/overrides/SocialIcons.astro'"), true);
-    assert.equal(social.includes('background: transparent'), true);
-    assert.equal(social.includes('border: none'), true);
-    assert.equal(override.includes('<style>'), false);
 });
 
 test('Starlight CTAs load solid primary pill buttons', (assert) => {

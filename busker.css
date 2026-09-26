@@ -9,7 +9,7 @@
 
 :root {
     /* Explore hint is on document.body — page-level tokens live here. */
-    --busker-cursor-z-index: 2147483647;
+    --busker-cursor-z-index: 999;
     --busker-hint-offset-x: 1.75rem;
     --busker-hint-bg: linear-gradient(
         180deg,
@@ -74,7 +74,7 @@ html[data-theme='light'] {
     --busker-cursor-fill: rgb(0 0 0 / 0.42);
     --busker-cursor-edge: #fff;
     --busker-cursor-shadow: rgb(0 0 0 / 0.3);
-    --busker-cursor-z-index: 2147483647;
+    --busker-cursor-z-index: 999;
 
     /* The cursor is positioned against the root. */
     position: relative;

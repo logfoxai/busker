@@ -20,10 +20,9 @@ Every routine has a non-empty **`steps`** array. Loop length is compiled from th
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
-| `start` | `[number, number]` | `[0.5, 0.5]` | Where the cursor rests, as a fraction of the root's size. |
+| `start` | [`Point`](#point) | `[0.5, 0.5]` | Where the cursor rests before the first beat, as a fraction of the root's size. |
 | `motion` | [`MotionConfig`](#motionconfig) | see below | Glide timing for all `{ click }` and `{ move }` steps. |
 | `clickTargets` | `string[]` | none | Selectors that look clickable and count for the miss hint. |
-| `onLoop` | `() => void` | none | Called when the playhead wraps to 0. |
 | `visibility` | `number` | `1` | How much of the root must be on screen to run, as a fraction. |
 | `freezeAt` | `number` | `0` | Frame to hold under `prefers-reduced-motion`. |
 | `exploreHint` | `boolean \| string \| ExploreHintConfig` | `true` | A "Click to explore" pill that tails the visitor's pointer. On by default; pass `false` to disable, a string for your own label, or a config object. |
@@ -38,6 +37,10 @@ One line in a click-driven script — exactly one of:
 | `{ wait: number }` | Pause the playhead (ms). |
 | `{ move: string \| [number, number] }` | Glide without pressing. |
 | `{ run: () => void }` | Run code once; cursor unchanged. |
+
+## `Point`
+
+`[number, number]` — a spot as a fraction of the mock root (`[0.5, 0.5]` is center). Used for routine [`start`](#routine) and `{ move: [x, y] }` steps. The optional `start` argument to [`compile()`](#compilesteps-resolvetarget-motion-start) uses the same tuple shape but in **pixels**, not fractions.
 
 ## `MotionConfig`
 
@@ -61,22 +64,65 @@ Exports: `cubicBezierEasing`, `DEFAULT_EASING`, `DEFAULT_MOTION`.
 
 Exports: `EXPLORE_HINT_TEXT`, `EXPLORE_HINT_DISMISS_MS`, `EXPLORE_HINT_OFFSET_X`.
 
-## `compile(steps, resolveTarget, motion?, start?)`
+## `ResolveTarget`
 
-Lays the same script out without the DOM — for tests and assertions. `resolveTarget(to, from)` returns the destination in px relative to the root (or `null` if missing). Returns `{ moves, duration, tasks }` where **`tasks`** are scheduled `{ run }` steps only.
+Type exported as **`ResolveTarget`**. It is **not** a function busker gives you — you **pass your own** into [`compile()`](#compilesteps-resolvetarget-motion-start) so glide lengths can be computed from distances.
 
-## `Task`
+```typescript
+type ResolveTarget = (to: string | Point, from: Point) => Point | null;
+```
 
-Output of [`compile()`](#compilesteps-resolvetarget-motion-start) — not passed on `Routine`.
+| Argument | Meaning |
+|---|---|
+| `to` | The selector or fractional [`Point`](#point) from a `{ click }` or `{ move }` step. |
+| `from` | Cursor position in **px** (root coordinates) when this step starts. |
+
+Return the destination in **px** from the mock root's top-left. Return **`null`** when a selector is not in layout yet (compile assumes ~zero travel; at runtime `busk()` may remeasure and stretch the glide).
+
+`busk()` builds a `ResolveTarget` from the live DOM. In unit tests you stub fixed coordinates — see [`compile()` for tests](./compile.md).
+
+## `Glide`
+
+One timed cursor segment from a `{ click }` or `{ move }` step. Output of [`compile()`](#compilesteps-resolvetarget-motion-start) only — not passed on [`Routine`](#routine).
 
 | Field | Type | What it does |
 |---|---|---|
-| `at` | `number` | Ms from loop start when `run` fires once. |
-| `run` | `() => void` | Your code. |
+| `to` | `string \| Point` | Same target as the step (selector or fraction). See [`Point`](#point). |
+| `from` | `number` | Ms from loop start when the glide begins. |
+| `until` | `number` | Ms when the cursor arrives at `to`. |
+| `press` | `number` | Optional. On `{ click }` steps only: ms when the demo press runs and the element is `.click()`ed (after dwell). Absent on `{ move }` glides. Read-only output of [`compile()`](#compilesteps-resolvetarget-motion-start). |
 
-## `Move`
+## `ScheduledRun`
 
-Compiled glide shape returned by [`compile()`](#compilesteps-resolvetarget-motion-start) — not passed on `Routine`.
+One `{ run }` step on the timeline. Output of [`compile()`](#compilesteps-resolvetarget-motion-start) only — not passed on [`Routine`](#routine).
+
+| Field | Type | What it does |
+|---|---|---|
+| `at` | `number` | Ms from loop start when `run` fires once per lap. |
+| `run` | `() => void` | Same function you put in the `{ run }` step. |
+
+## `compile(steps, resolveTarget, motion?, start?)`
+
+Runs the same scheduler as `busk()` without a DOM — for tests and assertions. Walkthrough: [`compile()` for tests](./compile.md).
+
+| Argument | Type | Default | What it does |
+|---|---|---|---|
+| `steps` | [`Step[]`](#step) | &mdash; | Same script you would pass on a routine. |
+| `resolveTarget` | [`ResolveTarget`](#resolvetarget) | &mdash; | Maps each glide target to px (or `null`). |
+| `motion` | [`MotionConfig`](#motionconfig) | `DEFAULT_MOTION` | Same glide timing as on a routine. |
+| `start` | `[number, number]` (px) | `[0, 0]` | Cursor position before the first step. Same tuple shape as [`Point`](#point), but **pixels**, not fractions. `busk()` converts routine `start` fractions to px first. |
+
+Returns:
+
+| Field | Type | What it does |
+|---|---|---|
+| `glides` | [`Glide[]`](#glide) | One entry per `{ click }` or `{ move }` step, in order. |
+| `runs` | [`ScheduledRun[]`](#scheduledrun) | One entry per `{ run }` step. |
+| `duration` | `number` | Loop length in ms (includes ring time after the last click). |
+
+## `compileStepStarts(steps, resolveTarget, motion?, start?)`
+
+Same arguments as [`compile()`](#compilesteps-resolvetarget-motion-start). Returns `number[]` — ms from loop start when each step **begins**, in script order (including `{ wait }` and `{ run }` steps).
 
 ## `Busker`
 

@@ -84,7 +84,9 @@ function wireTestMock(root: HTMLElement): {showPanel: (panel: string) => void} {
     return {showPanel};
 }
 
-function stage(routine: Routine): Stage & {showPanel: (panel: string) => void} {
+function stage(
+    buildRoutine: (showPanel: (panel: string) => void) => Routine = defaultRoutine,
+): Stage & {showPanel: (panel: string) => void} {
     document.body.innerHTML = `<div id="root">${MOCK}</div>`;
 
     const root = document.getElementById('root');
@@ -113,13 +115,8 @@ function stage(routine: Routine): Stage & {showPanel: (panel: string) => void} {
     performance.now = (): number => now;
 
     const {showPanel} = wireTestMock(root);
-
-    const show = busk(root, {
-        ...routine,
-        onLoop: routine.onLoop ?? ((): void => {
-            showPanel('home');
-        }),
-    });
+    const routine = buildRoutine(showPanel);
+    const show = busk(root, routine);
 
     return {
         root,
@@ -144,19 +141,25 @@ const TEST_MOTION = {
     dwellMs: 0,
 };
 
-const routine: Routine = {
-    motion: TEST_MOTION,
-    steps: [
-        {click: '[data-nav-item="alerts"]'},
-        {wait: 100},
-        {click: '[data-row="p0"]'},
-    ],
-    clickTargets: ['[data-nav-item="home"]', '[data-nav-item="alerts"]'],
-};
+const ROUTINE_CLICK_TARGETS = ['[data-nav-item="home"]', '[data-nav-item="alerts"]'];
+
+const ROUTINE_STEPS: Routine['steps'] = [
+    {click: '[data-nav-item="alerts"]'},
+    {wait: 100},
+    {click: '[data-row="p0"]'},
+];
+
+function defaultRoutine(showPanel: (panel: string) => void): Routine {
+    return {
+        motion: TEST_MOTION,
+        steps: [...ROUTINE_STEPS, {run: (): void => showPanel('home')}],
+        clickTargets: ROUTINE_CLICK_TARGETS,
+    };
+}
 
 test('the show clicks for real, so the mock changes through its own handlers', (assert) => {
 
-    const {root, startShow, tick} = stage(routine);
+    const {root, startShow, tick} = stage();
 
     assert.equal(root.querySelector('[data-panel="home"]')?.classList.contains('is-active'), true);
 
@@ -213,9 +216,9 @@ test('a glide to a hidden panel uses the same px/s once that panel is visible', 
             {click: '[data-nav-item="alerts"]'},
             {wait: 300},
             {click: '[data-row="p0"]'},
+            {run: (): void => showPanel('home')},
         ],
         clickTargets: ['[data-nav-item="alerts"]', '[data-row="p0"]'],
-        onLoop: () => showPanel('home'),
     });
 
     const cursor = root.querySelector<HTMLElement>('[data-cursor]');
@@ -253,7 +256,7 @@ test('a glide to a hidden panel uses the same px/s once that panel is visible', 
 
 test('the page holds still until the press lifts, so the click reads first', (assert) => {
 
-    const {root, startShow, tick} = stage(routine);
+    const {root, startShow, tick} = stage();
 
     startShow();
 
@@ -269,11 +272,11 @@ test('the page holds still until the press lifts, so the click reads first', (as
 
 test('a routine that ends on a click still lands it', (assert) => {
 
-    const {root, startShow, tick} = stage({
-        ...routine,
+    const {root, startShow, tick} = stage(() => ({
         motion: TEST_MOTION,
         steps: [{click: '[data-nav-item="alerts"]'}],
-    });
+        clickTargets: ROUTINE_CLICK_TARGETS,
+    }));
 
     startShow();
     tick(350);
@@ -284,11 +287,11 @@ test('a routine that ends on a click still lands it', (assert) => {
 
 test('the cursor holds its place when its own click takes the target away', (assert) => {
 
-    const {root, startShow, tick, showPanel} = stage({
+    const {root, startShow, tick, showPanel} = stage(() => ({
         motion: TEST_MOTION,
         steps: [{click: '[data-row="p0"]'}],
         clickTargets: ['[data-row="p0"]'],
-    });
+    }));
 
     showPanel('list');
 
@@ -358,9 +361,8 @@ test('the cursor does not chase a target that moves after the glide ends', (asse
 
     busk(root, {
         motion: {pxPerSecond: 1e9, minMoveMs: 100, dwellMs: 200},
-        steps: [{click: '[data-row="p0"]'}],
+        steps: [{click: '[data-row="p0"]'}, {run: (): void => showPanel('home')}],
         clickTargets: ['[data-row="p0"]'],
-        onLoop: () => showPanel('home'),
     });
 
     showPanel('list');
@@ -387,7 +389,7 @@ test('the cursor does not chase a target that moves after the glide ends', (asse
 
 test('the show does not mistake its own click for a visitor taking over', (assert) => {
 
-    const {root, startShow, tick} = stage(routine);
+    const {root, startShow, tick} = stage();
 
     startShow();
     tick(350);
@@ -398,7 +400,7 @@ test('the show does not mistake its own click for a visitor taking over', (asser
 
 test('a visitor click stops the show for good', (assert) => {
 
-    const {root, startShow, tick, clickAsVisitor} = stage(routine);
+    const {root, startShow, tick, clickAsVisitor} = stage();
 
     startShow();
     clickAsVisitor('[data-nav-item="alerts"]');
@@ -414,7 +416,7 @@ test('a visitor click stops the show for good', (assert) => {
 
 test('a visitor click on nothing lights up what is clickable', (assert) => {
 
-    const {root, startShow, clickAsVisitor} = stage(routine);
+    const {root, startShow, clickAsVisitor} = stage();
 
     startShow();
     clickAsVisitor('[data-panel="home"] p');
@@ -425,7 +427,7 @@ test('a visitor click on nothing lights up what is clickable', (assert) => {
 
 test('every clickable thing looks clickable', (assert) => {
 
-    const {root} = stage(routine);
+    const {root} = stage();
 
     assert.equal(root.querySelector('[data-nav-item="home"]')?.classList.contains('is-interactive'), true);
     assert.equal(root.querySelector('[data-panel="home"] p')?.classList.contains('is-interactive'), false);
@@ -455,7 +457,7 @@ test('scripted clicks do not bubble to window listeners that close overlays', (a
     };
     window.addEventListener('click', onWindowClick);
 
-    const {startShow, tick, clickAsVisitor} = stage(routine);
+    const {startShow, tick, clickAsVisitor} = stage();
     startShow();
     tick(350);
     assert.equal(searchOpen, true, 'show click stays inside the mock');
@@ -469,7 +471,7 @@ test('scripted clicks do not bubble to window listeners that close overlays', (a
 test('each beat presses once, and the loop starts over from the top', (assert) => {
 
     let clicks = 0;
-    const {root, startShow, tick} = stage(routine);
+    const {root, startShow, tick} = stage();
 
     root.querySelector('[data-nav-item="alerts"]')?.addEventListener('click', () => {
         clicks += 1;
@@ -495,7 +497,7 @@ test('each beat presses once, and the loop starts over from the top', (assert) =
 test('a frame jump past loop end keeps leftover time in the next loop', (assert) => {
 
     let clicks = 0;
-    const {root, startShow, tick} = stage(routine);
+    const {root, startShow, tick} = stage();
 
     root.querySelector('[data-nav-item="alerts"]')?.addEventListener('click', () => {
         clicks += 1;
@@ -525,7 +527,7 @@ test('busk does not change which panel is active on init', (assert) => {
     root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
     wireTestMock(root);
 
-    const show = busk(root, {clickTargets: routine.clickTargets, steps: routine.steps});
+    const show = busk(root, {clickTargets: ROUTINE_CLICK_TARGETS, steps: ROUTINE_STEPS});
 
     assert.equal(root.querySelector('[data-panel="list"]')?.classList.contains('is-active'), true);
     assert.equal(root.querySelector('[data-panel="home"]')?.classList.contains('is-active'), false);
@@ -533,16 +535,22 @@ test('busk does not change which panel is active on init', (assert) => {
 
 });
 
-test('onLoop runs when the playhead wraps', (assert) => {
+test('a final { run } step runs again when the playhead wraps', (assert) => {
 
     let loops = 0;
-    const {root, startShow, tick, showPanel} = stage({
-        ...routine,
-        onLoop: () => {
-            loops += 1;
-            showPanel('home');
-        },
-    });
+    const {root, startShow, tick, showPanel} = stage((showPanel) => ({
+        motion: TEST_MOTION,
+        steps: [
+            ...ROUTINE_STEPS,
+            {
+                run: (): void => {
+                    loops += 1;
+                    showPanel('home');
+                },
+            },
+        ],
+        clickTargets: ROUTINE_CLICK_TARGETS,
+    }));
 
     showPanel('list');
     startShow();
@@ -557,7 +565,7 @@ test('a run step at t=0 waits until playback starts', (assert) => {
 
     let runs = 0;
 
-    const {startShow, tick} = stage({
+    const {startShow, tick} = stage(() => ({
         motion: {...TEST_MOTION, minMoveMs: 50, pxPerSecond: 1e9},
         steps: [
             {run: (): void => {
@@ -565,7 +573,8 @@ test('a run step at t=0 waits until playback starts', (assert) => {
             }},
             {click: '[data-nav-item="alerts"]'},
         ],
-    });
+        clickTargets: ROUTINE_CLICK_TARGETS,
+    }));
 
     assert.equal(runs, 0);
     startShow();
@@ -578,7 +587,7 @@ test('run steps fire once per loop', (assert) => {
 
     let runs = 0;
 
-    const {startShow, tick} = stage({
+    const {startShow, tick} = stage(() => ({
         motion: {...TEST_MOTION, minMoveMs: 50, pxPerSecond: 1e9},
         steps: [
             {wait: 50},
@@ -591,7 +600,8 @@ test('run steps fire once per loop', (assert) => {
             }},
             {click: '[data-nav-item="alerts"]'},
         ],
-    });
+        clickTargets: ROUTINE_CLICK_TARGETS,
+    }));
 
     startShow();
     tick(80);
@@ -924,7 +934,7 @@ test('destroy leaves a markup-provided [data-cursor] in place', (assert) => {
 
 test('destroy puts the mock back the way it was found', (assert) => {
 
-    const {root, show, clickAsVisitor} = stage(routine);
+    const {root, show, clickAsVisitor} = stage();
 
     show.destroy();
 
@@ -939,7 +949,7 @@ test('destroy puts the mock back the way it was found', (assert) => {
 
 test('exploreHint pops in on hover and out for good when the visitor takes over', (assert) => {
 
-    const {root, clickAsVisitor} = stage({...routine, exploreHint: true});
+    const {root, clickAsVisitor} = stage((showPanel) => ({...defaultRoutine(showPanel), exploreHint: true}));
 
     const hint = document.body.querySelector('[data-explore-hint]');
 
@@ -960,7 +970,7 @@ test('exploreHint pops in on hover and out for good when the visitor takes over'
 
 test('exploreHint stays up when the show clicks for itself', (assert) => {
 
-    const {root, startShow, tick} = stage({...routine, exploreHint: true});
+    const {root, startShow, tick} = stage((showPanel) => ({...defaultRoutine(showPanel), exploreHint: true}));
 
     const hint = document.body.querySelector('[data-explore-hint]');
 
@@ -981,7 +991,7 @@ test('exploreHint stays up when the show clicks for itself', (assert) => {
 
 test('exploreHint stays up through multiple show navigation clicks', (assert) => {
 
-    const {root, startShow, tick} = stage({...routine, exploreHint: true});
+    const {root, startShow, tick} = stage((showPanel) => ({...defaultRoutine(showPanel), exploreHint: true}));
 
     const hint = document.body.querySelector('[data-explore-hint]');
 
@@ -1000,7 +1010,7 @@ test('exploreHint stays up through multiple show navigation clicks', (assert) =>
 
 test('exploreHint ignores spurious pointerleave after a show navigation click', (assert) => {
 
-    const {root, startShow, tick} = stage({...routine, exploreHint: true});
+    const {root, startShow, tick} = stage((showPanel) => ({...defaultRoutine(showPanel), exploreHint: true}));
 
     const hint = document.body.querySelector('[data-explore-hint]');
 
@@ -1023,7 +1033,7 @@ test('exploreHint ignores spurious pointerleave after a show navigation click', 
 
 test('destroy removes the explore hint element', (assert) => {
 
-    const {show} = stage({...routine, exploreHint: true});
+    const {show} = stage((showPanel) => ({...defaultRoutine(showPanel), exploreHint: true}));
 
     show.destroy();
 
@@ -1033,7 +1043,7 @@ test('destroy removes the explore hint element', (assert) => {
 
 test('explore hint is on by default', (assert) => {
 
-    stage(routine);
+    stage();
 
     assert.equal(document.body.querySelector('[data-explore-hint]') != null, true);
 
@@ -1041,7 +1051,7 @@ test('explore hint is on by default', (assert) => {
 
 test('exploreHint false disables the pill', (assert) => {
 
-    stage({...routine, exploreHint: false});
+    stage((showPanel) => ({...defaultRoutine(showPanel), exploreHint: false}));
 
     assert.equal(document.body.querySelector('[data-explore-hint]'), null);
 

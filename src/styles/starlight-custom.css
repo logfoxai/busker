@@ -552,7 +552,7 @@ html[data-has-toc] {
         gap: 0.75rem;
     }
 
-    /* Site-style pill — filled track, no outline (logfox.io mock search bars). */
+    /* Filled track pill — no outline (matches crema demo search bars). */
     header.header site-search > button {
         width: 100%;
         max-width: var(--docs-search-max-width);
@@ -645,7 +645,110 @@ html[data-theme='light'] header.header site-search > button .cs-search-kbd {
 }
 
 
-/* Header social icons — docs-social-icons.css */
+/* Header right icons — GitHub, theme toggle */
+header.header .social-icons::after {
+    display: none;
+    content: none;
+}
+
+header.header .social-icons a {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    margin: 0;
+    /* Neutral — Starlight defaults social icons to accent. */
+    color: var(--sl-color-white);
+    transition: color 120ms ease;
+}
+
+header.header .social-icons a[href*='github']:hover {
+    color: var(--sl-color-gray-3);
+}
+
+header.header .social-icons a[href*='discord']:hover {
+    color: #5865f2;
+}
+
+/* Mobile drawer — same social targets as header. */
+.cs-mobile-menu-tools .social-icons a {
+    transition: color 120ms ease;
+}
+
+.cs-mobile-menu-tools .social-icons a[href*='github']:hover {
+    color: var(--sl-color-gray-3);
+}
+
+.cs-mobile-menu-tools .social-icons a[href*='discord']:hover {
+    color: #5865f2;
+}
+
+header.header .social-icons a svg,
+.cs-mobile-menu-tools .social-icons a svg {
+    display: block;
+    transition: transform 140ms ease;
+    transform-origin: center;
+}
+
+header.header .social-icons a svg {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+header.header .social-icons a:hover svg,
+.cs-mobile-menu-tools .social-icons a:hover svg {
+    transform: scale(1.14);
+}
+
+header.header .social-icons a[href*='discord']:hover svg,
+.cs-mobile-menu-tools .social-icons a[href*='discord']:hover svg {
+    animation: cs-discord-shudder 480ms ease-in-out;
+}
+
+@keyframes cs-discord-shudder {
+    0%,
+    100% {
+        transform: scale(1.14) rotate(0deg);
+    }
+
+    18% {
+        transform: scale(1.14) rotate(-11deg);
+    }
+
+    36% {
+        transform: scale(1.14) rotate(9deg);
+    }
+
+    54% {
+        transform: scale(1.14) rotate(-7deg);
+    }
+
+    72% {
+        transform: scale(1.14) rotate(5deg);
+    }
+
+    88% {
+        transform: scale(1.14) rotate(-2deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    header.header .social-icons a svg,
+    .cs-mobile-menu-tools .social-icons a svg {
+        transition: none;
+    }
+
+    header.header .social-icons a:hover svg,
+    .cs-mobile-menu-tools .social-icons a:hover svg {
+        transform: none;
+    }
+
+    header.header .social-icons a[href*='discord']:hover svg,
+    .cs-mobile-menu-tools .social-icons a[href*='discord']:hover svg {
+        animation: none;
+    }
+}
 
 /*
  * Search dialog — unlayered on purpose.

@@ -11,6 +11,8 @@ html:not([data-has-sidebar]):has(.splash-page) {
     --splash-accent-icon: hsl(262 52% 62%);
 
     &[data-theme='dark'] {
+        --docs-bg: #07080c;
+        --docs-nav: #07080c;
         --sl-color-bg: #07080c;
         --sl-color-black: #07080c;
         --sl-color-bg-nav: #07080c;
@@ -35,11 +37,13 @@ html:not([data-has-sidebar]):has(.splash-page) {
 
         &,
         & body {
-            background: #07080c;
+            background-color: var(--sl-color-bg);
         }
     }
 
     &[data-theme='light'] {
+        --docs-bg: #ffffff;
+        --docs-nav: #ffffff;
         --sl-color-bg: #ffffff;
         --sl-color-black: #ffffff;
         --sl-color-bg-nav: #ffffff;
@@ -65,11 +69,11 @@ html:not([data-has-sidebar]):has(.splash-page) {
 
         &,
         & body {
-            background: #ffffff;
+            background-color: var(--sl-color-bg);
         }
     }
 
-    header.header.site-header {
+    header.header {
         border-bottom: none;
         box-shadow: none;
     }
@@ -81,8 +85,10 @@ html:not([data-has-sidebar]):has(.splash-page) {
     }
 
     .page,
+    .main-frame,
+    main,
     .content-panel:first-of-type {
-        background: transparent;
+        background-color: var(--sl-color-bg);
     }
 
     .content-panel:first-of-type {

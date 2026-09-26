@@ -21,7 +21,7 @@ You do not add pointer markup to your mock. When `busk()` starts, busker creates
 | `--busker-cursor-fill` | `rgb(0 0 0 / 0.42)` | Dot fill at rest. |
 | `--busker-cursor-edge` | `#fff` | Ring so the dot stays visible on dark UI. |
 | `--busker-cursor-shadow` | `rgb(0 0 0 / 0.3)` | Dot drop shadow. |
-| `--busker-cursor-z-index` | `2147483647` | Stack above in-mock overlays. |
+| `--busker-cursor-z-index` | `999` | Above in-mock UI; below typical site chrome (nav, modals). Override on `.busker` if you need a different stack. |
 
 ```css
 .my-mock {

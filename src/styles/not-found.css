@@ -53,7 +53,7 @@ html:not([data-has-sidebar]):has(.not-found-page) {
         }
     }
 
-    header.header.site-header {
+    header.header {
         border-bottom: none;
         box-shadow: none;
     }

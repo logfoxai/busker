@@ -25,14 +25,14 @@ export interface MotionConfig {
     easing?: CubicBezier;
 }
 
-/** Scheduled from `{ run }` steps inside `compile()` — not passed on `Routine`. */
-export interface Task {
+/** One `{ run }` step after `compile()` — not passed on `Routine`. */
+export interface ScheduledRun {
     at: number;
     run: () => void;
 }
 
-/** A compiled cursor glide (from `compile()` — not passed on `Routine`). */
-export interface Move {
+/** Timed cursor segment from `{ click }` or `{ move }` steps — not passed on `Routine`. */
+export interface Glide {
     /** Where to glide. */
     to: string | Point;
     /** When the glide starts. */
@@ -60,7 +60,7 @@ export interface ExploreHintConfig {
 
 /**
  * A click-driven show. One clock: `steps` set loop length; `{ run }` handles
- * everything else (UI, ambient ticks, livetail rows). No parallel schedules.
+ * everything else (mock UI updates in `{ run }` or click handlers). No parallel schedules.
  */
 export interface Routine {
     /** Script the cursor follows — required. */
@@ -74,8 +74,6 @@ export interface Routine {
      * Scene changes and other UI state are your handlers' job.
      */
     clickTargets?: string[];
-    /** Called when the playhead wraps to 0. */
-    onLoop?: () => void;
     /**
      * How much of the root must be on screen for the show to run, as a fraction
      * of its size. Default 1 — the whole thing.
@@ -92,9 +90,6 @@ export interface Routine {
      */
     exploreHint?: boolean | string | ExploreHintConfig;
 }
-
-/** @deprecated Use {@link Routine}. Kept as an alias for docs migration. */
-export type ScriptRoutine = Routine;
 
 export interface Busker {
     /** Loop length in ms. */

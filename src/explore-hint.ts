@@ -145,7 +145,7 @@ export function exploreHint(
         }
 
         hint.style.zIndex =
-            rootStyle.getPropertyValue('--busker-cursor-z-index').trim() || '2147483647';
+            rootStyle.getPropertyValue('--busker-cursor-z-index').trim() || '999';
     };
     theme();
 
