@@ -42,7 +42,7 @@ const required = [
 	'Zero dependencies',
 	'/getting-started/',
 	'data-splash-agent-copy',
-	'For coding agents',
+	'Get agent prompt',
 	'https://github.com/logfoxai/busker',
 	'<title>busker — scripted cursor demos that click</title>',
 	'property="og:image" content="https://busker.logfox.ai/og.png"',

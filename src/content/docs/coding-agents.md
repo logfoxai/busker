@@ -39,4 +39,4 @@ To browse the tree, use the GitHub repo and fetch file contents with raw URLs (h
 Install or attach the skill: copy skills/busker/SKILL.md to .cursor/skills/busker/SKILL.md (or symlink to node_modules/@logfox/busker/skills/busker/SKILL.md from npm).
 ```
 
-The splash homepage **For coding agents** button copies this prompt.
+The splash homepage **Get agent prompt** button copies this prompt.

@@ -48,7 +48,7 @@ export function wireSplashAgentCopyButton(root: ParentNode = document): void {
     const idleLabel =
         trigger.dataset.splashAgentCopyIdleLabel
         ?? labelEl?.textContent?.trim()
-        ?? 'For coding agents';
+        ?? 'Get agent prompt';
 
     trigger.addEventListener('click', (event) => {
         event.preventDefault();
