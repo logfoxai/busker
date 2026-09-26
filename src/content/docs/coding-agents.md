@@ -1,24 +1,25 @@
-# Working with Coding Agents
+# Working with coding agents
 
-Copy-paste prompts for Cursor, Claude Code, Copilot, and similar tools &mdash; so agents adopt busker conventions instead of timing page changes with `setTimeout`.
+If you build busks with Cursor, Claude Code, Copilot, or similar tools, give the agent a **skill** and a **starter prompt** so it follows busker conventions (real clicks and `{ run }` steps) instead of timing UI with `setTimeout`.
 
-## Docs prose
+## Install the skill
 
-In `src/content/docs/`, write em dashes as `&mdash;` in prose (not the Unicode `—` character). Starlight and GitHub decode it on render; it keeps agents from copying literal em dashes into new edits. Leave dashes inside fenced code blocks and string literals as-is.
+The skill lives at [`skills/busker/SKILL.md`](../../skills/busker/SKILL.md) in this repo (and under `skills/` in the npm package).
 
-## busker skill
+**Cursor:** copy or symlink it to `.cursor/skills/busker/SKILL.md`. From npm:
 
-[`skills/busker/SKILL.md`](../../skills/busker/SKILL.md) (also in the npm package under `skills/`)
+```bash
+mkdir -p .cursor/skills/busker
+ln -sf "$(npm root)/@logfox/busker/skills/busker/SKILL.md" .cursor/skills/busker/SKILL.md
+```
 
-**Cursor:** save as `.cursor/skills/busker/SKILL.md` (or symlink that path to `node_modules/@logfox/busker/skills/busker/SKILL.md` / this repo).
+Adjust the path if you use a monorepo checkout instead of `node_modules`.
 
-## Reading docs from GitHub
+## Paste a starter prompt
 
-Guides are markdown in this repo under `src/content/docs/`. Prefer a checkout; when fetching over HTTP, use **`raw.githubusercontent.com/logfoxai/busker/main/`** + path (plain markdown). Do not scrape [busker.logfox.ai](https://busker.logfox.ai) &mdash; that is HTML.
+On the [busker homepage](https://busker.logfox.ai/), **Get agent prompt** copies a ready-made message into your clipboard. Paste it into your agent chat, replace the `Task:` line with what you want (new mock, routine tweak, hover styling, etc.), and send.
 
-## Prompt: work with busker
-
-Install or attach the skill first, then:
+Or copy the template below:
 
 ```text
 We're using busker (https://github.com/logfoxai/busker) for a scripted cursor demo on our landing page.
@@ -39,4 +40,4 @@ To browse the tree, use the GitHub repo and fetch file contents with raw URLs (h
 Install or attach the skill: copy skills/busker/SKILL.md to .cursor/skills/busker/SKILL.md (or symlink to node_modules/@logfox/busker/skills/busker/SKILL.md from npm).
 ```
 
-The splash homepage **Get agent prompt** button copies this prompt.
+The block above is what the agent reads after you paste it. You do not need to hunt raw URLs yourself unless you are editing the prompt template in this repo.

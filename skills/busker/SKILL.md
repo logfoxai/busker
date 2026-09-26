@@ -25,3 +25,5 @@ The [README](https://raw.githubusercontent.com/logfoxai/busker/main/README.md) i
 ## Changing busker itself
 
 Pure timing, easing, interpolation, and text belong in `src/timeline.ts` and get exhaustive unit tests. `src/busk.ts` is the DOM adapter and is tested through happy-dom with a hand-driven clock. Keep new logic on the pure side of that line where you can.
+
+When editing guides in `src/content/docs/`, match existing prose: em dashes as `&mdash;` in body text (not Unicode `—`); leave dashes inside code fences and string literals alone.

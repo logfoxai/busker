@@ -1,6 +1,6 @@
 # Getting started
 
-For coding agents: [Working with Coding Agents](./coding-agents.md) (copy-paste prompts; skill [SKILL.md](../../skills/busker/SKILL.md)).
+For coding agents: [Working with coding agents](./coding-agents.md) (install the skill and paste a starter prompt).
 
 ## 1. Install
 
