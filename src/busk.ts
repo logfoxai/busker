@@ -455,12 +455,14 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         }
 
         playing = true;
+        cursor.classList.add('is-visible');
         last = performance.now();
         rafId = requestAnimationFrame(frame);
     }
 
     function pause(): void {
         playing = false;
+        cursor.classList.remove('is-visible');
         cancelAnimationFrame(rafId);
     }
 
@@ -628,7 +630,6 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         window.addEventListener('load', scheduleSyncViewportPlayback, {once: true});
         document.fonts?.ready.then(scheduleSyncViewportPlayback);
         syncViewportPlayback();
-        cursor.classList.add('is-visible');
     }
 
     return {
