@@ -722,6 +722,83 @@ test('scroll coalesces viewport sync to one animation frame', (assert) => {
 
 });
 
+test('canPlay holds a visible show until the host allows it', (assert) => {
+
+    document.body.innerHTML = `
+        <div id="root">
+            <button class="marker">x</button>
+            <span data-cursor></span>
+        </div>
+    `;
+
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 400, 400);
+    root.querySelectorAll('*').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 400, 400);
+    });
+
+    observers.length = 0;
+
+    let now = 0;
+    const queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    let allowed = false;
+    let loops = 0;
+
+    const show = busk(root, {
+        steps: [
+            {wait: 50},
+            {run: (): void => {
+                loops += 1;
+            }},
+        ],
+        visibility: 0.5,
+        canPlay: () => allowed,
+    });
+
+    observers[0].fire();
+    window.dispatchEvent(new Event('scroll'));
+
+    for (let i = 0; i < 4; i += 1) {
+        now += 100;
+        for (const cb of queued.splice(0)) cb(now);
+    }
+
+    assert.equal(loops, 0);
+
+    allowed = true;
+    window.dispatchEvent(new Event('scroll'));
+
+    for (let i = 0; i < 4; i += 1) {
+        now += 100;
+        for (const cb of queued.splice(0)) cb(now);
+    }
+
+    assert.equal(loops >= 1, true);
+
+    allowed = false;
+    window.dispatchEvent(new Event('scroll'));
+    for (const cb of queued.splice(0)) cb(now);
+    const loopsWhenHeld = loops;
+
+    for (let i = 0; i < 4; i += 1) {
+        now += 100;
+        for (const cb of queued.splice(0)) cb(now);
+    }
+
+    assert.equal(loops, loopsWhenHeld);
+    show.destroy();
+
+});
+
 test('resize pauses playback until the viewport settles', (assert) => {
 
     document.body.innerHTML = `

@@ -50,6 +50,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const start = routine.start ?? DEFAULT_START;
     const clickTargets = routine.clickTargets ?? [];
     const visibility = routine.visibility ?? 1;
+    const canPlay = routine.canPlay ?? ((): boolean => true);
     const scriptSteps = routine.steps;
 
     /** Where each selector was last seen, in case it stops being anywhere. */
@@ -517,7 +518,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
             return;
         }
 
-        if (meetsViewportVisibility(root, visibility)) play();
+        if (meetsViewportVisibility(root, visibility) && canPlay()) play();
         else {
             pause();
             hint?.retract();

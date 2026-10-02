@@ -79,6 +79,12 @@ export interface Routine {
      * of its size. Default 1 — the whole thing.
      */
     visibility?: number;
+    /**
+     * Extra condition for the show to run, checked alongside `visibility` on every
+     * viewport sync. Return false to hold the show (e.g. until a scroll animation
+     * settles). When the condition flips without a scroll, call `play()` / `pause()`.
+     */
+    canPlay?: () => boolean;
     /** Frame to hold under `prefers-reduced-motion`. Default 0. */
     freezeAt?: number;
     /**

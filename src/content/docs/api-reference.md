@@ -24,6 +24,7 @@ Every routine has a non-empty **`steps`** array. Loop length is compiled from th
 | `motion` | [`MotionConfig`](#motionconfig) | see below | Glide timing for all `{ click }` and `{ move }` steps. |
 | `clickTargets` | `string[]` | none | Selectors that look clickable and count for the miss hint. |
 | `visibility` | `number` | `1` | How much of the root must be on screen to run, as a fraction. |
+| `canPlay` | `() => boolean` | always `true` | Extra condition to run, checked with `visibility`. See [Stopping and starting](./taking-over.md#stopping-and-starting). |
 | `freezeAt` | `number` | `0` | Frame to hold under `prefers-reduced-motion`. |
 | `exploreHint` | `boolean \| string \| ExploreHintConfig` | `true` | A "Click to explore" pill that tails the visitor's pointer. On by default; pass `false` to disable, a string for your own label, or a config object. |
 
