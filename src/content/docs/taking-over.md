@@ -43,6 +43,8 @@ document.querySelector('#try-it')?.addEventListener('click', () => show.stepAsid
 
 `play()` and `pause()` are there if you need them, but you usually do not: busker already pauses when the mock scrolls off screen or the tab goes to the background, and resumes when it comes back. That is one `IntersectionObserver` and one `visibilitychange` listener, both cleaned up by `destroy()`.
 
+Calling `pause()` only holds until the next scroll, because busker re-checks visibility and resumes. To hold a visible show on your own condition &mdash; say, until a scroll animation settles &mdash; pass `canPlay`. Busker checks it alongside `visibility` every time. When your condition changes without a scroll, call `play()` or `pause()` yourself.
+
 `destroy()` puts everything back &mdash; listeners, observers, and every class busker added. Call it when the component unmounts.
 
 ## Reduced motion

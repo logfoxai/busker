@@ -7,6 +7,11 @@ const runCallback = p.custom(
     'must be a function',
 );
 
+const gateCallback = p.custom(
+    (input: unknown): input is () => boolean => typeof input === 'function',
+    'must be a function',
+);
+
 const point = p.custom(
     (input: unknown): input is [number, number] =>
         Array.isArray(input) &&
@@ -68,6 +73,7 @@ const routine = p.object({
     motion: p.optional(motionConfig),
     clickTargets: p.optional(p.array(nonEmptyString)),
     visibility: p.optional(p.number({range: {min: 0, max: 1}})),
+    canPlay: p.optional(gateCallback),
     freezeAt: p.optional(nonNegativeNumber),
     exploreHint: p.optional(exploreHint),
 });
