@@ -853,6 +853,155 @@ test('the cursor only shows while the show is playing', (assert) => {
 
 });
 
+test('delay keeps the show idle until it elapses', (assert) => {
+    const timers = new Map<number, {at: number; fn: () => void}>();
+    let timeoutNow = 0;
+    let nextTimerId = 1;
+    const origSetTimeout = globalThis.setTimeout;
+    const origClearTimeout = globalThis.clearTimeout;
+
+    globalThis.setTimeout = ((fn: () => void, ms?: number) => {
+        const id = nextTimerId;
+
+        nextTimerId += 1;
+        timers.set(id, {at: timeoutNow + (ms ?? 0), fn});
+
+        return id as unknown as ReturnType<typeof setTimeout>;
+    }) as typeof setTimeout;
+
+    globalThis.clearTimeout = ((id: unknown) => {
+        timers.delete(Number(id));
+    }) as typeof clearTimeout;
+
+    const flushTimeouts = (advanceMs: number): void => {
+        timeoutNow += advanceMs;
+
+        for (const [id, entry] of [...timers]) {
+            if (entry.at <= timeoutNow) {
+                timers.delete(id);
+                entry.fn();
+            }
+        }
+    };
+
+    try {
+        const {root, show, startShow, tick} = stage(() => ({
+            motion: TEST_MOTION,
+            delay: 400,
+            steps: [{wait: 50}],
+        }));
+
+        const cursor = root.querySelector('[data-cursor]');
+
+        if (!cursor) throw new Error('no cursor');
+
+        startShow();
+        tick(0);
+
+        assert.equal(cursor.classList.contains('is-visible'), false);
+
+        show.play();
+        assert.equal(cursor.classList.contains('is-visible'), false);
+
+        show.pause();
+        assert.equal(cursor.classList.contains('is-visible'), false);
+
+        flushTimeouts(399);
+        tick(0);
+        assert.equal(cursor.classList.contains('is-visible'), false);
+
+        flushTimeouts(1);
+        tick(0);
+        assert.equal(cursor.classList.contains('is-visible'), true);
+
+        show.destroy();
+    } finally {
+        globalThis.setTimeout = origSetTimeout;
+        globalThis.clearTimeout = origClearTimeout;
+    }
+});
+
+test('delay restarts when canPlay goes false mid-wait', (assert) => {
+    const timers = new Map<number, {at: number; fn: () => void}>();
+    let timeoutNow = 0;
+    let nextTimerId = 1;
+    const origSetTimeout = globalThis.setTimeout;
+    const origClearTimeout = globalThis.clearTimeout;
+
+    globalThis.setTimeout = ((fn: () => void, ms?: number) => {
+        const id = nextTimerId;
+
+        nextTimerId += 1;
+        timers.set(id, {at: timeoutNow + (ms ?? 0), fn});
+
+        return id as unknown as ReturnType<typeof setTimeout>;
+    }) as typeof setTimeout;
+
+    globalThis.clearTimeout = ((id: unknown) => {
+        timers.delete(Number(id));
+    }) as typeof clearTimeout;
+
+    const flushTimeouts = (advanceMs: number): void => {
+        timeoutNow += advanceMs;
+
+        for (const [id, entry] of [...timers]) {
+            if (entry.at <= timeoutNow) {
+                timers.delete(id);
+                entry.fn();
+            }
+        }
+    };
+
+    try {
+        document.body.innerHTML = `<div id="root">${MOCK}</div>`;
+
+        const root = document.getElementById('root');
+
+        if (!root) throw new Error('no root');
+
+        root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
+        root.querySelectorAll('*').forEach((el) => {
+            el.getBoundingClientRect = (): DOMRect => new DOMRect(100, 50, 80, 20);
+        });
+
+        observers.length = 0;
+
+        let allowed = true;
+        const show = busk(root, {
+            motion: TEST_MOTION,
+            delay: 300,
+            steps: [{wait: 50}],
+            canPlay: () => allowed,
+        });
+
+        const cursor = root.querySelector('[data-cursor]');
+
+        if (!cursor) throw new Error('no cursor');
+
+        observers[0].fire();
+        flushTimeouts(200);
+        assert.equal(cursor.classList.contains('is-visible'), false);
+
+        allowed = false;
+        observers[0].fire();
+        flushTimeouts(500);
+        assert.equal(cursor.classList.contains('is-visible'), false);
+
+        allowed = true;
+        observers[0].fire();
+        flushTimeouts(299);
+        assert.equal(cursor.classList.contains('is-visible'), false);
+
+        flushTimeouts(1);
+        assert.equal(cursor.classList.contains('is-visible'), true);
+
+        show.destroy();
+    } finally {
+        globalThis.setTimeout = origSetTimeout;
+        globalThis.clearTimeout = origClearTimeout;
+    }
+});
+
 test('resize pauses playback until the viewport settles', (assert) => {
 
     document.body.innerHTML = `
