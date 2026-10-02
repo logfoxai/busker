@@ -799,6 +799,60 @@ test('canPlay holds a visible show until the host allows it', (assert) => {
 
 });
 
+test('the cursor only shows while the show is playing', (assert) => {
+
+    document.body.innerHTML = `
+        <div id="root">
+            <button class="marker">x</button>
+            <span data-cursor></span>
+        </div>
+    `;
+
+    const root = document.getElementById('root');
+    const cursor = root?.querySelector('[data-cursor]');
+
+    if (!root || !cursor) throw new Error('no root');
+
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 400, 400);
+    root.querySelectorAll('*').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 400, 400);
+    });
+
+    observers.length = 0;
+
+    const now = 0;
+    const queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    let allowed = false;
+
+    const show = busk(root, {
+        steps: [{wait: 50}],
+        visibility: 0.5,
+        canPlay: () => allowed,
+    });
+
+    observers[0].fire();
+    for (const cb of queued.splice(0)) cb(now);
+
+    assert.equal(cursor.classList.contains('is-visible'), false);
+
+    allowed = true;
+    observers[0].fire();
+
+    assert.equal(cursor.classList.contains('is-visible'), true);
+
+    show.pause();
+
+    assert.equal(cursor.classList.contains('is-visible'), false);
+    show.destroy();
+
+});
+
 test('resize pauses playback until the viewport settles', (assert) => {
 
     document.body.innerHTML = `

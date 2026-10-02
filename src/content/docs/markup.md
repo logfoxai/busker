@@ -26,7 +26,7 @@ Optional press hints (yours to add):
 | `is-ringing` | the cursor | For 500ms &mdash; the ripple outlives the press so the click reads. |
 | `is-hint` | every `clickTargets` entry | For 1.5s after a visitor clicks something dead. |
 | `is-aside` | the root | Once a visitor has taken over. |
-| `is-visible` | the cursor, the explore hint | While each is showing. |
+| `is-visible` | the cursor, the explore hint | While each is showing. The cursor shows only while the show is playing. |
 
 Busker removes all of them on `destroy()`. It does **not** toggle nav state, swap views, or add classes for your layout &mdash; that is your JavaScript and CSS.
 
