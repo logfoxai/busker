@@ -75,6 +75,12 @@ export interface Routine {
      */
     clickTargets?: string[];
     /**
+     * Ms to wait after the show becomes eligible (`visibility` + `canPlay`) before
+     * the loop starts. While waiting, the show is not playing — `play()` / `pause()`
+     * are no-ops and the cursor stays hidden. Restarts if eligibility is lost mid-wait.
+     */
+    delay?: number;
+    /**
      * How much of the root must be on screen for the show to run, as a fraction
      * of its size. Default 1 — the whole thing.
      */
