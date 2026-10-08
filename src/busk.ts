@@ -41,7 +41,8 @@ function mountDemoCursor(root: HTMLElement): {el: HTMLElement; owned: boolean} {
  * steps. Busker creates `[data-cursor]` when your markup omits it.
  */
 export function busk(root: HTMLElement, routine: Routine): Busker {
-    assertRoutine(routine);
+    // Bundlers replace NODE_ENV at build time, so production bundles drop the validator and runtyp.
+    if (process.env.NODE_ENV !== 'production') assertRoutine(routine);
 
     const {el: cursor, owned: cursorOwned} = mountDemoCursor(root);
 

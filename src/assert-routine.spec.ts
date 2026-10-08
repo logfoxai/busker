@@ -72,3 +72,27 @@ test('busk: throws before touching the DOM when the routine is invalid', (assert
     assert.equal(root.classList.contains('busker'), false);
 
 });
+
+test('busk: skips routine validation in production builds', (assert) => {
+
+    document.body.innerHTML = '<div id="root"><span data-cursor></span></div>';
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    const nodeEnv = process.env.NODE_ENV;
+
+    process.env.NODE_ENV = 'production';
+
+    try {
+        // @ts-expect-error unknown key that validation would reject
+        const show = busk(root, {duration: 500, steps: [{wait: 100}]});
+
+        assert.equal(root.classList.contains('busker'), true);
+        show.destroy();
+    } finally {
+        if (nodeEnv === undefined) delete process.env.NODE_ENV;
+        else process.env.NODE_ENV = nodeEnv;
+    }
+
+});
