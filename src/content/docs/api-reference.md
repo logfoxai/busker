@@ -12,7 +12,7 @@ Puts on a show inside `root`, an `HTMLElement`. Returns a [`Busker`](#busker). S
 
 ## `Routine`
 
-Every routine has a non-empty **`steps`** array. Loop length is compiled from those steps (plus the ring on the last click). `busk()` validates the routine up front (runtyp) and throws before touching the DOM if the shape is wrong or includes unknown fields (including v1 parallel schedules like `toggles` or `duration`).
+Every routine has a non-empty **`steps`** array. Loop length is compiled from those steps (plus the ring on the last click). In development, `busk()` validates the routine up front (runtyp) and throws before touching the DOM if the shape is wrong or includes unknown fields (including v1 parallel schedules like `toggles` or `duration`). Production builds (`NODE_ENV=production`) skip the check, so runtyp stays out of your bundle; call `assertRoutine` yourself if you build routines from untrusted input.
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
