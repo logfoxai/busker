@@ -21,6 +21,7 @@ Every routine has a non-empty **`steps`** array. Loop length is compiled from th
 | Field | Type | Default | What it does |
 |---|---|---|---|
 | `start` | [`Point`](#point) | `[0.5, 0.5]` | Where the cursor rests before the first beat, as a fraction of the root's size. |
+| `delay` | `number` | `0` | Ms to wait after the show becomes eligible (`visibility` + `canPlay`) before the loop starts. While waiting, the show is not playing — `play()` / `pause()` are no-ops and the cursor stays hidden. Restarts if eligibility is lost mid-wait. |
 | `motion` | [`MotionConfig`](#motionconfig) | see below | Glide timing for all `{ click }` and `{ move }` steps. |
 | `clickTargets` | `string[]` | none | Selectors that look clickable and count for the miss hint. |
 | `visibility` | `number` | `1` | How much of the root must be on screen to run, as a fraction. |

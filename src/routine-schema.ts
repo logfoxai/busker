@@ -72,6 +72,7 @@ const routine = p.object({
     start: p.optional(point),
     motion: p.optional(motionConfig),
     clickTargets: p.optional(p.array(nonEmptyString)),
+    delay: p.optional(nonNegativeNumber),
     visibility: p.optional(p.number({range: {min: 0, max: 1}})),
     canPlay: p.optional(gateCallback),
     freezeAt: p.optional(nonNegativeNumber),

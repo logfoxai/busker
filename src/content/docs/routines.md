@@ -66,6 +66,20 @@ Busker does **not** change your UI. Wire `click` handlers (or rely on scripted `
 
 `start` is where the cursor rests before the first step, as a fraction of the root: `[0.55, 0.25]` is a bit right of centre, a quarter of the way down. It defaults to the middle.
 
+## Delay before the loop
+
+`delay` waits after the mock is eligible to play (`visibility` + `canPlay`) before the first beat. During that wait the cursor stays hidden and `play()` / `pause()` do nothing — unlike a leading `{ wait }`, which keeps the cursor visible at `start`. If the mock scrolls off screen or `canPlay()` goes false mid-wait, the timer resets and starts again when eligibility returns.
+
+```typescript
+busk(root, {
+    delay: 900,
+    steps: [
+        {click: '[data-nav-item="alerts"]'},
+        // …
+    ],
+});
+```
+
 ## Migrating from v1
 
 | v1 | v2 |

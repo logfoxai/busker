@@ -52,6 +52,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     const clickTargets = routine.clickTargets ?? [];
     const visibility = routine.visibility ?? 1;
     const canPlay = routine.canPlay ?? ((): boolean => true);
+    const delayMs = routine.delay ?? 0;
     const scriptSteps = routine.steps;
 
     /** Where each selector was last seen, in case it stops being anywhere. */
@@ -148,6 +149,8 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     let playing = false;
     let aside = false;
     let destroyed = false;
+    let delayElapsed = delayMs <= 0;
+    let delayTimerId = 0;
     /** Remeasure glides once the root has real layout (showcases often mount off-screen). */
     let syncedLayoutForPlayback = false;
     /** Steps already pressed this time round, so each one fires exactly once. */
@@ -447,7 +450,24 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
                   },
               );
 
+    function cancelDelay(): void {
+        if (!delayTimerId) return;
+        clearTimeout(delayTimerId);
+        delayTimerId = 0;
+    }
+
+    function scheduleDelay(): void {
+        if (delayElapsed || delayMs <= 0 || delayTimerId || aside || destroyed || reducedMotion) return;
+
+        delayTimerId = window.setTimeout(() => {
+            delayTimerId = 0;
+            delayElapsed = true;
+            syncViewportPlayback();
+        }, delayMs);
+    }
+
     function play(): void {
+        if (!delayElapsed && delayMs > 0) return;
         if (playing || aside || destroyed || reducedMotion || duration <= 0) return;
 
         if (!syncedLayoutForPlayback && root.clientWidth > 0 && root.clientHeight > 0) {
@@ -462,6 +482,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     }
 
     function pause(): void {
+        if (!delayElapsed && delayMs > 0 && !aside && !destroyed) return;
         playing = false;
         cursor.classList.remove('is-visible');
         cancelAnimationFrame(rafId);
@@ -470,6 +491,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     function stepAside(): void {
         if (aside) return;
         aside = true;
+        cancelDelay();
         pause();
         hint?.dismiss();
         root.classList.add('is-aside');
@@ -516,16 +538,30 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
     const syncViewportPlayback = (): void => {
         if (document.hidden || resizing) {
+            cancelDelay();
             pause();
             hint?.retract();
             return;
         }
 
-        if (meetsViewportVisibility(root, visibility) && canPlay()) play();
-        else {
+        const eligible = meetsViewportVisibility(root, visibility) && canPlay();
+
+        if (!eligible) {
+            cancelDelay();
             pause();
             hint?.retract();
+            return;
         }
+
+        if (!delayElapsed && delayMs > 0) {
+            playing = false;
+            cursor.classList.remove('is-visible');
+            cancelAnimationFrame(rafId);
+            scheduleDelay();
+            return;
+        }
+
+        play();
     };
 
     const scheduleSyncViewportPlayback = (): void => {
@@ -570,6 +606,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     function destroy(): void {
         if (destroyed) return;
         destroyed = true;
+        cancelDelay();
         pause();
         cancelAnimationFrame(viewportSyncRafId);
         viewportSyncRafId = 0;
