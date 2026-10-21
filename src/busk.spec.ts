@@ -722,6 +722,84 @@ test('scroll coalesces viewport sync to one animation frame', (assert) => {
 
 });
 
+test('scroll remeasures targets only when the mock box changes size', (assert) => {
+
+    document.body.innerHTML = `
+        <div id="root">
+            <button class="marker">x</button>
+            <span data-cursor></span>
+        </div>
+    `;
+
+    const root = document.getElementById('root');
+    const marker = document.querySelector('.marker');
+
+    if (!root || !marker) throw new Error('fixture missing');
+
+    let width = 400;
+    const height = 300;
+
+    Object.defineProperty(root, 'clientWidth', {configurable: true, get: () => width});
+    Object.defineProperty(root, 'clientHeight', {configurable: true, get: () => height});
+    // Off-screen so the playback loop is not running; scroll should only sync visibility.
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 4000, width, height);
+
+    let markerReads = 0;
+
+    marker.getBoundingClientRect = (): DOMRect => {
+        markerReads += 1;
+
+        return new DOMRect(10, 10, 40, 20);
+    };
+
+    observers.length = 0;
+
+    const now = 0;
+    const queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    const show = busk(root, {
+        steps: [{click: '.marker'}],
+        visibility: 0.5,
+    });
+
+    for (const cb of queued.splice(0)) cb(now);
+
+    window.dispatchEvent(new Event('scroll'));
+
+    for (const cb of queued.splice(0)) cb(now);
+
+    markerReads = 0;
+
+    for (let i = 0; i < 8; i += 1) window.dispatchEvent(new Event('scroll'));
+
+    for (const cb of queued.splice(0)) cb(now);
+
+    assert.equal(markerReads, 0, 'a stable mock is not remeasured while the page scrolls');
+
+    width = 520;
+    window.dispatchEvent(new Event('scroll'));
+
+    for (const cb of queued.splice(0)) cb(now);
+
+    assert.equal(markerReads > 0, true, 'a size change during scroll remeasures targets');
+
+    markerReads = 0;
+    window.dispatchEvent(new Event('resize'));
+
+    for (let i = 0; i < 4; i += 1) {
+        for (const cb of queued.splice(0)) cb(now);
+    }
+
+    assert.equal(markerReads > 0, true, 'resize still remeasures when the mock box size is unchanged');
+    show.destroy();
+
+});
+
 test('canPlay holds a visible show until the host allows it', (assert) => {
 
     document.body.innerHTML = `

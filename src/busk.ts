@@ -142,6 +142,10 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     let rafId = 0;
     let viewportSyncRafId = 0;
     let viewportSyncQueued = false;
+    let remeasureQueued = false;
+    /** Last measured mock box. Scroll rebuilds the script only when this changes. */
+    let layoutWidth = -1;
+    let layoutHeight = -1;
     let resizeQuietRafOuter = 0;
     let resizeQuietRafInner = 0;
     let resizeGeneration = 0;
@@ -564,20 +568,35 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         play();
     };
 
-    const scheduleSyncViewportPlayback = (): void => {
+    const scheduleSyncViewportPlayback = (remeasure = false): void => {
+        remeasureQueued = remeasureQueued || remeasure;
         if (viewportSyncQueued) return;
         viewportSyncQueued = true;
         viewportSyncRafId = requestAnimationFrame(() => {
+            const rebuild = remeasureQueued;
             viewportSyncQueued = false;
             viewportSyncRafId = 0;
+            remeasureQueued = false;
 
-            if (root.clientWidth > 0 && root.clientHeight > 0) {
+            const width = root.clientWidth;
+            const height = root.clientHeight;
+            const sizeChanged = width !== layoutWidth || height !== layoutHeight;
+            layoutWidth = width;
+            layoutHeight = height;
+
+            // Page scroll moves the mock as a unit. Rebuilding every frame redoes layout for every target.
+            if ((rebuild || sizeChanged) && width > 0 && height > 0) {
                 remeasureScript();
                 render(elapsed, playing);
+                syncedLayoutForPlayback = true;
             }
 
             syncViewportPlayback();
         });
+    };
+
+    const onScroll = (): void => {
+        scheduleSyncViewportPlayback();
     };
 
     const onResize = (): void => {
@@ -593,7 +612,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
                 resizeQuietRafInner = 0;
                 if (generation !== resizeGeneration) return;
                 resizing = false;
-                scheduleSyncViewportPlayback();
+                scheduleSyncViewportPlayback(true);
             });
         });
     };
@@ -611,6 +630,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         cancelAnimationFrame(viewportSyncRafId);
         viewportSyncRafId = 0;
         viewportSyncQueued = false;
+        remeasureQueued = false;
         cancelAnimationFrame(resizeQuietRafOuter);
         cancelAnimationFrame(resizeQuietRafInner);
         resizeQuietRafOuter = 0;
@@ -622,7 +642,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
         root.removeEventListener('click', stopScriptedClickBubble);
         root.removeEventListener('click', onClick);
         document.removeEventListener('visibilitychange', onVisibilityChange);
-        window.removeEventListener('scroll', scheduleSyncViewportPlayback);
+        window.removeEventListener('scroll', onScroll);
         window.removeEventListener('resize', onResize);
         setShownHover(null);
         setShownPressed(null);
@@ -663,10 +683,10 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     if (!reducedMotion) {
         observer?.observe(root);
         document.addEventListener('visibilitychange', onVisibilityChange);
-        window.addEventListener('scroll', scheduleSyncViewportPlayback, {passive: true});
+        window.addEventListener('scroll', onScroll, {passive: true});
         window.addEventListener('resize', onResize, {passive: true});
-        window.addEventListener('load', scheduleSyncViewportPlayback, {once: true});
-        document.fonts?.ready.then(scheduleSyncViewportPlayback);
+        window.addEventListener('load', () => scheduleSyncViewportPlayback(true), {once: true});
+        document.fonts?.ready.then(() => scheduleSyncViewportPlayback(true));
         syncViewportPlayback();
     }
 
