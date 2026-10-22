@@ -1,17 +1,17 @@
-[![CI](https://github.com/logfoxai/busker/actions/workflows/ci.yml/badge.svg)](https://github.com/logfoxai/busker/actions/workflows/ci.yml)
-[![AutoRel](https://img.shields.io/badge/%F0%9F%9A%80%20AutoRel-2D4DDE)](https://github.com/mhweiner/autorel)
-
 <div align="center">
   <picture>
     <source srcset="assets/busker-lockup-dark.svg" media="(prefers-color-scheme: dark)" />
     <source srcset="assets/busker-lockup-light.svg" media="(prefers-color-scheme: light)" />
-    <img src="assets/busker-lockup-light.svg" width="220" alt="busker" />
+    <img src="assets/busker-lockup-light.svg" height="56" alt="busker" />
   </picture>
   <h3 align="center">Scripted cursor demos that click.</h3>
   <p align="center">
     <a href="https://busker.logfox.ai">busker.logfox.ai</a>
   </p>
 </div>
+
+[![CI](https://github.com/logfoxai/busker/actions/workflows/ci.yml/badge.svg)](https://github.com/logfoxai/busker/actions/workflows/ci.yml)
+[![AutoRel](https://img.shields.io/badge/%F0%9F%9A%80%20AutoRel-2D4DDE)](https://github.com/mhweiner/autorel)
 
 Fake product demos on a landing page usually rot. The cursor is on one timeline, the page state is on another, and the moment you change a duration they drift &mdash; the cursor presses a button 200ms before the modal it opened, forever.
 
