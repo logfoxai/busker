@@ -65,7 +65,7 @@ Busker does **not** change your UI. Wire `click` handlers (or rely on scripted `
 
 `start` is where the cursor rests before the first step, as a fraction of the root: `[0.55, 0.25]` is a bit right of centre, a quarter of the way down. It defaults to the middle.
 
-When a loop ends somewhere else, Busker glides back to `start` on its own &mdash; same speed and easing as every other glide, after the click ring has finished. A script that already finishes on `start` does not get a second glide. Use `{ move }` when you want the cursor somewhere specific in the middle of the script, including home before a `{ run }` that resets the mock.
+When a loop ends somewhere else, Busker glides back to `start` on its own &mdash; same speed and easing as every other glide, after the click ring has finished. A script that already finishes on `start` does not get a second glide. Do not add a `{ move }` at the end to park or to sit out a reset. Use `{ move }` when the cursor is on its way to something the demo does.
 
 ## Delay before the loop
 
