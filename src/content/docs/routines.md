@@ -15,7 +15,6 @@ busk(root, {
         {wait: 2600},
         {click: '[data-close]'},
         {wait: 900},
-        {move: [0.55, 0.25]},
         {run: () => resetApp(root)},
     ],
     clickTargets: ['[data-nav-item="home"]', '[data-nav-item="alerts"]', '[data-row="p0"]'],
@@ -28,7 +27,7 @@ busk(root, {
 |---|---|
 | `{ click: 'selector' }` | Glide to the element, dwell, press, and **really** `.click()` it. |
 | `{ wait: ms }` | Pause — reading time after whatever just opened or happened. |
-| `{ move: selector \| [x, y] }` | Glide somewhere **without** pressing (park the cursor before the loop ends). |
+| `{ move: selector \| [x, y] }` | Glide somewhere **without** pressing. |
 | `{ run: () => void }` | Your code once at this beat (toggle a class, append a row, update copy — whatever your mock needs). |
 
 That is the whole vocabulary. Pauses are never folded into click steps, so the script reads like a storyboard and nothing drifts when you edit a `{ wait }`.
@@ -60,11 +59,13 @@ Each loop re-compiles the script from fresh layout. Hidden step targets are **re
 clickTargets: ['[data-nav-item="alerts"]', '[data-filter]'],
 ```
 
-Busker does **not** change your UI. Wire `click` handlers (or rely on scripted `{ click }` steps) for navigation, filters, and modals. To reset the mock before the next lap, add a final `{ run: () => … }` step (often after a `{ move }` that parks the cursor).
+Busker does **not** change your UI. Wire `click` handlers (or rely on scripted `{ click }` steps) for navigation, filters, and modals. To reset the mock before the next lap, add a final `{ run: () => … }` step.
 
 ## Where the cursor starts
 
 `start` is where the cursor rests before the first step, as a fraction of the root: `[0.55, 0.25]` is a bit right of centre, a quarter of the way down. It defaults to the middle.
+
+When a loop ends somewhere else, Busker glides back to `start` on its own &mdash; same speed and easing as every other glide, after the click ring has finished. A script that already finishes on `start` does not get a second glide. Do not add a `{ move }` at the end to park or to sit out a reset. Use `{ move }` when the cursor is on its way to something the demo does.
 
 ## Delay before the loop
 

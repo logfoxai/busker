@@ -25,6 +25,8 @@ export function distancePx(from: Point, to: Point): number {
     return Math.hypot(to[0] - from[0], to[1] - from[1]);
 }
 
+/** Already home. A return glide this short would only add a pause. */
+const LOOP_RETURN_MIN_PX = 1;
 /** Below this distance, glides get extra time so easing reads (long glides unchanged). */
 const SHORT_HOP_TAPER_PX = 150;
 const SHORT_HOP_READ_MS = 380;
@@ -114,9 +116,20 @@ export function compileScriptTimeline(
     }
 
     const last = glides[glides.length - 1];
-    const duration = last?.press === undefined ? t : Math.max(t, last.press + RING_MS);
+    // Stay through the click ring, then travel home. The next loop begins at `start`.
+    const rested = last?.press === undefined ? t : Math.max(t, last.press + RING_MS);
+    const gap = distancePx(cursorAt, start);
 
-    return {glides, duration, runs, stepStartsMs};
+    if (gap > LOOP_RETURN_MIN_PX) {
+        const glideMs = glideDurationMs(gap, m);
+        const until = rested + glideMs;
+
+        glides.push({to: start, from: rested, until, returnToStart: true});
+
+        return {glides, duration: until, runs, stepStartsMs};
+    }
+
+    return {glides, duration: rested, runs, stepStartsMs};
 }
 
 export function compile(

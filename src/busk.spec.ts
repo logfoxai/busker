@@ -2,7 +2,7 @@ import {test} from 'kizu';
 import {GlobalRegistrator} from '@happy-dom/global-registrator';
 import {busk} from './busk.ts';
 import {shouldCloseOnOutsideClick} from './components/searchDialog.ts';
-import type {Busker, Routine} from './types.ts';
+import type {Busker, Point, Routine} from './types.ts';
 
 GlobalRegistrator.register({url: 'https://busker.test', width: 1024, height: 768});
 
@@ -156,6 +156,101 @@ function defaultRoutine(showPanel: (panel: string) => void): Routine {
         clickTargets: ROUTINE_CLICK_TARGETS,
     };
 }
+
+function cursorPx(translate: string): Point | null {
+    const nums = [...translate.matchAll(/calc\(([-\d.]+)px/g)].map((match) => Number(match[1]));
+
+    if (nums.length !== 2 || nums.some((n) => Number.isNaN(n))) return null;
+
+    const [x, y] = nums;
+
+    if (x === undefined || y === undefined) return null;
+
+    return [x, y];
+}
+
+test('the cursor glides back to start at the end of a loop', (assert) => {
+
+    document.body.innerHTML = `<div id="root">${MOCK}</div>`;
+
+    const root = document.getElementById('root');
+
+    if (!root) throw new Error('no root');
+
+    Object.defineProperty(root, 'clientWidth', {configurable: true, value: 800});
+    Object.defineProperty(root, 'clientHeight', {configurable: true, value: 600});
+    root.getBoundingClientRect = (): DOMRect => new DOMRect(0, 0, 800, 600);
+    root.querySelectorAll('*').forEach((el) => {
+        el.getBoundingClientRect = (): DOMRect => new DOMRect(100, 50, 80, 20);
+    });
+
+    observers.length = 0;
+
+    let now = 0;
+    let queued: FrameRequestCallback[] = [];
+
+    globalThis.IntersectionObserver = FakeObserver;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number => queued.push(cb);
+    globalThis.cancelAnimationFrame = (): void => {};
+    performance.now = (): number => now;
+
+    const show = busk(root, {
+        motion: TEST_MOTION,
+        start: [0.5, 0.5],
+        steps: [{click: '[data-nav-item="alerts"]'}],
+        clickTargets: ['[data-nav-item="alerts"]'],
+    });
+
+    const tick = (ms: number): void => {
+        now += ms;
+        const due = queued;
+
+        queued = [];
+        for (const cb of due) cb(now);
+    };
+
+    observers[0].fire();
+    tick(0);
+
+    const cursor = root.querySelector<HTMLElement>('[data-cursor]');
+    const at = (): Point | null => cursorPx(cursor?.style.translate ?? '');
+    const home = at();
+
+    assert.equal(home, [400, 300]);
+
+    const button: Point = [140, 60];
+    const full = Math.hypot(button[0] - 400, button[1] - 300);
+    let sawButton = false;
+    let leftButton = false;
+    let backHome = false;
+    let maxStep = 0;
+    let previous = home ?? button;
+
+    for (let i = 0; i < 80; i += 1) {
+        tick(25);
+
+        const point = at();
+
+        if (!point) continue;
+
+        maxStep = Math.max(maxStep, Math.hypot(point[0] - previous[0], point[1] - previous[1]));
+        previous = point;
+
+        if (Math.hypot(point[0] - button[0], point[1] - button[1]) < 2) sawButton = true;
+        if (sawButton && Math.hypot(point[0] - button[0], point[1] - button[1]) > 40) leftButton = true;
+        if (leftButton && Math.hypot(point[0] - 400, point[1] - 300) < 2) {
+            backHome = true;
+            break;
+        }
+    }
+
+    assert.equal(sawButton, true);
+    assert.equal(leftButton, true);
+    assert.equal(backHome, true);
+    assert.equal(maxStep < full / 2, true);
+    show.destroy();
+
+});
 
 test('the show clicks for real, so the mock changes through its own handlers', (assert) => {
 
@@ -1366,12 +1461,16 @@ test('is-hover applies only to the step target once the cursor reaches it', (ass
     assert.equal(pick.classList.contains('is-hover'), false);
     assert.equal(pickOther.classList.contains('is-hover'), false);
 
-    for (let i = 0; i < 30; i += 1) {
-        now += 50;
+    // Land in the wait, before the loop glides back to start.
+    let arrived = false;
+
+    for (let i = 0; i < 20 && !arrived; i += 1) {
+        now += 25;
         for (const cb of queued.splice(0)) cb(now);
+        arrived = pick.classList.contains('is-hover');
     }
 
-    assert.equal(pick.classList.contains('is-hover'), true);
+    assert.equal(arrived, true);
     assert.equal(pickOther.classList.contains('is-hover'), false);
 
     show.destroy();
