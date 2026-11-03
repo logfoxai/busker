@@ -44,6 +44,12 @@ export interface Glide {
      * cursor freezes at that point and stops tracking `to`.
      */
     press?: number;
+    /**
+     * Closes the loop by gliding back to the routine start. `to` is that start
+     * in pixels (the `start` argument to `compile`), not a fraction. The player
+     * re-resolves the routine start instead of treating `to` as a fraction.
+     */
+    returnToStart?: boolean;
 }
 
 /** The "click to explore" pill that tails the visitor's pointer. */

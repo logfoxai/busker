@@ -115,7 +115,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
 
         if (frozen) return frozen;
 
-        const at = resolve(glide.to);
+        const at = glideTargetPx(glide);
 
         if (at && glide.press !== undefined && t >= glide.press) {
             frozenAtPress.set(glideIndex, at);
@@ -125,6 +125,13 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
     }
 
     const resolveTarget = (to: string | Point, _from: Point): Point | null => resolve(to);
+
+    /** Where a glide is headed. The loop-closing glide tracks `start`, not `to`. */
+    function glideTargetPx(glide: Glide): Point | null {
+        if (glide.returnToStart) return resolve(start);
+
+        return resolve(glide.to);
+    }
 
     function scheduleScript(): {glides: Glide[]; duration: number; runs: ScheduledRun[]} {
         const startPx = resolve(start) ?? [root.clientWidth / 2, root.clientHeight / 2];
@@ -295,7 +302,7 @@ export function busk(root: HTMLElement, routine: Routine): Busker {
             index === 0
                 ? resolve(start)
                 : (glideEndpoints.get(index - 1)?.to ?? resolve(glides[index - 1].to));
-        const toPt = resolve(glide.to);
+        const toPt = glideTargetPx(glide);
 
         if (!fromPt || !toPt) return;
 
