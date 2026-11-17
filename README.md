@@ -28,7 +28,6 @@ busk(document.querySelector('.app'), {
         {wait: 1500},
         {click: '[data-row="p0"]'},
         {wait: 2600},
-        {move: [0.55, 0.25]},
     ],
     clickTargets: [
         '[data-nav-item="alerts"]',
@@ -37,7 +36,7 @@ busk(document.querySelector('.app'), {
 });
 ```
 
-The show loops while the mock is on screen and stops when the tab is in the background. The first time a visitor clicks, busker steps aside &mdash; the cursor disappears and the mock is theirs to poke at. Click something dead and it flashes what is not. Worried the loop reads as a video? `exploreHint: true` floats a "Click to explore" pill at the visitor's pointer.
+The show loops while the mock is on screen and stops when the tab is in the background. Each new lap glides the cursor back to where it started. The first time a visitor clicks, busker steps aside &mdash; the cursor disappears and the mock is theirs to poke at. Click something dead and it flashes what is not. Worried the loop reads as a video? `exploreHint: true` floats a "Click to explore" pill at the visitor's pointer.
 
 Zero dependencies, about 4kB, no build step, no framework.
 

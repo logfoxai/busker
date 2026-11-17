@@ -36,7 +36,7 @@ test('compile: waits and clicks run in order with auto glide timing', (assert) =
 
     assert.equal(glides[0], {to: '#a', from: 100, until: 200, press: 250});
     assert.equal(glides[1], {to: '#b', from: 750, until: 850, press: 900});
-    assert.equal(duration, 1400);
+    assert.equal(duration, 1500);
 
 });
 
@@ -58,7 +58,37 @@ test('compile: a loop that ends on a click still runs until the ring has read', 
 
     const {duration} = compile([{click: '#a'}], resolveTestTarget, {...FIXED_GLIDE, dwellMs: 0}, [0, 0]);
 
-    assert.equal(duration, 600);
+    assert.equal(duration, 700);
+
+});
+
+test('compile: a loop that ends away from start glides back before it repeats', (assert) => {
+
+    const {glides, duration} = compile(
+        [{click: '#a'}],
+        resolveTestTarget,
+        {...FIXED_GLIDE, dwellMs: 0},
+        [0, 0],
+    );
+
+    const back = glides[1];
+
+    assert.equal(back?.returnToStart, true);
+    assert.equal(back?.press, undefined);
+    assert.equal(back?.to, [0, 0]);
+    // The click's ring finishes at 600ms; the return uses the same min glide as the hop out.
+    assert.equal(back?.from, 600);
+    assert.equal(back?.until, 700);
+    assert.equal(duration, 700);
+
+});
+
+test('compile: a script that already ends on start does not glide back', (assert) => {
+
+    const {glides} = compile([{move: [0, 0]}], resolveTestTarget, FIXED_GLIDE, [0, 0]);
+
+    assert.equal(glides.length, 1);
+    assert.equal(glides[0]?.returnToStart, undefined);
 
 });
 
@@ -72,7 +102,7 @@ test('compile: a move step glides without a press', (assert) => {
     );
 
     assert.equal(glides[0].press, undefined);
-    assert.equal(duration, 200);
+    assert.equal(duration, 300);
 
 });
 
@@ -88,7 +118,7 @@ test('compile: a run step schedules a scheduled run without moving the cursor', 
     assert.equal(runs.length, 1);
     assert.equal(runs[0].at, 100);
     assert.equal(glides[0].from, 100);
-    assert.equal(duration, 700);
+    assert.equal(duration, 800);
 
 });
 

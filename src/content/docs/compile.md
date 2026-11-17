@@ -41,7 +41,7 @@ const {glides, duration, runs} = compile(
 
 // glides[0] → { to: '#save', from: 100, until: 200, press: 250 }
 // runs[0].at → 650 (after wait, click beat, and wait: 200)
-// duration → 1520 (includes ring after last click)
+// duration → 1620 (ring after the last click, then the glide back to start)
 ```
 
 Return shape and field types: [`Glide`](./api-reference.md#glide), [`ScheduledRun`](./api-reference.md#scheduledrun), and [`compile()`](./api-reference.md#compilesteps-resolvetarget-motion-start) in the API reference.

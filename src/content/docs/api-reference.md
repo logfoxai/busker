@@ -89,10 +89,11 @@ One timed cursor segment from a `{ click }` or `{ move }` step. Output of [`comp
 
 | Field | Type | What it does |
 |---|---|---|
-| `to` | `string \| Point` | Same target as the step (selector or fraction). See [`Point`](#point). |
+| `to` | `string \| Point` | Same target as the step (selector or fraction). On a return glide, the start position in **pixels**. See [`Point`](#point). |
 | `from` | `number` | Ms from loop start when the glide begins. |
 | `until` | `number` | Ms when the cursor arrives at `to`. |
-| `press` | `number` | Optional. On `{ click }` steps only: ms when the demo press runs and the element is `.click()`ed (after dwell). Absent on `{ move }` glides. Read-only output of [`compile()`](#compilesteps-resolvetarget-motion-start). |
+| `press` | `number` | Optional. On `{ click }` steps only: ms when the demo press runs and the element is `.click()`ed (after dwell). Absent on `{ move }` glides and on the return glide. |
+| `returnToStart` | `boolean` | Optional. Set on the glide Busker appends when the cursor would finish away from [`start`](#routine). The player re-resolves the routine start; it does not treat `to` as a fraction. |
 
 ## `ScheduledRun`
 
@@ -118,9 +119,9 @@ Returns:
 
 | Field | Type | What it does |
 |---|---|---|
-| `glides` | [`Glide[]`](#glide) | One entry per `{ click }` or `{ move }` step, in order. |
+| `glides` | [`Glide[]`](#glide) | One entry per `{ click }` or `{ move }` step, in order, then a return glide when the cursor would finish away from `start`. |
 | `runs` | [`ScheduledRun[]`](#scheduledrun) | One entry per `{ run }` step. |
-| `duration` | `number` | Loop length in ms (includes ring time after the last click). |
+| `duration` | `number` | Loop length in ms (includes ring time after the last click, and the glide back to `start`). |
 
 ## `compileStepStarts(steps, resolveTarget, motion?, start?)`
 
